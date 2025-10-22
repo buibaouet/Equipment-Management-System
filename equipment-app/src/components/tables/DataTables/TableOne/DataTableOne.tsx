@@ -9,7 +9,7 @@ import {
   TableRow,
 } from "../../../ui/table";
 
-import PaginationWithIcon from "./PaginationWithIcon";
+import PaginationWithIcon from "../PaginationWithIcon";
 
 const tableRowData = [
   {

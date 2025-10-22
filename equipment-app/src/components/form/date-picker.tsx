@@ -1,7 +1,8 @@
 import { useEffect } from "react";
 import flatpickr from "flatpickr";
 import Label from "./Label";
-import { CalenderIcon } from "../../../public/icons";
+import "flatpickr/dist/flatpickr.css";
+import { Calendar1Icon } from 'lucide-react';
 import Hook = flatpickr.Options.Hook;
 import DateOption = flatpickr.Options.DateOption;
 
@@ -51,7 +52,7 @@ export default function DatePicker({
         />
 
         <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
-          <CalenderIcon className="size-6" />
+          <Calendar1Icon className="w-4 h-4 mr-2" />
         </span>
       </div>
     </div>

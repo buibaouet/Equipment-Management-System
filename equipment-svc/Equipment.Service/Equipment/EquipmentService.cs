@@ -17,7 +17,7 @@ public class EquipmentService : IEquipmentService
 
     public async Task<Response<Domain.Entities.Equipment>> GetById(int id)
     {
-        var entity = await _equipmentRepository.GetById(id);
+        var entity = await _equipmentRepository.GetByIdAsync(id);
 
         if (entity is null)
         {
@@ -64,7 +64,7 @@ public class EquipmentService : IEquipmentService
         Domain.Entities.Equipment equipment
     )
     {
-        var existing = await _equipmentRepository.GetById(equipment.Id);
+        var existing = await _equipmentRepository.GetByIdAsync(equipment.Id);
         if (existing == null)
         {
             return new Response<Domain.Entities.Equipment>(StatusCodes.Status404NotFound);

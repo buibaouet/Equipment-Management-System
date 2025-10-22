@@ -16,7 +16,7 @@ public interface IBaseRepository<T>
     /// </summary>
     /// <param name="id">The ID of the entity to retrieve</param>
     /// <returns>The entity if found, null otherwise. Entity will be detached from context</returns>
-    Task<T?> GetById(int id);
+    Task<T?> GetByIdAsync(int id);
 
     /// <summary>
     /// Creates a new entity in the database
@@ -72,7 +72,7 @@ public interface IBaseRepository<T>
     /// <param name="expression">The condition to filter by</param>
     /// <param name="orderBy">Optional ordering expression (e.g., "Name desc")</param>
     /// <returns>The first matching entity or null. Uses AsNoTracking for better performance</returns>
-    Task<T?> GetAsync(Expression<Func<T, bool>> expression, string? orderBy);
+    Task<T?> GetAsync(Expression<Func<T, bool>> expression, string? orderBy = null);
 
     /// <summary>
     /// Retrieves a queryable collection of entities based on a condition

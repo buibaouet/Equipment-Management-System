@@ -7,9 +7,9 @@ import {
   TableCell,
   TableHeader,
   TableRow,
-} from "../../../ui/table";
-import { PencilIcon, TrashBinIcon } from "../../../../../public/icons";
-import PaginationWithButton from "./PaginationWithButton";
+} from "../../ui/table";
+import PaginationWithIcon from "./PaginationWithIcon";
+import {Pencil, Trash2Icon} from "lucide-react";
 
 const tableRowData = [
   {
@@ -165,7 +165,7 @@ export default function DataTableTwo() {
               value={itemsPerPage}
               onChange={(e) => setItemsPerPage(Number(e.target.value))}
             >
-              {[5, 8, 10].map((value) => (
+              {[1, 8, 10].map((value) => (
                 <option
                   key={value}
                   value={value}
@@ -303,7 +303,7 @@ export default function DataTableTwo() {
               {currentData.map((item, i) => (
                 <TableRow key={i + 1}>
                   <TableCell className="px-4 py-4 font-medium text-gray-800 border border-gray-100 dark:border-white/[0.05] dark:text-white text-theme-sm whitespace-nowrap ">
-                    {item.name}
+                    {item["name"]}
                   </TableCell>
                   <TableCell className="px-4 py-4 font-normal text-gray-800 border border-gray-100 dark:border-white/[0.05] text-theme-sm dark:text-gray-400 whitespace-nowrap ">
                     {item.position}
@@ -322,12 +322,11 @@ export default function DataTableTwo() {
                   </TableCell>
                   <TableCell className="px-4 py-4 font-normal text-gray-800 border border-gray-100 dark:border-white/[0.05] text-theme-sm dark:text-white/90 whitespace-nowrap ">
                     <div className="flex items-center w-full gap-2">
-                      <button className="text-gray-500 hover:text-error-500 dark:text-gray-400 dark:hover:text-error-500">
-                        <TrashBinIcon className="size-5" />
-                      </button>
-                      <button className="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white/90">
-                        <PencilIcon className="size-5" />
-                      </button>
+                      <Pencil
+                        className="w-4 h-4 cursor-pointer hover:text-gray"
+                        onClick={() => alert('hahowho')}
+                      />
+                      <Trash2Icon className="w-4 h-4 cursor-pointer hover:text-error-500" />
                     </div>
                   </TableCell>
                 </TableRow>
@@ -340,17 +339,17 @@ export default function DataTableTwo() {
       <div className="border border-t-0 rounded-b-xl border-gray-100 py-4 pl-[18px] pr-4 dark:border-white/[0.05]">
         <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between">
           {/* Left side: Showing entries */}
-
-          <PaginationWithButton
+          <div className="pb-3 xl:pb-0">
+            <p className="pb-3 text-sm font-medium text-center text-gray-500 border-b border-gray-100 dark:border-gray-800 dark:text-gray-400 xl:border-b-0 xl:pb-0 xl:text-left">
+              Showing {startIndex + 1} to {endIndex} of {totalItems} entries
+            </p>
+          </div>
+          
+          <PaginationWithIcon
             totalPages={totalPages}
             initialPage={currentPage}
             onPageChange={handlePageChange}
           />
-          <div className="pt-3 xl:pt-0">
-            <p className="pt-3 text-sm font-medium text-center text-gray-500 border-t border-gray-100 dark:border-gray-800 dark:text-gray-400 xl:border-t-0 xl:pt-0 xl:text-left">
-              Showing {startIndex + 1} to {endIndex} of {totalItems} entries
-            </p>
-          </div>
         </div>
       </div>
     </div>

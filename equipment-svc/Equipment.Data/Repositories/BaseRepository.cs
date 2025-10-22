@@ -20,7 +20,7 @@ public abstract class BaseRepository<T> : IBaseRepository<T>
         DbSet = dbContext.Set<T>();
     }
 
-    public async Task<T?> GetById(int id)
+    public async Task<T?> GetByIdAsync(int id)
     {
         var entity = await DbSet.FindAsync(id);
 
@@ -98,7 +98,7 @@ public abstract class BaseRepository<T> : IBaseRepository<T>
 
     public async Task<bool> DeleteByIdAsync(int id)
     {
-        var entity = await GetById(id);
+        var entity = await GetByIdAsync(id);
         if (entity == null)
         {
             return false;
@@ -117,7 +117,7 @@ public abstract class BaseRepository<T> : IBaseRepository<T>
         });
     }
 
-    public async Task<T?> GetAsync(Expression<Func<T, bool>> expression, string? orderBy)
+    public async Task<T?> GetAsync(Expression<Func<T, bool>> expression, string? orderBy = null)
     {
         IQueryable<T> query = DbSet.AsNoTracking().Where(expression);
 

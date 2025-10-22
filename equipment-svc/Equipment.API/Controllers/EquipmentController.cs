@@ -47,7 +47,7 @@ public class EquipmentController : ControllerBase
     /// </summary>
     /// <param name="param"></param>
     /// <returns></returns>
-    [HttpPost]
+    [HttpPost("paging")]
     public async Task<ActionResult> GetPaging([FromBody] EquipmentPagingParam param)
     {
         try

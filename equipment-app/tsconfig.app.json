@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
+    "allowJs": true,           // ✅ Cho phép import file .js
+    "esModuleInterop": true,   // ✅ Giúp import/export mặc định mượt hơn
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
     "target": "ES2020",
     "useDefineForClassFields": true,
@@ -26,6 +28,7 @@
   },
   "include": [
     "src",
-    "**/*.ts"
+    "**/*.ts",
+    "**/*.js"
 , "public/icons"  ]
 }
