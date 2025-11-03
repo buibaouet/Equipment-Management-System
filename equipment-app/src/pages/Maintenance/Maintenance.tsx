@@ -6,7 +6,7 @@ import {
   TableHeader,
   TableRow,
 } from "../../components/ui/table";
-import PaginationWithIcon from "../../components/tables/DataTables/PaginationWithIcon";
+import PaginationWithIcon from "../../components/ui/table/PaginationWithIcon";
 import {
   Pencil,
   Trash2Icon,
@@ -30,8 +30,6 @@ export default function Maintenance() {
     handlePageChange,
     totalItems,
     totalPages,
-    startIndex,
-    endIndex,
     currentData
   } = useMaintenance();
 
@@ -153,22 +151,12 @@ export default function Maintenance() {
           </div>
         </div>
 
-        <div className="border border-t-0 rounded-b-xl border-gray-100 py-4 pl-[18px] pr-4 dark:border-white/[0.05]">
-          <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between">
-            {/* Left side: Showing entries */}
-            <div className="pb-3 xl:pb-0">
-              <p className="pb-3 text-sm font-medium text-center text-gray-500 border-b border-gray-100 dark:border-gray-800 dark:text-gray-400 xl:border-b-0 xl:pb-0 xl:text-left">
-                Từ {startIndex + 1} đến {endIndex} của {totalItems} bản ghi
-              </p>
-            </div>
-
-            <PaginationWithIcon
-              totalPages={totalPages}
-              initialPage={currentPage}
-              onPageChange={handlePageChange}
-            />
-          </div>
-        </div>
+        <PaginationWithIcon
+          totalPages={totalPages}
+          totalItems={totalItems}
+          initialPage={currentPage}
+          onPageChange={handlePageChange}
+        />
       </div>
     </div>
   );

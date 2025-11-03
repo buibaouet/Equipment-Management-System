@@ -1,4 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { getApiUrl } from '../../utils/baseQuery';
 
 export interface Department {
     id: number,
@@ -9,7 +10,7 @@ export interface Department {
 export const departmentApi = createApi({
     reducerPath: 'campaignApi',
     baseQuery: fetchBaseQuery({
-        baseUrl: `${import.meta.env.DEV ? 'http://localhost:5112' : import.meta.env.VITE_Z_CHAT_APP_URL}/api/v1`,
+        baseUrl: getApiUrl(),
         prepareHeaders: (headers) => {
             headers.set('Content-Type', 'application/json');
             return headers;

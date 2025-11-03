@@ -1,4 +1,4 @@
-import type React from "react";
+import React from "react";
 import type { FC } from "react";
 
 interface InputProps {
@@ -8,6 +8,7 @@ interface InputProps {
   placeholder?: string;
   value?: string | number;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
   className?: string;
   min?: string;
   max?: string;
@@ -16,6 +17,7 @@ interface InputProps {
   success?: boolean;
   error?: boolean;
   hint?: string;
+  required?: boolean;
 }
 
 const Input: FC<InputProps> = ({
@@ -25,6 +27,7 @@ const Input: FC<InputProps> = ({
   placeholder,
   value,
   onChange,
+  onBlur,
   className = "",
   min,
   max,
@@ -33,7 +36,18 @@ const Input: FC<InputProps> = ({
   success = false,
   error = false,
   hint,
+  required = false,
 }) => {
+  const [isEmpty, setIsEmpty] = React.useState(false);
+
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    if (required && e.target.value.trim() === '') {
+      setIsEmpty(true);
+    } else {
+      setIsEmpty(false);
+    }
+    onBlur?.(e);
+  };
   let inputClasses = ` h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3  dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 ${className}`;
 
   if (disabled) {
@@ -54,25 +68,32 @@ const Input: FC<InputProps> = ({
         name={name}
         placeholder={placeholder}
         value={value}
-        onChange={onChange}
+        onChange={(e) => {
+          onChange?.(e);
+          if (e.target.value.trim() !== '') {
+            setIsEmpty(false);
+          }
+        }}
+        onBlur={handleBlur}
         min={min}
         max={max}
         step={step}
         disabled={disabled}
-        className={inputClasses}
+        className={`${inputClasses} ${isEmpty ? '!border-error-500' : ''}`}
+        required={required}
       />
 
-      {hint && (
+      {(hint || (isEmpty && required)) && (
         <p
           className={`mt-1.5 text-xs ${
-            error
+            isEmpty || error
               ? "text-error-500"
               : success
               ? "text-success-500"
               : "text-gray-500"
           }`}
         >
-          {hint}
+          {isEmpty ? "Không được để trống" : hint}
         </p>
       )}
     </div>

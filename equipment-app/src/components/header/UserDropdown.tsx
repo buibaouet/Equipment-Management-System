@@ -26,7 +26,7 @@ export default function UserDropdown() {
           <UserCircleIcon className="h-10 w-10" />
         </span>
 
-        <span className="block mr-1 font-medium text-theme-sm">{currentUser?.username}</span>
+        <span className="block mr-1 font-medium text-theme-sm">{currentUser?.userName}</span>
         <svg
           className={`stroke-gray-500 dark:stroke-gray-400 transition-transform duration-200 ${isOpen ? "rotate-180" : ""
             }`}

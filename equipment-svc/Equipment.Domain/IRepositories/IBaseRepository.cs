@@ -79,14 +79,14 @@ public interface IBaseRepository<T>
     /// </summary>
     /// <param name="expression">The condition to filter by</param>
     /// <returns>IQueryable of matching entities for further querying</returns>
-    IQueryable<T> GetListAsync(Expression<Func<T, bool>> expression);
+    IQueryable<T> GetListAsync(Expression<Func<T, bool>>? expression = null);
 
     /// <summary>
     /// Counts the number of entities matching the specified condition
     /// </summary>
     /// <param name="expression">The condition to count by</param>
     /// <returns>The count of matching entities</returns>
-    Task<int> CountAsync(Expression<Func<T, bool>> expression);
+    Task<int> CountAsync(Expression<Func<T, bool>>? expression = null);
 
     /// <summary>
     /// Checks if any entity matches the specified condition
@@ -103,7 +103,7 @@ public interface IBaseRepository<T>
     /// <returns>A PagingDataModel containing the paged results and total count</returns>
     Task<PagingDataModel<TEntity>> GetPagingAsync<TEntity>(
         PaginationParam paginationParam,
-        Expression<Func<TEntity, bool>> expression
+        Expression<Func<TEntity, bool>>? expression = null
     )
         where TEntity : BaseEntity;
 

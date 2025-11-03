@@ -1,4 +1,5 @@
-import { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import { ChevronDown, Check } from "lucide-react";
 
 interface Option {
   value: string;
@@ -20,44 +21,114 @@ const Select: React.FC<SelectProps> = ({
   className = "",
   defaultValue = "",
 }) => {
-  // Manage the selected value
-  const [selectedValue, setSelectedValue] = useState<string>(defaultValue);
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedOption, setSelectedOption] = useState<Option | null>(() => {
+    if (!defaultValue) return null;
+    return options.find(opt => opt.value === defaultValue) || null;
+  });
+  const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    setSelectedValue(value);
-    onChange(value); // Trigger parent handler
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    if (defaultValue) {
+      const option = options.find(opt => opt.value === defaultValue);
+      setSelectedOption(option || null);
+    } else {
+      setSelectedOption(null);
+    }
+  }, [defaultValue, options]);
+
+  const handleSelect = (option: Option) => {
+    setSelectedOption(option);
+    onChange(option.value);
+    setIsOpen(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (!isOpen) {
+        setIsOpen(true);
+        setHighlightedIndex(0);
+        return;
+      }
+
+      const nextIndex = e.key === 'ArrowDown'
+        ? (highlightedIndex + 1) % options.length
+        : (highlightedIndex - 1 + options.length) % options.length;
+      setHighlightedIndex(nextIndex);
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      if (isOpen && highlightedIndex >= 0) {
+        handleSelect(options[highlightedIndex]);
+      } else {
+        setIsOpen(true);
+      }
+    } else if (e.key === 'Escape') {
+      setIsOpen(false);
+    }
   };
 
   return (
-    <select
-      className={`h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 pr-11 text-sm shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800 ${
-        selectedValue
-          ? "text-gray-800 dark:text-white/90"
-          : "text-gray-400 dark:text-gray-400"
-      } ${className}`}
-      value={selectedValue}
-      onChange={handleChange}
+    <div 
+      className="relative"
+      ref={containerRef}
+      onKeyDown={handleKeyDown}
+      tabIndex={0}
     >
-      {/* Placeholder option */}
-      <option
-        value=""
-        disabled
-        className="text-gray-700 dark:bg-gray-900 dark:text-gray-400"
+      <div
+        className={`h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm shadow-theme-xs cursor-pointer select-none flex items-center justify-between
+          ${isOpen ? 'border-brand-300 ring-3 ring-brand-500/10' : ''}
+          dark:border-gray-700 dark:bg-gray-900
+          ${className}`}
+        onClick={() => setIsOpen(!isOpen)}
       >
-        {placeholder}
-      </option>
-      {/* Map over options */}
-      {options.map((option) => (
-        <option
-          key={option.value}
-          value={option.value}
-          className="text-gray-700 dark:bg-gray-900 dark:text-gray-400"
-        >
-          {option.label}
-        </option>
-      ))}
-    </select>
+        <span className={selectedOption ? 'text-gray-800 dark:text-white/90' : 'text-gray-400 dark:text-gray-400'}>
+          {selectedOption ? selectedOption.label : placeholder}
+        </span>
+        <ChevronDown 
+          className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isOpen ? 'transform rotate-180' : ''}`} 
+        />
+      </div>
+
+      {isOpen && (
+        <div className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-60 overflow-auto">
+          {options.length === 0 ? (
+            <div className="px-4 py-2.5 text-sm text-gray-400 dark:text-gray-500">
+              Không có dữ liệu
+            </div>
+          ) : (
+            options.map((option, index) => (
+              <div
+                key={option.value}
+                className={`px-4 py-2.5 text-sm cursor-pointer flex items-center justify-between
+                  ${highlightedIndex === index ? 'bg-brand-50 dark:bg-brand-900/20' : ''}
+                  ${selectedOption?.value === option.value ? 'text-brand-600 dark:text-brand-400' : 'text-gray-700 dark:text-gray-200'}
+                  hover:bg-brand-50 dark:hover:bg-brand-900/20`}
+                onClick={() => handleSelect(option)}
+                onMouseEnter={() => setHighlightedIndex(index)}
+              >
+                <span>{option.label}</span>
+                {selectedOption?.value === option.value && (
+                  <Check className="w-4 h-4" />
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      )}
+    </div>
   );
 };
 

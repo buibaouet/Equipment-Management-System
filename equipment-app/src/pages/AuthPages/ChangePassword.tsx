@@ -6,12 +6,88 @@ import { EyeIcon, EyeClosedIcon, ArrowLeftCircle } from "lucide-react";
 import { useState } from "react";
 import Button from "../../components/ui/button/Button";
 import useGoBack from "../../hooks/useGoBack";
+import { useChangePasswordMutation } from '../../api/useAuthApi';
+import { toast } from "sonner";
+import { useAuth } from "../../hooks/useAuth";
 
 export default function ChangePassword() {
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [newPasswordError, setNewPasswordError] = useState<{ error: boolean; message: string }>({ error: false, message: '' });
+  const [confirmPasswordError, setConfirmPasswordError] = useState<{ error: boolean; message: string }>({ error: false, message: '' });
+  const [oldPasswordError, setOldPasswordError] = useState<{ error: boolean; message: string }>({ error: false, message: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const goBack = useGoBack();
+  const [changePasswordAPI] = useChangePasswordMutation();
+  const { logout, currentUser } = useAuth();
+
+  const validatePassword = (password: string): { isValid: boolean; message: string } => {
+    const hasMinLength = password.length >= 8;
+    const hasLetter = /[a-zA-Z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+    if(password === oldPassword) {
+      return { isValid: false, message: 'Mật khẩu mới không được trùng với mật khẩu cũ' };
+    }
+
+    if (!hasMinLength || !hasLetter || !hasNumber || !hasSpecialChar) {
+      return { isValid: false, message: 'Mật khẩu chứa tối thiểu 8 ký tự bao gồm chữ, số và ký tự đặc biệt' };
+    }
+
+    return { isValid: true, message: '' };
+  };
+
+  const handleSubmit = async () => {
+    // Validate all fields
+    if (!oldPassword.trim()) {
+      setOldPasswordError({ error: true, message: 'Vui lòng nhập mật khẩu cũ' });
+      return;
+    }
+
+    const newPasswordValidation = validatePassword(newPassword);
+    if (!newPasswordValidation.isValid) {
+      setNewPasswordError({ error: true, message: newPasswordValidation.message });
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setConfirmPasswordError({ error: true, message: 'Mật khẩu không khớp' });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      let response = await changePasswordAPI({ userId: currentUser?.id || 0, oldPassword, newPassword });
+
+      if (response.data && response.data?.data && response.data.data.isSuccess) {
+        // Password changed successfully
+        alert('Đổi mật khẩu thành công, vui lòng đăng nhập lại');
+        logout();
+      }
+      else if (response.data && response.data?.data && !response.data.data.isSuccess) {
+        if (response.data.data.oldPasswordError) {
+          setOldPasswordError({ error: true, message: response.data.data.oldPasswordError });
+        }
+        if (response.data.data.newPasswordError) {
+          setNewPasswordError({ error: true, message: response.data.data.newPasswordError });
+        }
+      }
+      else {
+        // Handle error
+        toast.error(response.data?.message || "Có lỗi xảy ra khi đổi mật khẩu");
+      }
+    } catch (error) {
+      toast.error("Có lỗi xảy ra khi đổi mật khẩu");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <>
       <PageMeta
@@ -39,7 +115,7 @@ export default function ChangePassword() {
               </p>
             </div>
             <div>
-              <form>
+              <form onSubmit={handleSubmit}>
                 <div className="space-y-5">
                   <div>
                     <Label>
@@ -49,6 +125,14 @@ export default function ChangePassword() {
                       <Input
                         placeholder="Nhập mật khẩu cũ"
                         type={showOldPassword ? "text" : "password"}
+                        value={oldPassword}
+                        onChange={(e) => {
+                          setOldPassword(e.target.value);
+                          setOldPasswordError({ error: false, message: '' });
+                        }}
+                        error={oldPasswordError.error}
+                        hint={oldPasswordError.message}
+                        required
                       />
                       <span
                         onClick={() => setShowOldPassword(!showOldPassword)}
@@ -71,6 +155,21 @@ export default function ChangePassword() {
                       <Input
                         placeholder="Nhập mật khẩu mới"
                         type={showNewPassword ? "text" : "password"}
+                        value={newPassword}
+                        onChange={(e) => {
+                          setNewPassword(e.target.value);
+                          setNewPasswordError({ error: false, message: '' });
+                        }}
+                        onBlur={(e) => {
+                          const validation = validatePassword(e.target.value);
+                          setNewPasswordError({
+                            error: !validation.isValid,
+                            message: validation.message
+                          });
+                        }}
+                        hint={newPasswordError.message}
+                        error={newPasswordError.error}
+                        required
                       />
                       <span
                         onClick={() => setShowNewPassword(!showNewPassword)}
@@ -93,6 +192,21 @@ export default function ChangePassword() {
                       <Input
                         placeholder="Xác nhận mật khẩu"
                         type={showConfirmPassword ? "text" : "password"}
+                        value={confirmPassword}
+                        onChange={(e) => {
+                          setConfirmPassword(e.target.value);
+                          setConfirmPasswordError({ error: false, message: '' });
+                        }}
+                        onBlur={(e) => {
+                          const isValid = newPassword === e.target.value;
+                          setConfirmPasswordError({
+                            error: !isValid,
+                            message: !isValid ? 'Mật khẩu không khớp' : ''
+                          });
+                        }}
+                        hint={confirmPasswordError.message}
+                        error={confirmPasswordError.error}
+                        required
                       />
                       <span
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
@@ -109,8 +223,15 @@ export default function ChangePassword() {
 
                   {/* <!-- Button --> */}
                   <div>
-                    <Button className="w-full" size="sm">
-                      Xác nhận
+                    <Button
+                      className="w-full"
+                      size="sm"
+                      onClick={() => {
+                        handleSubmit();
+                      }}
+                      disabled={isSubmitting || newPasswordError.error || confirmPasswordError.error}
+                    >
+                      {isSubmitting ? 'Đang xử lý...' : 'Xác nhận'}
                     </Button>
                   </div>
                 </div>

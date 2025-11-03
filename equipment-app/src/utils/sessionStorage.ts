@@ -1,107 +1,41 @@
-import type { UserSession } from '../types/User';
-
-const SESSION_KEY = 'equipment_user_session';
-
 export class SessionStorage {
-    /**
-     * Save user session to sessionStorage
-     */
-    static saveSession(user: UserSession): void {
-        try {
-            const sessionData = {
-                ...user,
-                sessionId: this.generateSessionId(),
-                expiresAt: Date.now() + (8 * 60 * 60 * 1000) // 8 hours
-            };
-            sessionStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
-        } catch (error) {
-            console.error('Failed to save session:', error);
-        }
+    private static readonly ACCESS_TOKEN_KEY = 'access_token';
+    private static readonly REFRESH_TOKEN_KEY = 'refresh_token';
+    private static readonly USER_ID_KEY = 'user_id';
+
+    static saveTokens(accessToken: string, refreshToken: string): void {
+        sessionStorage.setItem(this.ACCESS_TOKEN_KEY, accessToken);
+        sessionStorage.setItem(this.REFRESH_TOKEN_KEY, refreshToken);
     }
 
-    /**
-     * Get user session from sessionStorage
-     */
-    static getSession(): UserSession | null {
-        try {
-            const sessionData = sessionStorage.getItem(SESSION_KEY);
-            if (!sessionData) {
-                return null;
-            }
-
-            const parsed = JSON.parse(sessionData);
-
-            // Check if session has expired
-            if (parsed.expiresAt && Date.now() > parsed.expiresAt) {
-                this.clearSession();
-                return null;
-            }
-
-            // Remove internal session management fields before returning
-            const { sessionId, expiresAt, ...userSession } = parsed;
-            return userSession as UserSession;
-        } catch (error) {
-            console.error('Failed to get session:', error);
-            this.clearSession();
-            return null;
-        }
+    static saveUserId(userId: number): void {
+        sessionStorage.setItem(this.USER_ID_KEY, userId.toString());
     }
 
-    /**
-     * Clear user session from sessionStorage
-     */
+    static getAccessToken(): string | null {
+        return sessionStorage.getItem(this.ACCESS_TOKEN_KEY);
+    }
+
+    static getRefreshToken(): string | null {
+        return sessionStorage.getItem(this.REFRESH_TOKEN_KEY);
+    }
+
+    static getUserId(): number | null {
+        const userId = sessionStorage.getItem(this.USER_ID_KEY);
+        return userId ? parseInt(userId) : null;
+    }
+
     static clearSession(): void {
-        try {
-            sessionStorage.removeItem(SESSION_KEY);
-        } catch (error) {
-            console.error('Failed to clear session:', error);
-        }
+        sessionStorage.removeItem(this.ACCESS_TOKEN_KEY);
+        sessionStorage.removeItem(this.REFRESH_TOKEN_KEY);
+        sessionStorage.removeItem(this.USER_ID_KEY);
     }
 
-    /**
-     * Check if user session exists and is valid
-     */
     static isSessionValid(): boolean {
-        return this.getSession() !== null;
+        return !!this.getAccessToken() && !!this.getUserId();
     }
 
-    /**
-     * Update last activity timestamp
-     */
-    static updateActivity(): void {
-        const session = this.getSession();
-        if (session) {
-            this.saveSession(session);
-        }
+    static updateAccessToken(newAccessToken: string): void {
+        sessionStorage.setItem(this.ACCESS_TOKEN_KEY, newAccessToken);
     }
-
-    /**
-     * Generate a simple session ID
-     */
-    private static generateSessionId(): string {
-        return Math.random().toString(36).substring(2) + Date.now().toString(36);
-    }
-
-    /**
-     * Get session expiration time
-     */
-    static getSessionExpiration(): Date | null {
-        try {
-            const sessionData = sessionStorage.getItem(SESSION_KEY);
-            if (!sessionData) {
-                return null;
-            }
-            const parsed = JSON.parse(sessionData);
-            return parsed.expiresAt ? new Date(parsed.expiresAt) : null;
-        } catch (error) {
-            return null;
-        }
-    }
-}
-
-// Auto-clear expired sessions on page load
-if (typeof window !== 'undefined') {
-    window.addEventListener('beforeunload', () => {
-        SessionStorage.updateActivity();
-    });
 }

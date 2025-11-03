@@ -3,44 +3,60 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableHeader,
   TableRow,
 } from "../../components/ui/table";
-import PaginationWithIcon from "../../components/tables/DataTables/PaginationWithIcon";
+import PaginationWithIcon from "../../components/ui/table/PaginationWithIcon";
 import {
   Pencil,
-  Trash2Icon,
-  SeparatorHorizontal,
+  PauseCircleIcon,
+  PlayCircleIcon,
   PlusCircle
 } from "lucide-react";
-import { useNavigate } from "react-router";
 import Badge from "../../components/ui/badge/Badge";
 import useDepartmentList from "./useDepartmentList";
 import PageMeta from "../../components/common/PageMeta";
-
-
-type SortKey = "name" | "position" | "location" | "age" | "date" | "salary";
-
+import DepartmentModal from "./DepartmentModal";
+import { useState } from "react";
+import { DepartmentEntity } from "../../types/Department";
+import HeaderTable from "../../components/ui/table/HeaderTable";
 
 export default function DepartmentList() {
-  const navigate = useNavigate();
   const {
     handleSort,
     currentPage,
     handlePageChange,
     totalItems,
     totalPages,
-    startIndex,
-    endIndex,
-    currentData
+    departments,
+    refreshDepartments,
+    handleActiveDepartment
   } = useDepartmentList();
 
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedDepartment, setSelectedDepartment] = useState<DepartmentEntity | null>(null);
+
+  const handleOpenModal = () => {
+    setSelectedDepartment(null); // Clear selected department for "Add new"
+    setIsModalOpen(true);
+  };
+
+  const handleEditDepartment = (department: DepartmentEntity) => {
+    setSelectedDepartment(department);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedDepartment(null);
+  };
+
   const arrColumns = [
-    { key: "code", label: "Mã phòng ban" },
-    { key: "name", label: "Tên phòng ban" },
-    { key: "quantity", label: "Số lượng nhân sự" },
-    { key: "manager", label: "Người quản lý" },
-    { key: "isActive", label: "Trạng thái" },
+    { key: "code", label: "Mã phòng ban", sortable: true },
+    { key: "name", label: "Tên phòng ban", sortable: true },
+    { key: "quantityEquipment", label: "Số lượng thiết bị", sortable: false },
+    { key: "quantityUser", label: "Số lượng nhân sự", sortable: false },
+    { key: "managerName", label: "Người quản lý", sortable: false },
+    { key: "isActive", label: "Trạng thái", sortable: true },
   ];
 
 
@@ -59,7 +75,7 @@ export default function DepartmentList() {
           </div>
 
           <div className="flex gap-3">
-            <Button variant="primary">
+            <Button variant="primary" onClick={handleOpenModal}>
               <PlusCircle className="w-5 h-5" />
               Thêm mới
             </Button>
@@ -68,67 +84,57 @@ export default function DepartmentList() {
         <div className="max-w-full overflow-x-auto custom-scrollbar">
           <div>
             <Table>
-              <TableHeader className="border-t border-gray-100 dark:border-white/[0.05]">
-                <TableRow>
-                  {arrColumns.map(({ key, label }) => (
-                    <TableCell
-                      key={key}
-                      isHeader
-                      className="px-4 py-3 border border-gray-100 dark:border-white/[0.05]"
-                    >
-                      <div
-                        className="flex items-center justify-between cursor-pointer"
-                        onClick={() => handleSort(key as SortKey)}
-                      >
-                        <p className="font-medium text-gray-700 text-theme-xs dark:text-gray-400">
-                          {label}
-                        </p>
-                        <button className="text-gray-500">
-                          <SeparatorHorizontal className="h-3 w-3" />
-                        </button>
-                      </div>
-                    </TableCell>
-                  ))}
-                  <TableCell
-                    isHeader
-                    className="px-4 py-3 border border-gray-100 dark:border-white/[0.05]"
-                  >
-                    <p className="font-medium text-gray-700 text-theme-xs dark:text-gray-400">
-                      Thao tác
-                    </p>
-                  </TableCell>
-                </TableRow>
-              </TableHeader>
+              <HeaderTable arrColumns={arrColumns} handleSort={handleSort} />
               <TableBody>
-                {currentData.map((item: any, i: number) => (
+                {departments.map((item: any, i: number) => (
                   <TableRow key={i + 1}>
                     <TableCell className="px-4 py-4 font-medium text-gray-800 border border-gray-100 dark:border-white/[0.05] dark:text-white text-theme-sm whitespace-nowrap ">
-                      {item["name"]}
+                      {item.code}
                     </TableCell>
                     <TableCell className="px-4 py-4 font-normal text-gray-800 border border-gray-100 dark:border-white/[0.05] text-theme-sm dark:text-gray-400 whitespace-nowrap ">
-                      {item.position}
+                      {item.name}
                     </TableCell>
                     <TableCell className="px-4 py-4 font-normal text-gray-800 border border-gray-100 dark:border-white/[0.05] text-theme-sm dark:text-gray-400 whitespace-nowrap ">
-                      {item.location}
+                      {item.quantityEquipment}
                     </TableCell>
                     <TableCell className="px-4 py-4 font-normal text-gray-800 border border-gray-100 dark:border-white/[0.05] text-theme-sm dark:text-gray-400 whitespace-nowrap ">
-                      {item.location}
+                      {item.quantityUser}
+                    </TableCell>
+                    <TableCell className="px-4 py-4 font-normal text-gray-800 border border-gray-100 dark:border-white/[0.05] text-theme-sm dark:text-gray-400 whitespace-nowrap ">
+                      {item.managerName}
                     </TableCell>
                     <TableCell className="px-4 py-4 font-normal text-gray-800 border border-gray-100 dark:border-white/[0.05] text-theme-sm dark:text-white/90 whitespace-nowrap">
                       <Badge
                         size="sm"
-                        color="info"
+                        color={item.isActive ? "success" : "error"}
                       >
-                        {"Bảo dưỡng"}
+                        {item.isActive ? "Đang hoạt động" : "Ngừng hoạt động"}
                       </Badge>
                     </TableCell>
                     <TableCell className="px-4 py-4 font-normal text-gray-800 border border-gray-100 dark:border-white/[0.05] text-theme-sm dark:text-white/90 whitespace-nowrap ">
-                      <div className="flex items-center w-full gap-2">
-                        <Pencil
-                          className="w-4 h-4 cursor-pointer hover:text-gray"
-                          onClick={() => navigate('/equipment-detail')}
-                        />
-                        <Trash2Icon className="w-4 h-4 cursor-pointer hover:text-error-500" />
+                      <div className="flex items-center justify-center w-full gap-2">
+                        <span title="Sửa">
+                          <Pencil
+                            className="w-4 h-4 cursor-pointer hover:text-gray"
+                            onClick={() => handleEditDepartment(item)}
+                          />
+                        </span>
+                        {item.isActive
+                          ? (
+                            <span title="Ngừng hoạt động">
+                              <PauseCircleIcon
+                                className="w-4 h-4 cursor-pointer hover:text-error-500"
+                                onClick={() => handleActiveDepartment(item)}
+                              />
+                            </span>
+                          )
+                          : <span title="Hoạt động lại">
+                            <PlayCircleIcon
+                              className="w-4 h-4 cursor-pointer hover:text-error-500"
+                              onClick={() => handleActiveDepartment(item)}
+                            />
+                          </span>
+                        }
                       </div>
                     </TableCell>
                   </TableRow>
@@ -138,23 +144,20 @@ export default function DepartmentList() {
           </div>
         </div>
 
-        <div className="border border-t-0 rounded-b-xl border-gray-100 py-4 pl-[18px] pr-4 dark:border-white/[0.05]">
-          <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between">
-            {/* Left side: Showing entries */}
-            <div className="pb-3 xl:pb-0">
-              <p className="pb-3 text-sm font-medium text-center text-gray-500 border-b border-gray-100 dark:border-gray-800 dark:text-gray-400 xl:border-b-0 xl:pb-0 xl:text-left">
-                Từ {startIndex + 1} đến {endIndex} của {totalItems} bản ghi
-              </p>
-            </div>
-
-            <PaginationWithIcon
-              totalPages={totalPages}
-              initialPage={currentPage}
-              onPageChange={handlePageChange}
-            />
-          </div>
-        </div>
+        <PaginationWithIcon
+          totalPages={totalPages}
+          totalItems={totalItems}
+          initialPage={currentPage}
+          onPageChange={handlePageChange}
+        />
       </div>
+
+      <DepartmentModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        initialData={selectedDepartment}
+        callbackAction={refreshDepartments}
+      />
     </div>
   );
 }

@@ -129,14 +129,16 @@ public abstract class BaseRepository<T> : IBaseRepository<T>
         return await query.FirstOrDefaultAsync();
     }
 
-    public IQueryable<T> GetListAsync(Expression<Func<T, bool>> expression)
+    public IQueryable<T> GetListAsync(Expression<Func<T, bool>>? expression = null)
     {
+        expression ??= (x => x.Id > 0);
         var entities = DbSet.Where(expression);
         return entities;
     }
 
-    public async Task<int> CountAsync(Expression<Func<T, bool>> expression)
+    public async Task<int> CountAsync(Expression<Func<T, bool>>? expression = null)
     {
+        expression ??= (x => x.Id > 0);
         return await DbSet.CountAsync(expression);
     }
 
@@ -147,11 +149,13 @@ public abstract class BaseRepository<T> : IBaseRepository<T>
 
     public async Task<PagingDataModel<TEntity>> GetPagingAsync<TEntity>(
         PaginationParam paginationParam,
-        Expression<Func<TEntity, bool>> expression
+        Expression<Func<TEntity, bool>>? expression = null
     )
         where TEntity : BaseEntity
     {
         var dbSet = DbContext.Set<TEntity>();
+
+        expression ??= (x => x.Id > 0);
         
         if (!string.IsNullOrEmpty(paginationParam.Keyword))
         {

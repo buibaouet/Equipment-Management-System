@@ -11,7 +11,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<EquipmentCategory> EquipmentCategories { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<Department> Departments { get; set; }
-    public DbSet<Equipment.Domain.Entities.Equipment> Equipments { get; set; } 
+    public DbSet<Equipment.Domain.Entities.Equipment> Equipments { get; set; }
+    public DbSet<RefreshToken> RefreshTokens { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -63,6 +64,10 @@ public class ApplicationDbContext : DbContext
 
             builder.HasIndex(x => x.Code).IsUnique().HasDatabaseName("IX_Equipment_Code");
 
+            // Configure decimal precision for Price
+            builder.Property(x => x.Price)
+                .HasPrecision(18, 2);
+
             // Configure relationships
             builder
                 .HasOne(x => x.Category)
@@ -81,6 +86,18 @@ public class ApplicationDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(x => x.UserId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // Configuration for RefreshToken entity
+        modelBuilder.Entity<RefreshToken>(builder =>
+        {
+            builder.ToTable("RefreshTokens");
+
+            builder.HasKey(x => x.Id);
+
+            builder.Property(x => x.Token)
+                .IsRequired()
+                .HasMaxLength(100);
         });
     }
 }

@@ -1,4 +1,5 @@
 using Equipment.Domain.Constant;
+using Equipment.Domain.Models;
 using Equipment.Domain.Models.User;
 using Equipment.Service.User;
 using Microsoft.AspNetCore.Mvc;
@@ -15,6 +16,32 @@ public class UserController : ControllerBase
     {
         _userService = userService;
     }
+    
+    /// <summary>
+    /// Lấy danh sách người dùng phân trang
+    /// </summary>
+    /// <param name="param"></param>
+    /// <returns></returns>
+    [HttpPost("paging")]
+    public async Task<ActionResult> GetPaging([FromBody] PaginationParam param)
+    {
+        try
+        {
+            var res = await _userService.GetPaging(param);
+            if (res.StatusCode != StatusCodes.Status200OK)
+            {
+                return StatusCode(res.StatusCode, res.Message);
+            }
+            return Ok(res);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                "Xảy ra lỗi trong quá trình xử lý: \n" + ex.Message + ex.StackTrace
+            );
+        }
+    }
 
     /// <summary>
     /// Lấy thông tin người dùng theo Id
@@ -27,57 +54,6 @@ public class UserController : ControllerBase
         try
         {
             var res = await _userService.GetUserByIdAsync(id);
-            if (res.StatusCode != StatusCodes.Status200OK)
-            {
-                return StatusCode(res.StatusCode, res.Message);
-            }
-            return Ok(res);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(
-                StatusCodes.Status500InternalServerError,
-                "Xảy ra lỗi trong quá trình xử lý: \n" + ex.Message + ex.StackTrace
-            );
-        }
-    }
-
-    /// <summary>
-    /// Lấy danh sách người dùng
-    /// </summary>
-    /// <returns></returns>
-    [HttpGet]
-    public async Task<ActionResult> GetAll()
-    {
-        try
-        {
-            var res = await _userService.GetAllUsersAsync();
-            if (res.StatusCode != StatusCodes.Status200OK)
-            {
-                return StatusCode(res.StatusCode, res.Message);
-            }
-            return Ok(res);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(
-                StatusCodes.Status500InternalServerError,
-                "Xảy ra lỗi trong quá trình xử lý: \n" + ex.Message + ex.StackTrace
-            );
-        }
-    }
-
-    /// <summary>
-    /// Tạo mới người dùng
-    /// </summary>
-    /// <param name="model"></param>
-    /// <returns></returns>
-    [HttpPost]
-    public async Task<ActionResult> Create([FromBody] CreateUserModel model)
-    {
-        try
-        {
-            var res = await _userService.CreateUserAsync(model);
             if (res.StatusCode != StatusCodes.Status200OK)
             {
                 return StatusCode(res.StatusCode, res.Message);
@@ -121,17 +97,17 @@ public class UserController : ControllerBase
     }
 
     /// <summary>
-    /// Cập nhật vai trò người dùng
+    /// Cập nhật vai trò và phòng ban người dùng
     /// </summary>
     /// <param name="id"></param>
-    /// <param name="role"></param>
+    /// <param name="param"></param>
     /// <returns></returns>
-    [HttpPatch("{id}/role")]
-    public async Task<ActionResult> UpdateRole(int id, [FromBody] Enumerations.Role role)
+    [HttpPut("role-department/{id}")]
+    public async Task<ActionResult> UpdateRole(int id, [FromBody] UpdateRoleDepartmentUserModel param)
     {
         try
         {
-            var res = await _userService.UpdateUserRoleAsync(id, role);
+            var res = await _userService.UpdateUserRoleDepartmentAsync(id, param);
             if (res.StatusCode != StatusCodes.Status200OK)
             {
                 return StatusCode(res.StatusCode, res.Message);
@@ -146,18 +122,17 @@ public class UserController : ControllerBase
             );
         }
     }
-
+    
     /// <summary>
-    /// Xóa người dùng
+    /// Lấy danh sách quản lý
     /// </summary>
-    /// <param name="id"></param>
     /// <returns></returns>
-    [HttpDelete("{id}")]
-    public async Task<ActionResult> Delete(int id)
+    [HttpGet("managers")]
+    public async Task<ActionResult> GetListManager()
     {
         try
         {
-            var res = await _userService.DeleteUserAsync(id);
+            var res = await _userService.GetListManager();
             if (res.StatusCode != StatusCodes.Status200OK)
             {
                 return StatusCode(res.StatusCode, res.Message);

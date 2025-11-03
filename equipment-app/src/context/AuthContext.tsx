@@ -1,8 +1,10 @@
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
-import type { UserSession, LoginCredentials, AuthResponse, AuthContextType } from '../types/User';
+import type { UserEntity } from '../types/User';
+import type { AuthContextType } from '../types/Auth';
+import type { LoginCredentials } from '../types/Auth';
 import RoleEnum from '../utils/enumerations';
 import { SessionStorage } from '../utils/sessionStorage';
-import { useLoginMutation } from '../pages/AuthPages/useAuthAPI';
+import { useLoginMutation, useGetUserInfoQuery } from '../api/useAuthApi';
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -11,51 +13,56 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-    const [currentUser, setCurrentUser] = useState<UserSession | null>(null);
-    const [isLoading, setIsLoading] = useState(false);
+    const [currentUser, setCurrentUser] = useState<UserEntity | null>(null);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isInitialized, setIsInitialized] = useState(false);
 
     const [loginMutation] = useLoginMutation();
 
-    // Initialize auth state from session storage
-    useEffect(() => {
-        const session = SessionStorage.getSession();
-        if (session && SessionStorage.isSessionValid()) {
-            setCurrentUser(session);
-            setIsAuthenticated(true);
+    const userId = SessionStorage.getUserId();
+    const { data: userData, isLoading } = useGetUserInfoQuery(
+        { userId: userId || 0 },
+        {
+            skip: !SessionStorage.isSessionValid(),
+            refetchOnMountOrArgChange: false, // Prevent refetch on mount
+            refetchOnFocus: false, // Prevent refetch when window gains focus
+            refetchOnReconnect: false, // Prevent refetch on reconnect
         }
-        setIsInitialized(true);
-    }, []);
+    );
 
-    const login = async (credentials: LoginCredentials): Promise<AuthResponse> => {
-        setIsLoading(true);
+    useEffect(() => {
+        const accessToken = SessionStorage.getAccessToken();
+        if (accessToken && userId && SessionStorage.isSessionValid()) {
+            setIsAuthenticated(true);
+            if (userData?.data) {
+                setCurrentUser(userData.data);
+            }
+        } else {
+            setIsAuthenticated(false);
+            setCurrentUser(null);
+        }
+        setIsInitialized(!isLoading);
+    }, [userData, isLoading, userId]);
+
+    const login = async (credentials: LoginCredentials): Promise<{ success: boolean; message?: string }> => {
         try {
-            const result = await loginMutation({
-                userName: credentials.username,
-                password: credentials.password
-            });
+            const result = await loginMutation(credentials);
 
-            if (!result || !result.data || !result.data.success || !result.data.user) {
+            if (!result.data || !result.data.data || !result.data.data?.success || !result.data.data.data) {
                 return {
                     success: false,
                     message: 'Tài khoản hoặc mật khẩu không chính xác.'
                 };
             }
 
-            const userSession = result.data.user;
+            const loginInfo = result.data.data.data;
 
-            // Save session
-            SessionStorage.saveSession(userSession);
+            // Save tokens and userId
+            SessionStorage.saveTokens(loginInfo.accessToken, loginInfo.refreshToken);
+            SessionStorage.saveUserId(loginInfo.userId);
 
-            // Update state
-            setCurrentUser(userSession);
             setIsAuthenticated(true);
-
-            return {
-                success: true,
-                user: userSession
-            };
+            return { success: true };
 
         } catch (error) {
             console.error('Login error:', error);
@@ -63,8 +70,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 success: false,
                 message: 'Đăng nhập không thành công. Vui lòng thử lại.'
             };
-        } finally {
-            setIsLoading(false);
         }
     };
 

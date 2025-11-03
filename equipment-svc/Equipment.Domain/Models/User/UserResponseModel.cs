@@ -11,6 +11,35 @@ public class UserResponseModel
     public DateTime? BirthDate { get; set; }
     public string Email { get; set; } = string.Empty;
     public Enumerations.Role Role { get; set; }
-    public int DepartmentId { get; set; }
-    public string DepartmentName { get; set; } = string.Empty;
+    public int? DepartmentId { get; set; }
+    public string? DepartmentName { get; set; } = string.Empty;
+    public string? Bio { get; set; } = string.Empty;
+}
+
+public class ManaUserResponseModel
+{
+    public int Id { get; set; }
+    public string UserName { get; set; } = string.Empty;
+    public string FirstName { get; set; } = string.Empty;
+    public string LastName { get; set; } = string.Empty;
+
+    public string FullName
+    {
+        get
+        {
+            return FirstName + " " + LastName;
+        }
+    }
+
+    public string Email { get; set; } = string.Empty;
+    public Enumerations.Role Role { get; set; }
+    public int? DepartmentId { get; set; }
+    public string? DepartmentName { get; set; } = string.Empty;
+}
+
+public class UserNameModel
+{
+    public int Id { get; set; }
+    public string UserName { get; set; } = string.Empty;
+    public string FullName { get; set; } = string.Empty;
 }

@@ -1,44 +1,46 @@
 import RoleEnum from "../utils/enumerations";
 
+export interface UserModel {
+    id: number;
+    userName: string;
+    fullName: string;
+}
+
 export interface CreateUserInput {
-    username: string;
+    userName: string;
     firstName: string;
     lastName: string;
     email: string;
     password: string;
 }
 
-export interface UserSession {
+export interface UpdateUserInfo {
+    firstName: string;
+    lastName: string;
+    email: string;
+    birthDate: Date | undefined;
+    bio: string;
+}
+
+export interface UserEntity {
     id: number;
-    username: string;
+    userName: string;
     firstName: string;
     lastName: string;
     email: string;
     role: RoleEnum;
     birthDate: Date;
+    bio: string;
     departmentId: number;
     departmentName: string;
 }
 
-export interface LoginCredentials {
-    username: string;
-    password: string;
+export interface UpdateUserResponseModel {
+    isSuccess: boolean;
+    emailError: string;
 }
 
-export interface AuthResponse {
-    success: boolean;
-    user?: UserSession;
-    message?: string;
-}
-
-export interface AuthContextType {
-    currentUser: UserSession | null;
-    isAuthenticated: boolean;
-    isLoading: boolean;
-    isInitialized: boolean;
-    login: (credentials: LoginCredentials) => Promise<AuthResponse>;
-    logout: () => void;
-    hasRole: (role: RoleEnum) => boolean;
-    isAdmin: () => boolean;
-    isManagerOrAdmin: () => boolean;
+export interface UpdateUserRoleDepartment {
+    role: RoleEnum;
+    departmentId: number;
 }

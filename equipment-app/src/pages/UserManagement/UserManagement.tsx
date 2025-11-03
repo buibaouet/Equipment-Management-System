@@ -2,42 +2,49 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableHeader,
   TableRow,
 } from "../../components/ui/table";
-import PaginationWithIcon from "../../components/tables/DataTables/PaginationWithIcon";
+import PaginationWithIcon from "../../components/ui/table/PaginationWithIcon";
 import {
   Pencil,
-  Trash2Icon,
-  SeparatorHorizontal,
+  SearchIcon,
 } from "lucide-react";
-import { useNavigate } from "react-router";
 import Badge from "../../components/ui/badge/Badge";
 import useUserManagement from "./useUserManagement";
 import PageMeta from "../../components/common/PageMeta";
-
-
-type SortKey = "name" | "position" | "location" | "age" | "date" | "salary";
-
+import RoleEnum from "../../utils/enumerations";
+import { useModal } from "../../hooks/useModal";
+import UserInfoModal from "./UserInfoModal";
+import { useState } from "react";
+import { UserEntity } from "../../types/User";
+import HeaderTable from "../../components/ui/table/HeaderTable";
 
 export default function UserManagement() {
-  const navigate = useNavigate();
   const {
     handleSort,
     currentPage,
     handlePageChange,
+    handleSearch,
     totalItems,
     totalPages,
-    startIndex,
-    endIndex,
-    currentData
+    users,
+    refreshUsers
   } = useUserManagement();
 
+  const { isOpen, openModal, closeModal } = useModal();
+  const [selectedUser, setSelectedUser] = useState<UserEntity | null>(null);
+
+  const handleEditUser = (user: UserEntity) => {
+    setSelectedUser(user);
+    openModal();
+  };
+
   const arrColumns = [
-    { key: "name", label: "Họ và tên" },
-    { key: "departmentName", label: "Phòng ban" },
-    { key: "quantity", label: "Số thiết bị" },
-    { key: "role", label: "Vai trò" },
+    { key: "userName", label: "Tên đăng nhập", sortable: true },
+    { key: "fullName", label: "Họ và tên", sortable: true },
+    { key: "email", label: "Email", sortable: false },
+    { key: "departmentName", label: "Phòng ban", sortable: false },
+    { key: "role", label: "Vai trò", sortable: false },
   ];
 
   return (
@@ -53,74 +60,66 @@ export default function UserManagement() {
               Danh sách người dùng
             </h3>
           </div>
+          <div className="flex gap-3">
+            <div className="relative flex-1 sm:flex-auto">
+              <span className="absolute top-1/2 left-4 -translate-y-1/2 text-gray-500 dark:text-gray-400">
+                <SearchIcon className="h-4 w-4" />
+              </span>
+              <input
+                type="text"
+                placeholder="Tìm kiếm..."
+                className="shadow-sm focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 pr-4 pl-11 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-none sm:w-[300px] sm:min-w-[300px] dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
+                onChange={(e) => handleSearch(e.target.value)}
+              />
+            </div>
+          </div>
         </div>
         <div className="max-w-full overflow-x-auto custom-scrollbar">
           <div>
             <Table>
-              <TableHeader className="border-t border-gray-100 dark:border-white/[0.05]">
-                <TableRow>
-                  {arrColumns.map(({ key, label }) => (
-                    <TableCell
-                      key={key}
-                      isHeader
-                      className="px-4 py-3 border border-gray-100 dark:border-white/[0.05]"
-                    >
-                      <div
-                        className="flex items-center justify-between cursor-pointer"
-                        onClick={() => handleSort(key as SortKey)}
-                      >
-                        <p className="font-medium text-gray-700 text-theme-xs dark:text-gray-400">
-                          {label}
-                        </p>
-                        <button className="text-gray-500">
-                          <SeparatorHorizontal className="h-3 w-3" />
-                        </button>
-                      </div>
-                    </TableCell>
-                  ))}
-                  <TableCell
-                    isHeader
-                    className="px-4 py-3 border border-gray-100 dark:border-white/[0.05]"
-                  >
-                    <p className="font-medium text-gray-700 text-theme-xs dark:text-gray-400">
-                      Thao tác
-                    </p>
-                  </TableCell>
-                </TableRow>
-              </TableHeader>
+              <HeaderTable arrColumns={arrColumns} handleSort={handleSort} />
               <TableBody>
-                {currentData.map((item: any, i: number) => (
+                {users.map((item: any, i: number) => (
                   <TableRow key={i + 1}>
                     <TableCell className="px-4 py-4 font-medium text-gray-800 border border-gray-100 dark:border-white/[0.05] dark:text-white text-theme-sm whitespace-nowrap ">
-                      {item["name"]}
+                      {item.userName}
+                    </TableCell>
+                    <TableCell className="px-4 py-4 font-medium text-gray-800 border border-gray-100 dark:border-white/[0.05] dark:text-white text-theme-sm whitespace-nowrap ">
+                      {item.fullName}
                     </TableCell>
                     <TableCell className="px-4 py-4 font-normal text-gray-800 border border-gray-100 dark:border-white/[0.05] text-theme-sm dark:text-gray-400 whitespace-nowrap ">
-                      {item.position}
+                      {item.email}
                     </TableCell>
                     <TableCell className="px-4 py-4 font-normal text-gray-800 border border-gray-100 dark:border-white/[0.05] text-theme-sm dark:text-gray-400 whitespace-nowrap ">
-                      {item.location}
+                      {item.departmentName}
                     </TableCell>
                     <TableCell className="px-4 py-4 font-normal text-gray-800 border border-gray-100 dark:border-white/[0.05] text-theme-sm dark:text-white/90 whitespace-nowrap">
                       <Badge
                         size="sm"
                         color={
-                          item.age < 30
+                          item.role == RoleEnum.Admin
                             ? "success"
-                            : item.age < 50
+                            : item.role == RoleEnum.Manager
                               ? "warning"
-                              : "error"
+                              : "primary"
                         }
                       >
-                        {"item.status"}
+                        {item.role == RoleEnum.Admin
+                          ? "Quản trị viên"
+                          : item.role == RoleEnum.Manager
+                            ? "Quản lý dự án"
+                            : "Người dùng"}
                       </Badge>
                     </TableCell>
                     <TableCell className="px-4 py-4 font-normal text-gray-800 border border-gray-100 dark:border-white/[0.05] text-theme-sm dark:text-white/90 whitespace-nowrap ">
-                      <div className="flex items-center w-full gap-2">
-                        <Pencil
-                          className="w-4 h-4 cursor-pointer hover:text-gray"
-                          onClick={() => navigate('/equipment-detail')}
-                        />
-                        <Trash2Icon className="w-4 h-4 cursor-pointer hover:text-error-500" />
+                      <div className="flex items-center justify-center w-full gap-2" title="Sửa">
+                        {item.role != RoleEnum.Admin
+                          ? (<Pencil
+                            className="w-4 h-4 cursor-pointer hover:text-brand-600 transition-colors"
+                            onClick={() => handleEditUser(item)}
+                          />)
+                          :
+                          (<></>)}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -130,23 +129,21 @@ export default function UserManagement() {
           </div>
         </div>
 
-        <div className="border border-t-0 rounded-b-xl border-gray-100 py-4 pl-[18px] pr-4 dark:border-white/[0.05]">
-          <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between">
-            {/* Left side: Showing entries */}
-            <div className="pb-3 xl:pb-0">
-              <p className="pb-3 text-sm font-medium text-center text-gray-500 border-b border-gray-100 dark:border-gray-800 dark:text-gray-400 xl:border-b-0 xl:pb-0 xl:text-left">
-                Từ {startIndex + 1} đến {endIndex} của {totalItems} bản ghi
-              </p>
-            </div>
-
-            <PaginationWithIcon
-              totalPages={totalPages}
-              initialPage={currentPage}
-              onPageChange={handlePageChange}
-            />
-          </div>
-        </div>
+        <PaginationWithIcon
+          totalPages={totalPages}
+          totalItems={totalItems}
+          initialPage={currentPage}
+          onPageChange={handlePageChange}
+        />
       </div>
+
+      {/* User Info Modal */}
+      <UserInfoModal
+        isOpen={isOpen}
+        onClose={closeModal}
+        user={selectedUser}
+        callbackAction={refreshUsers}
+      />
     </div>
   );
 }

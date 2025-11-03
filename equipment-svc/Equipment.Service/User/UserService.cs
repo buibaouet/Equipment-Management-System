@@ -1,9 +1,8 @@
 using Equipment.Domain.Constant;
-using Equipment.Domain.Extensions;
 using Equipment.Domain.IRepositories;
+using Equipment.Domain.Models;
 using Equipment.Domain.Models.ReponseModel;
 using Equipment.Domain.Models.User;
-using Microsoft.EntityFrameworkCore;
 
 namespace Equipment.Service.User;
 
@@ -18,97 +17,124 @@ public class UserService : IUserService
         _departmentRepository = departmentRepository;
     }
 
-    public async Task<Response<UserResponseModel>> CreateUserAsync(CreateUserModel model)
+    public async Task<Response<PagingDataModel<ManaUserResponseModel>>> GetPaging(
+        PaginationParam param
+    )
     {
-        var user = new Domain.Entities.User
+        var resultData = new PagingDataModel<ManaUserResponseModel>();
+
+        var pagingData = await _userRepository.GetPagingAsync<Domain.Entities.User>(param);
+
+        foreach (var item in pagingData.Data)
         {
-            FirstName = model.FirstName,
-            LastName = model.LastName,
-            Password = BcryptHasher.HashPassword(model.Password),
-            BirthDate = model.BirthDate,
-            Email = model.Email,
-            IsActive = true
-        };
+            var department = await _departmentRepository.GetByIdAsync(item.DepartmentId ?? 0);
+            var userModel = new ManaUserResponseModel
+            {
+                Id = item.Id,
+                UserName = item.UserName,
+                FirstName = item.FirstName,
+                LastName = item.LastName,
+                Email = item.Email,
+                Role = item.Role,
+                DepartmentId = item.DepartmentId,
+                DepartmentName = department?.Name ?? "-",
+            };
+            resultData.Data.Add(userModel);
+        }
 
-        await _userRepository.CreateAsync(user);
+        resultData.TotalPages = pagingData.TotalPages;
+        resultData.TotalRecords = pagingData.TotalRecords;
 
-        var entity = MapToResponseModel(user, string.Empty);
-
-        return new Response<UserResponseModel>(entity);
+        return new Response<PagingDataModel<ManaUserResponseModel>>(resultData);
     }
 
-    public async Task<Response<UserResponseModel>> UpdateUserAsync(int id, UpdateUserModel model)
+    public async Task<Response<UpdateUserResponseModel>> UpdateUserAsync(
+        int id,
+        UpdateUserModel model
+    )
     {
-        var user = await _userRepository.GetByIdAsync(id)
-            ?? throw new ArgumentException("User not found");
+        var user =
+            await _userRepository.GetByIdAsync(id) ?? throw new ArgumentException("User not found");
 
-        var department = await _departmentRepository.GetByIdAsync(model.DepartmentId)
-            ?? throw new ArgumentException("Department not found");
+        var existsEmail = await _userRepository.ExistAsync(u =>
+            u.Email == model.Email && u.Id != id
+        );
+
+        if (existsEmail)
+        {
+            return new Response<UpdateUserResponseModel>(
+                new UpdateUserResponseModel()
+                {
+                    IsSuccess = false,
+                    EmailError = "Địa chỉ email đã tồn tại",
+                }
+            );
+        }
 
         user.FirstName = model.FirstName;
         user.LastName = model.LastName;
         user.BirthDate = model.BirthDate;
         user.Email = model.Email;
-        user.DepartmentId = model.DepartmentId;
+        user.Bio = model.Bio;
 
-        user = await _userRepository.UpdateAsync(user);
-
-        var entity = MapToResponseModel(user, department.Name);
-
-        return new Response<UserResponseModel>(entity);
-    }
-
-    public async Task<Response<UserResponseModel>> UpdateUserRoleAsync(int id, Enumerations.Role role)
-    {
-        var user = await _userRepository.GetByIdAsync(id)
-            ?? throw new ArgumentException("User not found");
-
-        user.Role = role;
-        user = await _userRepository.UpdateAsync(user);
-
-        var department = await _departmentRepository.GetByIdAsync(user.DepartmentId);
-        var entity = MapToResponseModel(user, department?.Name ?? string.Empty);
-
-        return new Response<UserResponseModel>(entity);
-    }
-
-    public async Task<Response<bool>> DeleteUserAsync(int id)
-    {
-        var user = await _userRepository.GetByIdAsync(id)
-            ?? throw new ArgumentException("User not found");
-
-        user.IsActive = false;
         await _userRepository.UpdateAsync(user);
-        
+
+        return new Response<UpdateUserResponseModel>(
+            new UpdateUserResponseModel() { IsSuccess = true }
+        );
+    }
+
+    public async Task<Response<bool>> UpdateUserRoleDepartmentAsync(
+        int id,
+        UpdateRoleDepartmentUserModel param
+    )
+    {
+        var user =
+            await _userRepository.GetByIdAsync(id) ?? throw new ArgumentException("User not found");
+
+        user.Role = param.Role;
+        user.DepartmentId = param.DepartmentId;
+        await _userRepository.UpdateAsync(user);
+
         return new Response<bool>(true);
     }
 
     public async Task<Response<UserResponseModel>> GetUserByIdAsync(int id)
     {
-        var user = await _userRepository.GetByIdAsync(id)
-                   ?? throw new ArgumentException("User not found");
+        var user =
+            await _userRepository.GetByIdAsync(id) ?? throw new ArgumentException("User not found");
 
-        var department = await _departmentRepository.GetByIdAsync(user.DepartmentId);
+        var department = await _departmentRepository.GetByIdAsync(user.DepartmentId ?? 0);
         var entity = MapToResponseModel(user, department?.Name ?? string.Empty);
 
         return new Response<UserResponseModel>(entity);
     }
 
-    public async Task<Response<List<UserResponseModel>>> GetAllUsersAsync()
+    public async Task<Response<List<UserNameModel>>> GetListManager()
     {
-        var users = await _userRepository.GetListAsync(u => u.IsActive)
-            .Include(u => u.Department)
-            .ToListAsync();
+        var managers = _userRepository.GetListAsync(u => u.Role == Enumerations.Role.Manager);
 
-        var entities = users.Select(u => MapToResponseModel(u, u.Department.Name)).ToList();
-        return new Response<List<UserResponseModel>>(entities);
+        var result = managers
+            .Select(u => new UserNameModel
+            {
+                Id = u.Id,
+                UserName = u.UserName,
+                FullName = u.FullName,
+            })
+            .ToList();
+
+        return new Response<List<UserNameModel>>(result);
     }
 
-    private static UserResponseModel MapToResponseModel(Domain.Entities.User user, string departmentName)
+    private static UserResponseModel MapToResponseModel(
+        Domain.Entities.User user,
+        string departmentName
+    )
     {
         return new UserResponseModel
         {
             Id = user.Id,
+            UserName = user.UserName,
             FirstName = user.FirstName,
             LastName = user.LastName,
             BirthDate = user.BirthDate,
@@ -116,6 +142,7 @@ public class UserService : IUserService
             Role = user.Role,
             DepartmentId = user.DepartmentId,
             DepartmentName = departmentName,
+            Bio = user.Bio,
         };
     }
 }

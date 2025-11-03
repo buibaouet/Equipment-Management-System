@@ -8,6 +8,18 @@ public class UpdateUserModel
     public string LastName { get; set; } = string.Empty;
     public DateTime? BirthDate { get; set; }
     public string Email { get; set; } = string.Empty;
+    public string? Bio { get; set; } = string.Empty;
+}
+
+public class UpdateUserResponseModel
+{
+    public bool IsSuccess { get; set; }
+    public string EmailError { get; set; } = string.Empty;
+}
+
+public class UpdateRoleDepartmentUserModel
+{
     public Enumerations.Role Role { get; set; }
-    public int DepartmentId { get; set; }
+
+    public int? DepartmentId { get; set; }
 }

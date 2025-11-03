@@ -5,7 +5,7 @@ import { Link, useLocation, useNavigate } from "react-router";
 import { EyeIcon, EyeClosedIcon, Loader2 } from "lucide-react";
 import Label from "../../components/form/Label";
 import Input from "../../components/form/input/InputField";
-import { LoginCredentials } from "../../types/User";
+import { LoginCredentials } from "../../types/Auth";
 import { useAuth } from "../../hooks/useAuth";
 import Alert from "../../components/ui/alert/Alert";
 
@@ -19,7 +19,7 @@ export default function Login() {
   const from = (location.state as any)?.from?.pathname || '/';
 
   const [formData, setFormData] = useState<LoginCredentials>({
-    username: '',
+    userName: '',
     password: ''
   });
   const [errors, setErrors] = useState<Partial<LoginCredentials>>({});
@@ -28,8 +28,8 @@ export default function Login() {
   const validateForm = (): boolean => {
     const newErrors: Partial<LoginCredentials> = {};
 
-    if (!formData.username.trim()) {
-      newErrors.username = 'Vui lòng nhập tên đăng nhập';
+    if (!formData.userName.trim()) {
+      newErrors.userName = 'Vui lòng nhập tên đăng nhập';
     } 
 
     if (!formData.password.trim()) {
@@ -75,7 +75,7 @@ export default function Login() {
     try {
       const response = await login(formData);
 
-      if (response.success && response.user) {
+      if (response.success) {
         // Navigate to the page user was trying to access, or dashboard
         navigate(from, { replace: true });
       } else {
@@ -124,14 +124,14 @@ export default function Login() {
                       </Label>
                       <Input
                         type="text"
-                        id="username"
-                        name="username"
-                        value={formData.username}
+                        id="userName"
+                        name="userName"
+                        value={formData.userName}
                         onChange={handleInputChange}
                         className={`form-input`}
-                        error={errors.username ? true : false}
+                        error={errors.userName ? true : false}
                         placeholder="Nhập tên đăng nhập"
-                        hint={errors.username}
+                        hint={errors.userName}
                       />
                     </div>
                     <div>
