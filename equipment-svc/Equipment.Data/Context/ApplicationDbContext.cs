@@ -13,6 +13,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Department> Departments { get; set; }
     public DbSet<Equipment.Domain.Entities.Equipment> Equipments { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
+    public DbSet<BorrowEquipment> BorrowEquipments { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -36,12 +37,6 @@ public class ApplicationDbContext : DbContext
             builder.ToTable("Users");
 
             builder.HasKey(x => x.Id);
-
-            builder
-                .HasOne(x => x.Department)
-                .WithMany()
-                .HasForeignKey(x => x.DepartmentId)
-                .OnDelete(DeleteBehavior.Restrict);
         });
 
         // Configuration for Department entity
@@ -58,7 +53,7 @@ public class ApplicationDbContext : DbContext
         // Configuration for Equipment entity
         modelBuilder.Entity<Equipment.Domain.Entities.Equipment>(builder =>
         {
-            builder.ToTable("Equipment");
+            builder.ToTable("Equipments");
 
             builder.HasKey(x => x.Id);
 
@@ -67,25 +62,6 @@ public class ApplicationDbContext : DbContext
             // Configure decimal precision for Price
             builder.Property(x => x.Price)
                 .HasPrecision(18, 2);
-
-            // Configure relationships
-            builder
-                .HasOne(x => x.Category)
-                .WithMany()
-                .HasForeignKey(x => x.CategoryId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            builder
-                .HasOne(x => x.Department)
-                .WithMany()
-                .HasForeignKey(x => x.DepartmentId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            builder
-                .HasOne(x => x.User)
-                .WithMany()
-                .HasForeignKey(x => x.UserId)
-                .OnDelete(DeleteBehavior.SetNull);
         });
 
         // Configuration for RefreshToken entity
@@ -98,6 +74,14 @@ public class ApplicationDbContext : DbContext
             builder.Property(x => x.Token)
                 .IsRequired()
                 .HasMaxLength(100);
+        });
+
+        // Configuration for BorrowEquipment entity
+        modelBuilder.Entity<BorrowEquipment>(builder =>
+        {
+            builder.ToTable("BorrowEquipments");
+
+            builder.HasKey(x => x.Id);
         });
     }
 }

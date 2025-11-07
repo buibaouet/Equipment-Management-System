@@ -3,12 +3,12 @@ import { Modal } from "../../components/ui/modal";
 import Button from "../../components/ui/button/Button";
 import Label from "../../components/form/Label";
 import { UpdateUserRoleDepartment, UserEntity } from "../../types/User";
-import RoleEnum from "../../utils/enumerations";
 import Select from "../../components/form/Select";
 import { useUpdateRoleDepartmentUserMutation } from "../../api/useUserApi";
 import { Loader2 } from "lucide-react";
 import { useGetDepartmentListQuery } from "../../api/useDepartmentApi";
 import { toast } from "sonner";
+import { RoleEnum } from "../../utils/enumerations";
 
 interface UserInfoModalProps {
     isOpen: boolean;
@@ -87,14 +87,14 @@ export default function UserInfoModal({ isOpen, onClose, user, callbackAction }:
     };
 
     const roleOptions = [
-        { value: String(RoleEnum.Manager), label: "Quản lý dự án" },
+        { value: String(RoleEnum.Manager), label: "Quản lý phòng ban" },
         { value: String(RoleEnum.User), label: "Người dùng" },
     ];
 
     const handleRoleChange = (value: string) => {
         setFormData((prev) => ({
             ...prev,
-            role: Number(value) as RoleEnum,
+            role: Number(value),
         }));
     };
 

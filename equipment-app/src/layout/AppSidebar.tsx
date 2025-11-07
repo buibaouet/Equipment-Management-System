@@ -13,12 +13,13 @@ import {
 } from "lucide-react";
 import { useSidebar } from "../context/SidebarContext";
 import { useAuth } from "../hooks/useAuth";
-import RoleEnum from "../utils/enumerations";
+import { RoleEnum } from "../utils/enumerations";
 
 type MenuItem = {
   name: string;
   icon: React.ReactNode;
   path?: string;
+  activePath?: string[];
 };
 
 const commonItems: MenuItem[] = [
@@ -31,6 +32,7 @@ const commonItems: MenuItem[] = [
     icon: <LayoutDashboard />,
     name: "Danh sách thiết bị",
     path: "/equipment-list",
+    activePath: ["/equipment-list", "/equipment-detail"],
   },
 ];
 
@@ -124,7 +126,7 @@ const AppSidebar: React.FC = () => {
 
   // const isActive = (path: string) => location.pathname === path;
   const isActive = useCallback(
-    (path: string) => location.pathname === path,
+    (nav: MenuItem) => nav.activePath?.some(path => location.pathname.startsWith(path)) || location.pathname === nav.path,
     [location.pathname]
   );
 
@@ -138,11 +140,11 @@ const AppSidebar: React.FC = () => {
             nav.path && (
               <Link
                 to={nav.path}
-                className={`menu-item group ${isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"
+                className={`menu-item group ${isActive(nav) ? "menu-item-active" : "menu-item-inactive"
                   }`}
               >
                 <span
-                  className={`menu-item-icon-size ${isActive(nav.path)
+                  className={`menu-item-icon-size ${isActive(nav)
                     ? "menu-item-icon-active"
                     : "menu-item-icon-inactive"
                     }`}

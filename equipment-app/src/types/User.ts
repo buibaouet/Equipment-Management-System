@@ -1,4 +1,4 @@
-import RoleEnum from "../utils/enumerations";
+import { RoleEnum } from "../utils/enumerations";
 
 export interface UserModel {
     id: number;

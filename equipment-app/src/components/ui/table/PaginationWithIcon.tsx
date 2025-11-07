@@ -22,6 +22,8 @@ export default function PaginationWithIcon({
 }: PaginationProps) {
   const [currentPage, setCurrentPage] = useState(initialPage);
 
+  if (totalPages === 0) return null;
+
   const startIndex = (currentPage - 1) * PAGINATION_CONFIG.PAGE_SIZE;
   const endIndex = Math.min(startIndex + PAGINATION_CONFIG.PAGE_SIZE, totalItems);
 

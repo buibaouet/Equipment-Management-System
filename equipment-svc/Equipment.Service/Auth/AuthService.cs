@@ -261,23 +261,6 @@ public class AuthService : IAuthService
         );
     }
 
-    private static UserResponseModel MapToResponseModel(Domain.Entities.User user)
-    {
-        return new UserResponseModel
-        {
-            Id = user.Id,
-            FirstName = user.FirstName,
-            LastName = user.LastName,
-            BirthDate = user.BirthDate,
-            Email = user.Email,
-            Role = user.Role,
-            DepartmentId = user.DepartmentId,
-            DepartmentName = user.Department?.Name,
-            UserName = user.UserName,
-            Bio = user.Bio,
-        };
-    }
-
     /// <summary>
     /// Validates password requirements:
     /// - At least 8 characters
@@ -285,7 +268,7 @@ public class AuthService : IAuthService
     /// - Contains at least one number
     /// - Contains at least one special character
     /// </summary>
-    /// <param name="password">The password to validate</param>
+    /// <ParamPaging name="password">The password to validate</ParamPaging>
     /// <returns>Validation result with success status and error message if any</returns>
     private static bool ValidatePassword(string password)
     {
@@ -305,7 +288,7 @@ public class AuthService : IAuthService
     /// <summary>
     /// Validates email format using RFC 5322 standard
     /// </summary>
-    /// <param name="email">The email to validate</param>
+    /// <ParamPaging name="email">The email to validate</ParamPaging>
     /// <returns>True if email is valid, false otherwise</returns>
     private static bool ValidateEmail(string email)
     {

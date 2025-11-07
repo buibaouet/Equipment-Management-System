@@ -62,7 +62,6 @@ export default function useUserManagement() {
     setCurrentPage(1); // Reset to first page when searching
   };
 
-
   return {
     // Data
     users,

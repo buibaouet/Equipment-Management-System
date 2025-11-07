@@ -3,6 +3,8 @@ import { useAuthApi } from '../api/useAuthApi';
 import { useUserApi } from '../api/useUserApi';
 import { useDepartmentApi } from '../api/useDepartmentApi';
 import { useCategoryApi } from '../api/useCategoryApi';
+import { useEquipmentApi } from '../api/useEquipmentApi';
+import { useBorrowEquipmentApi } from '../api/useBorrowEquipmentApi';
 
 export const store = configureStore({
   reducer: {
@@ -10,13 +12,17 @@ export const store = configureStore({
     [useUserApi.reducerPath]: useUserApi.reducer,
     [useDepartmentApi.reducerPath]: useDepartmentApi.reducer,
     [useCategoryApi.reducerPath]: useCategoryApi.reducer,
+    [useEquipmentApi.reducerPath]: useEquipmentApi.reducer,
+    [useBorrowEquipmentApi.reducerPath]: useBorrowEquipmentApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
       useAuthApi.middleware,
       useUserApi.middleware,
       useDepartmentApi.middleware,
-      useCategoryApi.middleware
+      useCategoryApi.middleware,
+      useEquipmentApi.middleware,
+      useBorrowEquipmentApi.middleware,
     ),
 });
 

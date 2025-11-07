@@ -12,4 +12,5 @@ public interface IUserService
     Task<Response<bool>> UpdateUserRoleDepartmentAsync(int id, UpdateRoleDepartmentUserModel param);
     Task<Response<UserResponseModel>> GetUserByIdAsync(int id);
     Task<Response<List<UserNameModel>>> GetListManager();
+    Task<Response<List<UserNameModel>>> GetListUserActive();
 }

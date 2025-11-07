@@ -119,8 +119,6 @@ export default function CategoryModal({
 
         setErrors(newErrors);
       }
-
-
     } catch (error) {
       console.error('Error saving category:', error);
       toast.error("Có lỗi xảy ra khi lưu danh mục");

@@ -23,7 +23,7 @@ public class AuthController : ControllerBase
     /// <summary>
     /// Đăng nhập hệ thống
     /// </summary>
-    /// <param name="loginModel"></param>
+    /// <ParamPaging name="loginModel"></ParamPaging>
     /// <returns></returns>
     [HttpPost("login")]
     [AllowAnonymous]
@@ -50,7 +50,7 @@ public class AuthController : ControllerBase
     /// <summary>
     /// Làm mới token
     /// </summary>
-    /// <param name="model"></param>
+    /// <ParamPaging name="model"></ParamPaging>
     /// <returns></returns>
     [HttpPost("refresh-token")]
     public async Task<ActionResult> RefreshToken(RefreshTokenModel model)
@@ -76,7 +76,7 @@ public class AuthController : ControllerBase
     /// <summary>
     /// Tạo mới người dùng
     /// </summary>
-    /// <param name="model"></param>
+    /// <ParamPaging name="model"></ParamPaging>
     /// <returns></returns>
     [HttpPost("register")]
     [AllowAnonymous]
@@ -103,7 +103,7 @@ public class AuthController : ControllerBase
     /// <summary>
     /// Thay đổi mật khẩu người dùng
     /// </summary>
-    /// <param name="model"></param>
+    /// <ParamPaging name="model"></ParamPaging>
     /// <returns></returns>
     [HttpPut("change-password")]
     public async Task<ActionResult> ChangePassword([FromBody] ChangePasswordInputModel model)
@@ -129,7 +129,7 @@ public class AuthController : ControllerBase
     /// <summary>
     /// Lấy thông tin người dùng theo Id
     /// </summary>
-    /// <param name="userId"></param>
+    /// <ParamPaging name="userId"></ParamPaging>
     /// <returns></returns>
     [HttpGet("{userId}")]
     public async Task<ActionResult> GetUserInfo(int userId)

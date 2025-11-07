@@ -2,7 +2,6 @@ import { useState } from "react";
 import Button from "../../components/ui/button/Button";
 import {
   Table,
-  TableBody,
   TableCell,
   TableRow,
 } from "../../components/ui/table";
@@ -19,6 +18,7 @@ import PageMeta from "../../components/common/PageMeta";
 import HeaderTable from "../../components/ui/table/HeaderTable";
 import CategoryModal from "./CategoryModal";
 import { CategoryEntity } from "../../types/Category";
+import TableBodyContent from "../../components/ui/table/TableBodyContent";
 
 export default function CategoryList() {
   const {
@@ -29,7 +29,8 @@ export default function CategoryList() {
     totalPages,
     categories: currentData,
     refreshCategories,
-    handleActiveCategory
+    handleActiveCategory,
+    isLoading
   } = useCategoryList();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -82,9 +83,12 @@ export default function CategoryList() {
           <div>
             <Table>
               <HeaderTable arrColumns={arrColumns} handleSort={handleSort} />
-              <TableBody>
-                {currentData.map((item: any, i: number) => (
-                  <TableRow key={i + 1}>
+              <TableBodyContent
+                isLoading={isLoading}
+                data={currentData}
+                columns={arrColumns}
+                renderRow={(item: any, index: number) => (
+                  <TableRow key={index + 1}>
                     <TableCell className="px-4 py-4 font-medium text-gray-800 border border-gray-100 dark:border-white/[0.05] dark:text-white text-theme-sm whitespace-nowrap ">
                       {item.code}
                     </TableCell>
@@ -129,8 +133,8 @@ export default function CategoryList() {
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
+                )}
+              />
             </Table>
           </div>
         </div>

@@ -2,7 +2,7 @@ import { createApi } from '@reduxjs/toolkit/query/react';
 import { baseQueryWithReauth } from '../utils/baseQuery';
 import { BaseResponse, PagingDataModel } from '../types/Response';
 import { PaginationParam } from '../types/PagingParam';
-import { CategoryEntity, CategoryPaging, CategoryResponseModel } from '../types/Category';
+import { CategoryEntity, CategoryModel, CategoryPaging, CategoryResponseModel } from '../types/Category';
 
 export const useCategoryApi = createApi({
     reducerPath: 'categoryApi',
@@ -27,7 +27,7 @@ export const useCategoryApi = createApi({
             }),
             providesTags: ['Category'],
         }),
-        getCategoryList: builder.query<BaseResponse<CategoryEntity[]>, {}>({
+        getCategoryList: builder.query<BaseResponse<CategoryModel[]>, {}>({
             query: () => ({
                 method: 'GET',
                 url: '/category/active',

@@ -2,7 +2,7 @@ import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import type { UserEntity } from '../types/User';
 import type { AuthContextType } from '../types/Auth';
 import type { LoginCredentials } from '../types/Auth';
-import RoleEnum from '../utils/enumerations';
+import { RoleEnum } from '../utils/enumerations';
 import { SessionStorage } from '../utils/sessionStorage';
 import { useLoginMutation, useGetUserInfoQuery } from '../api/useAuthApi';
 

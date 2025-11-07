@@ -89,10 +89,6 @@ export default function useDepartmentList() {
     handleSort,
     refreshDepartments: fetchDepartments,
     handleActiveDepartment: handleActiveDepartment,
-
-    // Sort state
-    sortKey,
-    sortOrder,
   };
 }
 

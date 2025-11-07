@@ -1,7 +1,7 @@
 import UserInfoCard from "./UserInfoCard";
 import PageMeta from "../../components/common/PageMeta";
 import { useAuth } from "../../hooks/useAuth";
-import RoleEnum from "../../utils/enumerations";
+import { RoleEnum } from "../../utils/enumerations";
 import { UserCircleIcon } from "lucide-react";
 
 export default function UserProfiles() {
@@ -32,13 +32,13 @@ export default function UserProfiles() {
                         currentUser?.role == RoleEnum.Admin
                           ? 'Quản trị viên'
                           : currentUser?.role == RoleEnum.Manager
-                            ? 'Quản lý dự án'
+                            ? 'Quản lý phòng ban'
                             : 'Người dùng'
                       }
                     </p>
                     <div className="hidden h-3.5 w-px bg-gray-300 dark:bg-gray-700 xl:block"></div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                      Dự án: {currentUser && currentUser?.departmentName ? `${currentUser?.departmentName}` : '-'}
+                      Phòng ban: {currentUser && currentUser?.departmentName ? `${currentUser?.departmentName}` : '-'}
                     </p>
                   </div>
                 </div>

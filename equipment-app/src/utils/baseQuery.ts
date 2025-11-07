@@ -1,5 +1,7 @@
 import { fetchBaseQuery } from "@reduxjs/toolkit/query";
 import { SessionStorage } from "./sessionStorage";
+import { BaseResponse } from "../types/Response";
+import { formatDatesInObject } from "./dateFormatter";
 
 // API Configuration
 export const API_CONFIG = {
@@ -36,9 +38,30 @@ const handleLogout = () => {
     window.location.href = '/login';
 };
 
+// Helper function to format dates in request arguments
+const formatRequestArgs = (args: any): any => {
+    if (!args) return args;
+    
+    const formatted = { ...args };
+    
+    // Format dates in body
+    if (formatted.body) {
+        formatted.body = formatDatesInObject(formatted.body);
+    }
+    
+    // Format dates in params (query parameters)
+    if (formatted.params) {
+        formatted.params = formatDatesInObject(formatted.params);
+    }
+    
+    return formatted;
+};
+
 // Create a base query with automatic token refresh
 export const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
-    let result = await baseQueryWithToken(args, api, extraOptions);
+    // Format dates in request arguments before sending
+    const formattedArgs = formatRequestArgs(args);
+    let result = await baseQueryWithToken(formattedArgs, api, extraOptions);
 
     if (result.error && result.error.status === 401) {
         // Try to refresh the token
@@ -59,12 +82,12 @@ export const baseQueryWithReauth = async (args: any, api: any, extraOptions: any
                 extraOptions
             );
 
-            if (refreshResult.data) {
+            if (refreshResult.data && (refreshResult.data as BaseResponse<string>).statusCode === 200) {
                 // Store the new token
-                const accessToken = refreshResult.data as string;
+                const accessToken = (refreshResult.data as BaseResponse<string>).data as string;
                 SessionStorage.updateAccessToken(accessToken);
-                // Retry the original query
-                result = await baseQueryWithToken(args, api, extraOptions);
+                // Retry the original query (dates already formatted)
+                result = await baseQueryWithToken(formattedArgs, api, extraOptions);
             } else {
                 // Refresh token request failed
                 handleLogout();

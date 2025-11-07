@@ -15,7 +15,7 @@ public class Equipment : BaseEntity
     /// <summary>
     /// Ngày nhập
     /// </summary>
-    public DateTime ImportDate { get; set; }
+    public DateTime? ImportDate { get; set; }
 
     /// <summary>
     /// Giá tiền
@@ -25,26 +25,21 @@ public class Equipment : BaseEntity
     /// <summary>
     /// Xuất xứ
     /// </summary>
-    public string OriginOfGoods { get; set; } = string.Empty;
+    public string? OriginOfGoods { get; set; }
 
     /// <summary>
     /// Hãng sản xuất
     /// </summary>
-    public string Manufacturer { get; set; } = string.Empty;
+    public string? Manufacturer { get; set; }
 
     /// <summary>
     /// Mô tả
     /// </summary>
-    public string Description { get; set; } = string.Empty;
+    public string? Description { get; set; }
     public Enumerations.EquipmentStatus Status { get; set; }
 
     // Foreign keys and navigation properties
     public int CategoryId { get; set; }
-    public virtual EquipmentCategory Category { get; set; } = null!;
-
     public int DepartmentId { get; set; }
-    public virtual Department Department { get; set; } = null!;
-
-    public int? UserId { get; set; }
-    public virtual User? User { get; set; }
+    public int? OwnerId { get; set; }
 }

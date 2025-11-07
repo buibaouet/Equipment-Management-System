@@ -18,7 +18,7 @@ public class EquipmentCategoryController : ControllerBase
     /// <summary>
     /// EquipmentCategoryController
     /// </summary>
-    /// <param name="service"></param>
+    /// <ParamPaging name="service"></ParamPaging>
     public EquipmentCategoryController(IEquipmentCategoryService service)
     {
         _service = service;
@@ -52,7 +52,7 @@ public class EquipmentCategoryController : ControllerBase
     /// <summary>
     /// Lấy danh sách danh mục thiết bị phân trang
     /// </summary>
-    /// <param name="param"></param>
+    /// <ParamPaging name="param"></ParamPaging>
     /// <returns></returns>
     [HttpPost("paging")]
     public async Task<IActionResult> GetPaging([FromBody] PaginationParam param)
@@ -78,7 +78,7 @@ public class EquipmentCategoryController : ControllerBase
     /// <summary>
     /// Tạo mới danh mục thiết bị / Cập nhật thông tin danh mục thiết bị
     /// </summary>
-    /// <param name="category"></param>
+    /// <ParamPaging name="category"></ParamPaging>
     /// <returns></returns>
     [HttpPost]
     public async Task<IActionResult> CreateOrUpdate([FromBody] EquipmentCategory category)
@@ -104,7 +104,7 @@ public class EquipmentCategoryController : ControllerBase
     /// <summary>
     /// Lấy thông tin danh mục theo Id
     /// </summary>
-    /// <param name="id"></param>
+    /// <ParamPaging name="id"></ParamPaging>
     /// <returns></returns>
     [HttpGet("{id}")]
     public async Task<ActionResult> GetById(int id)
@@ -130,7 +130,7 @@ public class EquipmentCategoryController : ControllerBase
     /// <summary>
     /// Lấy thông tin danh mục theo Id
     /// </summary>
-    /// <param name="id"></param>
+    /// <ParamPaging name="id"></ParamPaging>
     /// <returns></returns>
     [HttpPut("status/{id}")]
     public async Task<ActionResult> UpdateStatusCategory(int id)

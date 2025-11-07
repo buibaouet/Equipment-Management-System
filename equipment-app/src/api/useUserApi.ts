@@ -49,7 +49,20 @@ export const useUserApi = createApi({
             }),
             providesTags: ['Manager'],
         }),
+        getUserList: builder.query<BaseResponse<UserModel[]>, {}>({
+            query: ({ }) => ({
+                method: 'GET',
+                url: '/user/active',
+            }),
+            providesTags: ['Manager'],
+        }),
     }),
 });
 
-export const { useGetListUserPagingMutation, useUpdateUserMutation, useUpdateRoleDepartmentUserMutation, useGetManagerListQuery } = useUserApi;
+export const {
+    useGetListUserPagingMutation,
+    useUpdateUserMutation,
+    useUpdateRoleDepartmentUserMutation,
+    useGetManagerListQuery,
+    useGetUserListQuery
+} = useUserApi;

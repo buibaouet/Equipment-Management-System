@@ -8,7 +8,7 @@ export interface DepartmentEntity {
     isActive: boolean,
 }
 
-export interface Department {
+export interface DepartmentModel {
     id: number,
     code: string,
     name: string,

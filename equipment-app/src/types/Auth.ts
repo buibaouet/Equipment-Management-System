@@ -1,4 +1,4 @@
-import RoleEnum from "../utils/enumerations";
+import { RoleEnum } from "../utils/enumerations";
 import { UserEntity } from "./User";
 
 export interface LoginResponse {

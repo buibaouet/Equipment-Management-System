@@ -2,7 +2,7 @@ import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import Unauthorized from '../pages/OtherPage/Unauthorized';
-import RoleEnum from '../utils/enumerations';
+import { RoleEnum } from '../utils/enumerations';
  
 interface PrivateRouteProps {
   children: React.ReactNode;

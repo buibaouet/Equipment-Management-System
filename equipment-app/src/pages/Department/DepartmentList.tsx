@@ -1,7 +1,6 @@
 import Button from "../../components/ui/button/Button";
 import {
   Table,
-  TableBody,
   TableCell,
   TableRow,
 } from "../../components/ui/table";
@@ -19,6 +18,7 @@ import DepartmentModal from "./DepartmentModal";
 import { useState } from "react";
 import { DepartmentEntity } from "../../types/Department";
 import HeaderTable from "../../components/ui/table/HeaderTable";
+import TableBodyContent from "../../components/ui/table/TableBodyContent";
 
 export default function DepartmentList() {
   const {
@@ -29,7 +29,8 @@ export default function DepartmentList() {
     totalPages,
     departments,
     refreshDepartments,
-    handleActiveDepartment
+    handleActiveDepartment,
+    isLoading
   } = useDepartmentList();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -59,7 +60,6 @@ export default function DepartmentList() {
     { key: "isActive", label: "Trạng thái", sortable: true },
   ];
 
-
   return (
     <div>
       <PageMeta
@@ -85,9 +85,12 @@ export default function DepartmentList() {
           <div>
             <Table>
               <HeaderTable arrColumns={arrColumns} handleSort={handleSort} />
-              <TableBody>
-                {departments.map((item: any, i: number) => (
-                  <TableRow key={i + 1}>
+              <TableBodyContent
+                isLoading={isLoading}
+                data={departments}
+                columns={arrColumns}
+                renderRow={(item: any, index: number) => (
+                  <TableRow key={index + 1}>
                     <TableCell className="px-4 py-4 font-medium text-gray-800 border border-gray-100 dark:border-white/[0.05] dark:text-white text-theme-sm whitespace-nowrap ">
                       {item.code}
                     </TableCell>
@@ -138,8 +141,8 @@ export default function DepartmentList() {
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
+                )}
+              />
             </Table>
           </div>
         </div>

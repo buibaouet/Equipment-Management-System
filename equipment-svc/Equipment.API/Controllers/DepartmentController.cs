@@ -44,7 +44,7 @@ public class DepartmentController : ControllerBase
     /// <summary>
     /// Lấy danh sách phòng ban phân trang
     /// </summary>
-    /// <param name="param"></param>
+    /// <ParamPaging name="param"></ParamPaging>
     /// <returns></returns>
     [HttpPost("paging")]
     public async Task<ActionResult> GetPaging([FromBody] PaginationParam param)
@@ -70,7 +70,7 @@ public class DepartmentController : ControllerBase
     /// <summary>
     /// Tạo mới / Cập nhật thông tin phòng ban
     /// </summary>
-    /// <param name="department"></param>
+    /// <ParamPaging name="department"></ParamPaging>
     /// <returns></returns>
     [HttpPost]
     public async Task<IActionResult> CreateOrUpdate([FromBody] Department department)
@@ -96,7 +96,7 @@ public class DepartmentController : ControllerBase
     /// <summary>
     /// Lấy thông tin phòng ban theo Id
     /// </summary>
-    /// <param name="id"></param>
+    /// <ParamPaging name="id"></ParamPaging>
     /// <returns></returns>
     [HttpGet("{id}")]
     public async Task<ActionResult> GetById(int id)
@@ -122,7 +122,7 @@ public class DepartmentController : ControllerBase
     /// <summary>
     /// cập nhật trạng thái phòng ban
     /// </summary>
-    /// <param name="id"></param>
+    /// <ParamPaging name="id"></ParamPaging>
     /// <returns></returns>
     [HttpPut("status/{id}")]
     public async Task<ActionResult> UpdateStatusDepartment(int id)

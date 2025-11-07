@@ -20,7 +20,7 @@ public class UserController : ControllerBase
     /// <summary>
     /// Lấy danh sách người dùng phân trang
     /// </summary>
-    /// <param name="param"></param>
+    /// <ParamPaging name="param"></ParamPaging>
     /// <returns></returns>
     [HttpPost("paging")]
     public async Task<ActionResult> GetPaging([FromBody] PaginationParam param)
@@ -46,7 +46,7 @@ public class UserController : ControllerBase
     /// <summary>
     /// Lấy thông tin người dùng theo Id
     /// </summary>
-    /// <param name="id"></param>
+    /// <ParamPaging name="id"></ParamPaging>
     /// <returns></returns>
     [HttpGet("{id}")]
     public async Task<ActionResult> GetById(int id)
@@ -72,8 +72,8 @@ public class UserController : ControllerBase
     /// <summary>
     /// Cập nhật thông tin người dùng
     /// </summary>
-    /// <param name="id"></param>
-    /// <param name="model"></param>
+    /// <ParamPaging name="id"></ParamPaging>
+    /// <ParamPaging name="model"></ParamPaging>
     /// <returns></returns>
     [HttpPut("{id}")]
     public async Task<ActionResult> Update(int id, [FromBody] UpdateUserModel model)
@@ -99,8 +99,8 @@ public class UserController : ControllerBase
     /// <summary>
     /// Cập nhật vai trò và phòng ban người dùng
     /// </summary>
-    /// <param name="id"></param>
-    /// <param name="param"></param>
+    /// <ParamPaging name="id"></ParamPaging>
+    /// <ParamPaging name="param"></ParamPaging>
     /// <returns></returns>
     [HttpPut("role-department/{id}")]
     public async Task<ActionResult> UpdateRole(int id, [FromBody] UpdateRoleDepartmentUserModel param)
@@ -133,6 +133,31 @@ public class UserController : ControllerBase
         try
         {
             var res = await _userService.GetListManager();
+            if (res.StatusCode != StatusCodes.Status200OK)
+            {
+                return StatusCode(res.StatusCode, res.Message);
+            }
+            return Ok(res);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                "Xảy ra lỗi trong quá trình xử lý: \n" + ex.Message + ex.StackTrace
+            );
+        }
+    }
+    
+    /// <summary>
+    /// Lấy danh sách user active
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet("active")]
+    public async Task<ActionResult> GetListUserActive()
+    {
+        try
+        {
+            var res = await _userService.GetListUserActive();
             if (res.StatusCode != StatusCodes.Status200OK)
             {
                 return StatusCode(res.StatusCode, res.Message);

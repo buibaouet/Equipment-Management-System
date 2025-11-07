@@ -2,7 +2,7 @@ import { createApi } from '@reduxjs/toolkit/query/react';
 import { baseQueryWithReauth } from '../utils/baseQuery';
 import { BaseResponse, PagingDataModel } from '../types/Response';
 import { PaginationParam } from '../types/PagingParam';
-import { Department, DepartmentEntity, DepartmentPaging, DepartmentResponseModel } from '../types/Department';
+import { DepartmentModel, DepartmentEntity, DepartmentPaging, DepartmentResponseModel } from '../types/Department';
 
 export const useDepartmentApi = createApi({
     reducerPath: 'departmentApi',
@@ -20,7 +20,7 @@ export const useDepartmentApi = createApi({
             }),
             invalidatesTags: ['Department'],
         }),
-        getDepartmentList: builder.query<BaseResponse<Department[]>, {}>({
+        getDepartmentList: builder.query<BaseResponse<DepartmentModel[]>, {}>({
             query: () => ({
                 method: 'GET',
                 url: '/department/active',

@@ -19,7 +19,7 @@ public class EquipmentController : ControllerBase
     /// <summary>
     /// Lấy thông tin thiết bị theo Id
     /// </summary>
-    /// <param name="id"></param>
+    /// <ParamPaging name="id"></ParamPaging>
     /// <returns></returns>
     [HttpGet("{id}")]
     public async Task<ActionResult> GetById(int id)
@@ -45,7 +45,7 @@ public class EquipmentController : ControllerBase
     /// <summary>
     /// Lấy danh sách thiết bị phân trang
     /// </summary>
-    /// <param name="param"></param>
+    /// <ParamPaging name="param"></ParamPaging>
     /// <returns></returns>
     [HttpPost("paging")]
     public async Task<ActionResult> GetPaging([FromBody] EquipmentPagingParam param)
@@ -69,16 +69,16 @@ public class EquipmentController : ControllerBase
     }
 
     /// <summary>
-    /// Tạo mới thiết bị
+    /// Tạo mới thiết bị / Cập nhật thông tin thiết bị
     /// </summary>
-    /// <param name="equipment"></param>
+    /// <ParamPaging name="equipment"></ParamPaging>
     /// <returns></returns>
     [HttpPost]
-    public async Task<ActionResult> Create([FromBody] Domain.Entities.Equipment equipment)
+    public async Task<ActionResult> CreateOrUpdateEquipment([FromBody] Domain.Entities.Equipment equipment)
     {
         try
         {
-            var res = await _equipmentService.Create(equipment);
+            var res = await _equipmentService.CreateOrUpdateEquipment(equipment);
             if (res.StatusCode != StatusCodes.Status200OK)
             {
                 return StatusCode(res.StatusCode, res.Message);
@@ -93,18 +93,26 @@ public class EquipmentController : ControllerBase
             );
         }
     }
-
+    
     /// <summary>
-    /// Cập nhật thông tin thiết bị
+    /// Lấy danh sách thiết bị còn sẵn
     /// </summary>
-    /// <param name="equipment"></param>
     /// <returns></returns>
-    [HttpPut]
-    public async Task<ActionResult> Update([FromBody] Domain.Entities.Equipment equipment)
+    [HttpGet("available")]
+    public async Task<ActionResult> GetListEquipmentAvaiable()
     {
         try
         {
-            var res = await _equipmentService.Update(equipment);
+            var currentUserId = GetCurrentUserId();
+            if (currentUserId == null)
+            {
+                return StatusCode(
+                    StatusCodes.Status401Unauthorized,
+                    "Không thể xác định người dùng"
+                );
+            }
+            
+            var res = await _equipmentService.GetListEquipmentAvaiable(currentUserId.Value);
             if (res.StatusCode != StatusCodes.Status200OK)
             {
                 return StatusCode(res.StatusCode, res.Message);
@@ -119,30 +127,17 @@ public class EquipmentController : ControllerBase
             );
         }
     }
-
-    /// <summary>
-    /// Xóa thiết bị
-    /// </summary>
-    /// <param name="id"></param>
-    /// <returns></returns>
-    [HttpDelete("{id}")]
-    public async Task<ActionResult> Delete(int id)
+    
+    private int? GetCurrentUserId()
     {
-        try
+        // JWT token stores user ID in "sub" claim (JwtRegisteredClaimNames.Sub)
+        var userIdClaim =
+            User.FindFirst("sub")
+            ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+        if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
         {
-            var res = await _equipmentService.Delete(id);
-            if (res.StatusCode != StatusCodes.Status200OK)
-            {
-                return StatusCode(res.StatusCode, res.Message);
-            }
-            return Ok(res);
+            return userId;
         }
-        catch (Exception ex)
-        {
-            return StatusCode(
-                StatusCodes.Status500InternalServerError,
-                "Xảy ra lỗi trong quá trình xử lý: \n" + ex.Message + ex.StackTrace
-            );
-        }
+        return null;
     }
 }

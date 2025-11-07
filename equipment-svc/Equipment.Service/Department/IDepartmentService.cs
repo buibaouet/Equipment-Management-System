@@ -12,21 +12,21 @@ public interface IDepartmentService
     /// <summary>
     /// Tạo mới phòng ban / Cập nhật thông tin phòng ban
     /// </summary>
-    /// <param name="department"></param>
+    /// <ParamPaging name="department"></ParamPaging>
     /// <returns></returns>
     Task<Response<DepartmentResponseModel>> CreateOrUpdate(Domain.Entities.Department department);
     
     /// <summary>
     /// Lấy thông tin phòng ban theo Id
     /// </summary>
-    /// <param name="id"></param>
+    /// <ParamPaging name="id"></ParamPaging>
     /// <returns></returns>
     public Task<Response<Domain.Entities.Department>> GetByIdAsync(int id);
     
     /// <summary>
     /// Cập nhật trạng thái phòng ban
     /// </summary>
-    /// <param name="id"></param>
+    /// <ParamPaging name="id"></ParamPaging>
     /// <returns></returns>
     public Task<Response<bool>> UpdateStatusDepartment(int id);
 }

@@ -26,7 +26,6 @@ public class User : BaseEntity
 
     // Department relationship
     public int? DepartmentId { get; set; }
-    public virtual Department? Department { get; set; }
 
     public string? Bio { get; set; } = string.Empty;
 }

@@ -5,11 +5,13 @@ import { createPopper, type Instance } from "@popperjs/core";
 interface DropdownProps {
   dropdownButton: React.ReactNode;
   dropdownContent: React.ReactNode;
+  className?: string;
 }
 
 const TableDropdown: React.FC<DropdownProps> = ({
   dropdownButton,
   dropdownContent,
+  className = "",
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const buttonRef = useRef<HTMLDivElement>(null);
@@ -64,7 +66,7 @@ const TableDropdown: React.FC<DropdownProps> = ({
   }, []);
 
   return (
-    <div>
+    <div className={`${className}`}>
       <div onClick={toggle} ref={buttonRef}>
         {dropdownButton}
       </div>

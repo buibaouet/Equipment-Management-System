@@ -15,28 +15,28 @@ public interface IEquipmentCategoryService
     /// <summary>
     /// Lấy danh sách danh mục thiết bị phân trang
     /// </summary>
-    /// <param name="param"></param>
+    /// <ParamPaging name="param"></ParamPaging>
     /// <returns></returns>
     Task<Response<PagingDataModel<CategoryPagingModel>>> GetPaging(PaginationParam param);
 
     /// <summary>
     /// Tạo mới danh mục thiết bị / Cập nhật thông tin danh mục thiết bị
     /// </summary>
-    /// <param name="category"></param>
+    /// <ParamPaging name="category"></ParamPaging>
     /// <returns></returns>
     Task<Response<CategoryResponseModel>> CreateOrUpdate(Domain.Entities.EquipmentCategory category);
     
     /// <summary>
     /// Lấy thông tin danh mục thiết bị theo Id
     /// </summary>
-    /// <param name="id"></param>
+    /// <ParamPaging name="id"></ParamPaging>
     /// <returns></returns>
     public Task<Response<Domain.Entities.EquipmentCategory>> GetByIdAsync(int id);
     
     /// <summary>
     /// Cập nhật trạng thái danh mục thiết bị
     /// </summary>
-    /// <param name="id"></param>
+    /// <ParamPaging name="id"></ParamPaging>
     /// <returns></returns>
     public Task<Response<bool>> UpdateStatusCategory(int id);
 }

@@ -1,6 +1,5 @@
 import {
   Table,
-  TableBody,
   TableCell,
   TableRow,
 } from "../../components/ui/table";
@@ -12,12 +11,13 @@ import {
 import Badge from "../../components/ui/badge/Badge";
 import useUserManagement from "./useUserManagement";
 import PageMeta from "../../components/common/PageMeta";
-import RoleEnum from "../../utils/enumerations";
+import { RoleEnum } from "../../utils/enumerations";
 import { useModal } from "../../hooks/useModal";
 import UserInfoModal from "./UserInfoModal";
 import { useState } from "react";
 import { UserEntity } from "../../types/User";
 import HeaderTable from "../../components/ui/table/HeaderTable";
+import TableBodyContent from "../../components/ui/table/TableBodyContent";
 
 export default function UserManagement() {
   const {
@@ -28,7 +28,8 @@ export default function UserManagement() {
     totalItems,
     totalPages,
     users,
-    refreshUsers
+    refreshUsers,
+    isLoading
   } = useUserManagement();
 
   const { isOpen, openModal, closeModal } = useModal();
@@ -78,9 +79,12 @@ export default function UserManagement() {
           <div>
             <Table>
               <HeaderTable arrColumns={arrColumns} handleSort={handleSort} />
-              <TableBody>
-                {users.map((item: any, i: number) => (
-                  <TableRow key={i + 1}>
+              <TableBodyContent
+                isLoading={isLoading}
+                data={users}
+                columns={arrColumns}
+                renderRow={(item: any, index: number) => (
+                  <TableRow key={index + 1}>
                     <TableCell className="px-4 py-4 font-medium text-gray-800 border border-gray-100 dark:border-white/[0.05] dark:text-white text-theme-sm whitespace-nowrap ">
                       {item.userName}
                     </TableCell>
@@ -107,7 +111,7 @@ export default function UserManagement() {
                         {item.role == RoleEnum.Admin
                           ? "Quản trị viên"
                           : item.role == RoleEnum.Manager
-                            ? "Quản lý dự án"
+                            ? "Quản lý phòng ban"
                             : "Người dùng"}
                       </Badge>
                     </TableCell>
@@ -123,8 +127,8 @@ export default function UserManagement() {
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
+                )}
+              />
             </Table>
           </div>
         </div>

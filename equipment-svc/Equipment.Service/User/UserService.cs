@@ -125,6 +125,22 @@ public class UserService : IUserService
 
         return new Response<List<UserNameModel>>(result);
     }
+    
+    public async Task<Response<List<UserNameModel>>> GetListUserActive()
+    {
+        var managers = _userRepository.GetListAsync(u => u.Role != Enumerations.Role.Admin);
+
+        var result = managers
+            .Select(u => new UserNameModel
+            {
+                Id = u.Id,
+                UserName = u.UserName,
+                FullName = u.FullName,
+            })
+            .ToList();
+
+        return new Response<List<UserNameModel>>(result);
+    }
 
     private static UserResponseModel MapToResponseModel(
         Domain.Entities.User user,

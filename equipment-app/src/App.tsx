@@ -8,7 +8,7 @@ import Login from "./pages/AuthPages/Login";
 import Register from "./pages/AuthPages/Register";
 import ChangePassword from "./pages/AuthPages/ChangePassword";
 import Logout from "./pages/AuthPages/Logout";
-import BorrowReturn from "./pages/BorrowReturn/BorrowReturn";
+import BorrowReturnList from "./pages/BorrowReturn/BorrowReturnList";
 import MyEquipment from "./pages/MyEquipment/MyEquipment";
 import Maintenance from "./pages/Maintenance/Maintenance";
 import ApprovedRequest from "./pages/ApprovedRequest/ApprovedRequest";
@@ -17,7 +17,7 @@ import CategoryList from "./pages/Category/CategoryList";
 import UserManagement from "./pages/UserManagement/UserManagement";
 import PrivateRoute from "./layout/PrivateRoute";
 import NotFound from "./pages/OtherPage/NotFound";
-import RoleEnum from "./utils/enumerations";
+import { RoleEnum } from "./utils/enumerations";
 import { useAuth } from "./hooks/useAuth";
 import UserProfiles from "./pages/UserProfile/UserProfiles";
 
@@ -63,7 +63,7 @@ export default function App() {
           <Route element={<PrivateRoute> <AppLayout /> </PrivateRoute>}>
             <Route index path="/" element={<Ecommerce />} />
             <Route path="/equipment-list" element={<EquipmentList />} />
-            <Route path="/equipment-detail" element={<EquipmentDetail />} />
+            <Route path="/equipment-detail/:id" element={<EquipmentDetail />} />
             <Route path="/borrow-request" element={<ApprovedRequest />} />
             <Route path="/profile" element={<UserProfiles />} />
           </Route>
@@ -71,10 +71,11 @@ export default function App() {
           {/* Role-based routes */}
           <Route element={<PrivateRoute allowedRoles={[RoleEnum.User, RoleEnum.Manager]}> <AppLayout /> </PrivateRoute>}>
             <Route path="/my-equipment" element={<MyEquipment />} />
-            <Route path="/borrow-return" element={<BorrowReturn />} />
+            <Route path="/borrow-return" element={<BorrowReturnList />} />
           </Route>
 
           <Route element={<PrivateRoute allowedRoles={[RoleEnum.Admin, RoleEnum.Manager]}> <AppLayout /> </PrivateRoute>}>
+            <Route path="/equipment-detail" element={<EquipmentDetail />} />
             <Route path="/maintenance" element={<Maintenance />} />
           </Route>
 

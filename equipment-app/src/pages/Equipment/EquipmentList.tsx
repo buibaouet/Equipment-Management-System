@@ -1,56 +1,70 @@
 import Button from "../../components/ui/button/Button";
 import {
   Table,
-  TableBody,
   TableCell,
-  TableHeader,
-  TableRow,
+  TableRow
 } from "../../components/ui/table";
 import PaginationWithIcon from "../../components/ui/table/PaginationWithIcon";
 import {
   Pencil,
-  Trash2Icon,
   ArrowBigDownDash,
   PlusCircle,
-  SeparatorHorizontal,
-  SearchIcon
+  SearchIcon,
+  EyeIcon,
+  EllipsisVerticalIcon
 } from "lucide-react";
 import { useNavigate } from "react-router";
 import Badge from "../../components/ui/badge/Badge";
 import useEquipmentList from "./useEquipmentList";
 import FilterDropdown from "./FilterDropdown";
 import PageMeta from "../../components/common/PageMeta";
-
-
-type SortKey = "code" | "name" | "pice";
-
-
+import HeaderTable from "../../components/ui/table/HeaderTable";
+import { EquipmentStatusEnum } from "../../utils/enumerations";
+import { useAuth } from "../../hooks/useAuth";
+import TableBodyContent from "../../components/ui/table/TableBodyContent";
+import { useState } from "react";
+import EquipmentModal from "./EquipmentModal";
+import TableDropdown from "../../components/common/TableDropdown";
 
 export default function EquipmentList() {
   const navigate = useNavigate();
+  const { isAdmin, isManagerOrAdmin } = useAuth();
   const {
     showFilter,
     setShowFilter,
-    searchTerm,
-    setSearchTerm,
+    handleSearch,
     handleSort,
     currentPage,
     handlePageChange,
     totalItems,
     totalPages,
-    currentData
+    equipments: currentData,
+    handleApplyFilter,
+    categoryId,
+    departmentId,
+    status,
+    isLoading
   } = useEquipmentList();
 
   const arrColumns = [
-    { key: "code", label: "Mã thiết bị" },
-    { key: "name", label: "Tên thiết bị" },
-    { key: "categoryName", label: "Loại thiết bị" },
-    { key: "price", label: "Giá trị" },
-    { key: "departmentName", label: "Phòng ban" },
-    { key: "owner", label: "Người sử dụng" },
-    { key: "status", label: "Trạng thái" },
+    { key: "code", label: "Mã thiết bị", sortable: true },
+    { key: "name", label: "Tên thiết bị", sortable: true },
+    { key: "categoryName", label: "Loại thiết bị", sortable: false },
+    { key: "price", label: "Giá trị", sortable: true },
+    { key: "departmentName", label: "Phòng ban", sortable: false },
+    { key: "ownerName", label: "Người sử dụng", sortable: false },
+    { key: "status", label: "Trạng thái", sortable: true },
   ];
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedEquipmentId, setSelectedEquipmentId] = useState<number | null>(null);
+  const handleOpenModal = (equipmentId: number) => {
+    setSelectedEquipmentId(equipmentId);
+    setIsModalOpen(true);
+  };
 
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
 
   return (
     <div>
@@ -67,15 +81,19 @@ export default function EquipmentList() {
           </div>
 
           <div className="flex gap-3">
-            <Button variant="outline">
-              Xuất dữ liệu
-              <ArrowBigDownDash className="w-5 h-5" />
-            </Button>
+            {isAdmin() && (
+              <Button variant="outline">
+                Xuất dữ liệu
+                <ArrowBigDownDash className="w-5 h-5" />
+              </Button>
+            )}
 
-            <Button variant="primary">
-              <PlusCircle className="w-5 h-5" />
-              Thêm thiết bị
-            </Button>
+            {isManagerOrAdmin() && (
+              <Button variant="primary" onClick={() => navigate('/equipment-detail')}>
+                <PlusCircle className="w-5 h-5" />
+                Thêm thiết bị
+              </Button>
+            )}
           </div>
         </div>
         <div className="border-b border-gray-200 px-5 py-4 dark:border-gray-800">
@@ -88,97 +106,122 @@ export default function EquipmentList() {
                 type="text"
                 placeholder="Tìm kiếm..."
                 className="shadow-sm focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 pr-4 pl-11 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-none sm:w-[300px] sm:min-w-[300px] dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => handleSearch(e.target.value)}
               />
             </div>
             <FilterDropdown
               showFilter={showFilter}
               setShowFilter={setShowFilter}
+              onApplyFilter={handleApplyFilter}
+              initialFilters={{ categoryId, departmentId, status }}
             />
           </div>
         </div>
         <div className="max-w-full overflow-x-auto custom-scrollbar">
           <div>
             <Table>
-              <TableHeader className="border-t border-gray-100 dark:border-white/[0.05]">
-                <TableRow>
-                  {arrColumns.map(({ key, label }) => (
-                    <TableCell
-                      key={key}
-                      isHeader
-                      className="px-4 py-3 border border-gray-100 dark:border-white/[0.05]"
-                    >
-                      <div
-                        className="flex items-center justify-between cursor-pointer"
-                        onClick={() => handleSort(key as SortKey)}
-                      >
-                        <p className="font-medium text-gray-700 text-theme-xs dark:text-gray-400">
-                          {label}
-                        </p>
-                        <button className="text-gray-500">
-                          <SeparatorHorizontal className="h-3 w-3" />
-                        </button>
-                      </div>
+              <HeaderTable arrColumns={arrColumns} handleSort={handleSort} />
+              <TableBodyContent
+                isLoading={isLoading}
+                data={currentData}
+                columns={arrColumns}
+                renderRow={(item: any, index: number) => (
+                  <TableRow key={index + 1}>
+                    <TableCell className="px-4 py-3.5 font-medium text-gray-800 border border-gray-100 dark:border-white/[0.05] dark:text-white text-theme-sm whitespace-nowrap ">
+                      {item.code}
                     </TableCell>
-                  ))}
-                  <TableCell
-                    isHeader
-                    className="px-4 py-3 border border-gray-100 dark:border-white/[0.05]"
-                  >
-                    <p className="font-medium text-gray-700 text-theme-xs dark:text-gray-400">
-                      Thao tác
-                    </p>
-                  </TableCell>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {currentData.map((item: any, i: number) => (
-                  <TableRow key={i + 1}>
-                    <TableCell className="px-4 py-4 font-medium text-gray-800 border border-gray-100 dark:border-white/[0.05] dark:text-white text-theme-sm whitespace-nowrap ">
-                      {item["name"]}
+                    <TableCell className="px-4 py-3.5 font-normal text-gray-800 border border-gray-100 dark:border-white/[0.05] text-theme-sm dark:text-gray-400 whitespace-nowrap ">
+                      {item.name}
                     </TableCell>
-                    <TableCell className="px-4 py-4 font-normal text-gray-800 border border-gray-100 dark:border-white/[0.05] text-theme-sm dark:text-gray-400 whitespace-nowrap ">
-                      {item.position}
+                    <TableCell className="px-4 py-3.5 font-normal text-gray-800 border border-gray-100 dark:border-white/[0.05] text-theme-sm dark:text-gray-400 whitespace-nowrap ">
+                      {item.categoryName}
                     </TableCell>
-                    <TableCell className="px-4 py-4 font-normal text-gray-800 border border-gray-100 dark:border-white/[0.05] text-theme-sm dark:text-gray-400 whitespace-nowrap ">
-                      {item.location}
+                    <TableCell className="px-4 py-3.5 font-normal text-gray-800 border dark:border-white/[0.05] border-gray-100 text-theme-sm dark:text-gray-400 whitespace-nowrap ">
+                      {item.price
+                        ? new Intl.NumberFormat("vi-VN").format(item.price)
+                        : ""}
                     </TableCell>
-                    <TableCell className="px-4 py-4 font-normal text-gray-800 border dark:border-white/[0.05] border-gray-100 text-theme-sm dark:text-gray-400 whitespace-nowrap ">
-                      {item.age}
+                    <TableCell className="px-4 py-3.5 font-normal text-gray-800 border border-gray-100  dark:border-white/[0.05] text-theme-sm dark:text-gray-400 whitespace-nowrap ">
+                      {item.departmentName}
                     </TableCell>
-                    <TableCell className="px-4 py-4 font-normal text-gray-800 border border-gray-100  dark:border-white/[0.05] text-theme-sm dark:text-gray-400 whitespace-nowrap ">
-                      {item.date}
+                    <TableCell className="px-4 py-3.5 font-normal text-gray-800 border border-gray-100  dark:border-white/[0.05] text-theme-sm dark:text-gray-400 whitespace-nowrap ">
+                      {item.ownerName}
                     </TableCell>
-                    <TableCell className="px-4 py-4 font-normal text-gray-800 border border-gray-100  dark:border-white/[0.05] text-theme-sm dark:text-gray-400 whitespace-nowrap ">
-                      {item.salary}
-                    </TableCell>
-                    <TableCell className="px-4 py-4 font-normal text-gray-800 border border-gray-100 dark:border-white/[0.05] text-theme-sm dark:text-white/90 whitespace-nowrap">
+                    <TableCell className="px-4 py-3.5 font-normal text-gray-800 border border-gray-100 dark:border-white/[0.05] text-theme-sm dark:text-white/90 whitespace-nowrap">
                       <Badge
                         size="sm"
                         color={
-                          item.age < 30
+                          item.status === EquipmentStatusEnum.Available
                             ? "success"
-                            : item.age < 50
-                              ? "warning"
-                              : "error"
+                            : item.status === EquipmentStatusEnum.Borrowed
+                              ? "info"
+                              : item.status === EquipmentStatusEnum.Maintenance
+                                ? "primary"
+                                : item.status === EquipmentStatusEnum.Lost
+                                  ? "dark"
+                                  : item.status === EquipmentStatusEnum.BrokenPart
+                                    ? "warning"
+                                    : "error"
                         }
                       >
-                        {"item.status"}
+                        {item.status === EquipmentStatusEnum.Available
+                          ? "Còn sử dụng"
+                          : item.status === EquipmentStatusEnum.Borrowed
+                            ? "Đang mượn"
+                            : item.status === EquipmentStatusEnum.Maintenance
+                              ? "Đang bảo dưỡng"
+                              : item.status === EquipmentStatusEnum.Lost
+                                ? "Đã mất"
+                                : item.status === EquipmentStatusEnum.BrokenPart
+                                  ? "Hỏng một phần"
+                                  : item.status === EquipmentStatusEnum.Broken
+                                    ? "Đã hỏng"
+                                    : ""
+                        }
                       </Badge>
                     </TableCell>
-                    <TableCell className="px-4 py-4 font-normal text-gray-800 border border-gray-100 dark:border-white/[0.05] text-theme-sm dark:text-white/90 whitespace-nowrap ">
-                      <div className="flex items-center w-full gap-2">
-                        <Pencil
-                          className="w-4 h-4 cursor-pointer hover:text-gray"
-                          onClick={() => navigate('/equipment-detail')}
+                    <TableCell className="px-4 py-3.5 font-normal text-gray-800 border border-gray-100 dark:border-white/[0.05] text-theme-sm dark:text-white/90 whitespace-nowrap ">
+                      <div className="flex items-center justify-center w-full gap-2">
+                        <span title="Xem">
+                          <EyeIcon className="w-4 h-4 cursor-pointer hover:text-gray"
+                            onClick={() => handleOpenModal(item.id)}
+                          />
+                        </span>
+                        <span title="Sửa">
+                          <Pencil
+                            className="w-4 h-4 cursor-pointer hover:text-gray"
+                            onClick={() => navigate(`/equipment-detail/${item.id}`)}
+                          />
+                        </span>
+                        <TableDropdown
+                          className="h-4 w-4"
+                          dropdownButton={
+                            <button className="text-gray-500 dark:text-gray-400" title="Thêm thao tác">
+                              <EllipsisVerticalIcon className="w-4 h-4" />
+                            </button>
+                          }
+                          dropdownContent={
+                            <>
+                              <button
+                                className="text-xs flex w-full rounded-lg px-3 py-2 text-left font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+                                onClick={() => navigate(`/equipment-detail/${item.id}`)}
+                                title="Sửa"
+                              >
+                                Sửa
+                              </button>
+                              <button
+                                className="text-xs flex w-full rounded-lg px-3 py-2 text-left font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+                              >
+                                Xóa
+                              </button>
+                            </>
+                          }
                         />
-                        <Trash2Icon className="w-4 h-4 cursor-pointer hover:text-error-500" />
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
+                )}
+              />
             </Table>
           </div>
         </div>
@@ -190,6 +233,12 @@ export default function EquipmentList() {
           onPageChange={handlePageChange}
         />
       </div>
+
+      <EquipmentModal
+        id={selectedEquipmentId ?? 0}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+      />
     </div>
   );
 }
