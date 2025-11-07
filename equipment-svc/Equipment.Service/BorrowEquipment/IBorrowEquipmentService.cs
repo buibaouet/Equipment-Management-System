@@ -11,6 +11,10 @@ public interface IBorrowEquipmentService
         PaginationParam param,
         int currentUserId
     );
+    Task<Response<PagingDataModel<BorrowEquipmentRequestPagingModel>>> GetRequestPaging(
+        PaginationParam param,
+        int currentUserId
+    );
     Task<Response<BorrowEquipmentResponseModel>> CreateOrUpdateBorrowRequest(
         Domain.Entities.BorrowEquipment borrowEquipment,
         int currentUserId

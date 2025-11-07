@@ -1,7 +1,8 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { baseQueryWithReauth } from '../utils/baseQuery';
 import { BaseResponse, PagingDataModel } from '../types/Response';
-import { EquipmentModel, EquipmentPagingResponse, EquipmentPagingParam, EquipmentResponseModel, EquipmentEntity } from '../types/Equipment';
+import { EquipmentModel, EquipmentPagingResponse, EquipmentPagingParam, EquipmentResponseModel, EquipmentEntity, MyEquipmentPagingResponse } from '../types/Equipment';
+import { PaginationParam } from '../types/PagingParam';
 
 export const useEquipmentApi = createApi({
     reducerPath: 'equipmentApi',
@@ -48,6 +49,17 @@ export const useEquipmentApi = createApi({
             }),
             invalidatesTags: ['Equipment'],
         }),
+        getListMyEquipmentPaging: builder.mutation<
+            BaseResponse<PagingDataModel<MyEquipmentPagingResponse>>,
+            { param: PaginationParam }
+        >({
+            query: ({ param }) => ({
+                url: '/equipment/me/paging',
+                method: 'POST',
+                body: param,
+            }),
+            invalidatesTags: ['Equipment'],
+        }),
     }),
 });
 
@@ -57,4 +69,5 @@ export const {
     useGetEquipmentListQuery,
     useCreateOrUpdateEquipmentMutation,
     useUpdateEquipmentStatusMutation,
+    useGetListMyEquipmentPagingMutation,
 } = useEquipmentApi;

@@ -128,6 +128,43 @@ public class EquipmentController : ControllerBase
         }
     }
     
+    
+    /// <summary>
+    /// Lấy danh sách thiết bị phân trang thiet bị của tôi
+    /// </summary>
+    /// <ParamPaging name="param"></ParamPaging>
+    /// <returns></returns>
+    [HttpPost("me/paging")]
+    public async Task<ActionResult> GetPagingMyEquipment([FromBody] PaginationParam param)
+    {
+        try
+        {
+            var currentUserId = GetCurrentUserId();
+            if (currentUserId == null)
+            {
+                return StatusCode(
+                    StatusCodes.Status401Unauthorized,
+                    "Không thể xác định người dùng"
+                );
+            }
+            
+            var res = await _equipmentService.GetPagingMyEquipment(param, currentUserId.Value);
+            if (res.StatusCode != StatusCodes.Status200OK)
+            {
+                return StatusCode(res.StatusCode, res.Message);
+            }
+            return Ok(res);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                "Xảy ra lỗi trong quá trình xử lý: \n" + ex.Message + ex.StackTrace
+            );
+        }
+    }
+
+    
     private int? GetCurrentUserId()
     {
         // JWT token stores user ID in "sub" claim (JwtRegisteredClaimNames.Sub)

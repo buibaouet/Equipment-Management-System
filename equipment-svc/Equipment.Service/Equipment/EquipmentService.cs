@@ -15,18 +15,21 @@ public class EquipmentService : IEquipmentService
     private readonly IEquipmentCategoryRepository _equipmentCategoryRepository;
     private readonly IDepartmentRepository _departmentRepository;
     private readonly IUserRepository _userRepository;
+    private readonly IBorrowEquipmentRepository _borrowEquipmentRepository;
 
     public EquipmentService(
         IEquipmentRepository equipmentRepository,
         IEquipmentCategoryRepository equipmentCategoryRepository,
         IDepartmentRepository departmentRepository,
-        IUserRepository userRepository
+        IUserRepository userRepository,
+        IBorrowEquipmentRepository borrowEquipmentRepository
     )
     {
         _equipmentRepository = equipmentRepository;
         _equipmentCategoryRepository = equipmentCategoryRepository;
         _departmentRepository = departmentRepository;
         _userRepository = userRepository;
+        _borrowEquipmentRepository = borrowEquipmentRepository;
     }
 
     public async Task<Response<Domain.Entities.Equipment>> GetById(int id)
@@ -263,5 +266,65 @@ public class EquipmentService : IEquipmentService
             .ToList();
 
         return new Response<List<EquipmentModel>>(entity);
+    }
+
+    public async Task<Response<PagingDataModel<MyEquipmentPagingModel>>> GetPagingMyEquipment(
+        PaginationParam param,
+        int userId
+    )
+    {
+        var resultData = new PagingDataModel<MyEquipmentPagingModel>();
+
+        // list equipment borrowed by user
+        var borrowedEquipments = await _borrowEquipmentRepository
+            .GetListAsync(x =>
+                x.RequestedByUserId == userId
+                && x.Status == Enumerations.BorrowEquipmentStatus.Borrowed
+            )
+            .ToListAsync();
+
+        var borrowedEquipmentsIds = borrowedEquipments.Select(x => x.EquipmentId).ToList();
+
+        Expression<Func<Domain.Entities.Equipment, bool>> expression = equipment =>
+            equipment.Id > 0
+            && (equipment.OwnerId == userId || borrowedEquipmentsIds.Contains(equipment.Id));
+
+        var pagingData = await _equipmentRepository.GetPagingAsync(param, expression);
+
+        foreach (var item in pagingData.Data)
+        {
+            var category = await _equipmentCategoryRepository.GetByIdAsync(item.CategoryId);
+            var department = await _departmentRepository.GetByIdAsync(item.DepartmentId);
+            var owner = await _userRepository.GetByIdAsync(item.OwnerId ?? 0);
+            var equipmentModel = new MyEquipmentPagingModel
+            {
+                Id = item.Id,
+                Code = item.Code,
+                Name = item.Name,
+                OwnerId = item.OwnerId,
+                OwnerName = owner?.UserName + " - " + owner?.FullName,
+                Price = item.Price,
+                CategoryId = item.CategoryId,
+                CategoryName = category?.Name ?? "-",
+                DepartmentId = item.DepartmentId,
+                DepartmentName = department?.Name ?? "-",
+                Status = item.Status,
+                CreatedDate = item.CreatedDate,
+                UpdatedDate = item.UpdatedDate,
+                IsBorrow = borrowedEquipmentsIds.Contains(item.Id),
+                RemainingDays = borrowedEquipmentsIds.Contains(item.Id)
+                    ? (borrowedEquipments
+                        .FirstOrDefault(x => x.EquipmentId == item.Id)!
+                        .ToDate
+                        .Date - DateTime.Now.Date).Days
+                    : 0,
+            };
+            resultData.Data.Add(equipmentModel);
+        }
+
+        resultData.TotalPages = pagingData.TotalPages;
+        resultData.TotalRecords = pagingData.TotalRecords;
+
+        return new Response<PagingDataModel<MyEquipmentPagingModel>>(resultData);
     }
 }

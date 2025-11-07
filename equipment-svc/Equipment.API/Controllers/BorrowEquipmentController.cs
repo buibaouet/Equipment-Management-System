@@ -206,6 +206,41 @@ public class BorrowEquipmentController : ControllerBase
             );
         }
     }
+    
+    /// <summary>
+    /// Lấy danh sách yêu cầu mượn thiết bị phân trang để duyệt
+    /// </summary>
+    /// <param name="param"></param>
+    /// <returns></returns>
+    [HttpPost("request/paging")]
+    public async Task<ActionResult> GetRequestPaging([FromBody] PaginationParam param)
+    {
+        try
+        {
+            var currentUserId = GetCurrentUserId();
+            if (currentUserId == null)
+            {
+                return StatusCode(
+                    StatusCodes.Status401Unauthorized,
+                    "Không thể xác định người dùng"
+                );
+            }
+            
+            var res = await _borrowEquipmentService.GetRequestPaging(param, currentUserId.Value);
+            if (res.StatusCode != StatusCodes.Status200OK)
+            {
+                return StatusCode(res.StatusCode, res.Message);
+            }
+            return Ok(res);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                "Xảy ra lỗi trong quá trình xử lý: \n" + ex.Message + ex.StackTrace
+            );
+        }
+    }
 
     private int? GetCurrentUserId()
     {

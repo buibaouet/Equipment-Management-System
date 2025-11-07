@@ -9,6 +9,7 @@ public interface IEquipmentService
 {
     Task<Response<Domain.Entities.Equipment>> GetById(int id);
     Task<Response<PagingDataModel<EquipmentPagingModel>>> GetPaging(EquipmentPagingParam param);
+    Task<Response<PagingDataModel<MyEquipmentPagingModel>>> GetPagingMyEquipment(PaginationParam param, int userId);
     Task<Response<EquipmentResponseModel>> CreateOrUpdateEquipment(Domain.Entities.Equipment equipment);
     Task<Response<List<EquipmentModel>>> GetListEquipmentAvaiable(int userId);
 }

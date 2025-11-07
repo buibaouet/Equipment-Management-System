@@ -1,43 +1,97 @@
 import {
   Table,
-  TableBody,
   TableCell,
-  TableHeader,
   TableRow,
 } from "../../components/ui/table";
 import PaginationWithIcon from "../../components/ui/table/PaginationWithIcon";
 import {
-  Pencil,
-  Trash2Icon,
-  SeparatorHorizontal,
+  EyeIcon,
+  RotateCcwIcon,
 } from "lucide-react";
-import { useNavigate } from "react-router";
 import Badge from "../../components/ui/badge/Badge";
 import useMyEquipment from "./useMyEquipment";
 import PageMeta from "../../components/common/PageMeta";
-
-
-type SortKey = "name" | "position" | "location" | "age" | "date" | "salary";
-
+import { EquipmentStatusEnum } from "../../utils/enumerations";
+import TableBodyContent from "../../components/ui/table/TableBodyContent";
+import HeaderTable from "../../components/ui/table/HeaderTable";
+import { useState } from "react";
+import EquipmentModal from "../Equipment/EquipmentModal";
 
 export default function MyEquipment() {
-  const navigate = useNavigate();
   const {
     handleSort,
     currentPage,
     handlePageChange,
     totalItems,
     totalPages,
-    currentData
+    currentData,
+    isLoading,
   } = useMyEquipment();
 
   const arrColumns = [
-    { key: "code", label: "Mã thiết bị" },
-    { key: "name", label: "Tên thiết bị" },
-    { key: "categoryName", label: "Loại thiết bị" },
-    { key: "price", label: "Giá trị" },
-    { key: "status", label: "Trạng thái" },
+    { key: "isBorrow", label: "Loại", sortable: false },
+    { key: "code", label: "Mã thiết bị", sortable: true },
+    { key: "name", label: "Tên thiết bị", sortable: true },
+    { key: "categoryName", label: "Loại thiết bị", sortable: false },
+    { key: "price", label: "Giá trị", sortable: true },
+    { key: "status", label: "Trạng thái", sortable: false },
   ];
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedEquipmentId, setSelectedEquipmentId] = useState<number | null>(null);
+  const handleOpenModal = (equipmentId: number) => {
+    setSelectedEquipmentId(equipmentId);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
+
+  const getStatusLabel = (status: EquipmentStatusEnum) => {
+    switch (status) {
+      case EquipmentStatusEnum.Available:
+        return "Còn sử dụng";
+      case EquipmentStatusEnum.Borrowed:
+        return "Đang mượn";
+      case EquipmentStatusEnum.Maintenance:
+        return "Đang bảo dưỡng";
+      case EquipmentStatusEnum.Lost:
+        return "Đã mất";
+      case EquipmentStatusEnum.BrokenPart:
+        return "Hỏng một phần";
+      case EquipmentStatusEnum.Broken:
+        return "Đã hỏng";
+      default:
+        return "";
+    }
+  };
+
+  const getStatusColor = (status: EquipmentStatusEnum) => {
+    switch (status) {
+      case EquipmentStatusEnum.Available:
+        return "success";
+      case EquipmentStatusEnum.Borrowed:
+        return "info";
+      case EquipmentStatusEnum.Maintenance:
+        return "primary";
+      case EquipmentStatusEnum.Lost:
+        return "dark";
+      case EquipmentStatusEnum.BrokenPart:
+        return "warning";
+      case EquipmentStatusEnum.Broken:
+        return "error";
+      default:
+        return "dark";
+    }
+  };
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND'
+    }).format(price);
+  };
 
 
   return (
@@ -57,78 +111,71 @@ export default function MyEquipment() {
         <div className="max-w-full overflow-x-auto custom-scrollbar">
           <div>
             <Table>
-              <TableHeader className="border-t border-gray-100 dark:border-white/[0.05]">
-                <TableRow>
-                  {arrColumns.map(({ key, label }) => (
-                    <TableCell
-                      key={key}
-                      isHeader
-                      className="px-4 py-3 border border-gray-100 dark:border-white/[0.05]"
-                    >
-                      <div
-                        className="flex items-center justify-between cursor-pointer"
-                        onClick={() => handleSort(key as SortKey)}
-                      >
-                        <p className="font-medium text-gray-700 text-theme-xs dark:text-gray-400">
-                          {label}
-                        </p>
-                        <button className="text-gray-500">
-                          <SeparatorHorizontal className="h-3 w-3" />
-                        </button>
-                      </div>
+              <HeaderTable arrColumns={arrColumns} handleSort={handleSort} />
+              <TableBodyContent
+                isLoading={isLoading}
+                data={currentData}
+                columns={arrColumns}
+                renderRow={(item: any, index: number) => (
+                  <TableRow key={index + 1}>
+                    <TableCell className="px-4 py-4 font-normal text-gray-800 border border-gray-100 dark:border-white/[0.05] text-theme-sm dark:text-white/90 whitespace-nowrap">
+                      {(
+                        <Badge
+                          size="sm"
+                          color={item.isBorrow ? "warning" : "success"}
+                        >
+                          {item.isBorrow ? "Thiết bị mượn" : "Thiết bị sở hữu"}
+                        </Badge>
+                      )}
                     </TableCell>
-                  ))}
-                  <TableCell
-                    isHeader
-                    className="px-4 py-3 border border-gray-100 dark:border-white/[0.05]"
-                  >
-                    <p className="font-medium text-gray-700 text-theme-xs dark:text-gray-400">
-                      Thao tác
-                    </p>
-                  </TableCell>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {currentData.map((item: any, i: number) => (
-                  <TableRow key={i + 1}>
                     <TableCell className="px-4 py-4 font-medium text-gray-800 border border-gray-100 dark:border-white/[0.05] dark:text-white text-theme-sm whitespace-nowrap ">
-                      {item["name"]}
+                      {item.code}
                     </TableCell>
                     <TableCell className="px-4 py-4 font-normal text-gray-800 border border-gray-100 dark:border-white/[0.05] text-theme-sm dark:text-gray-400 whitespace-nowrap ">
-                      {item.position}
+                      {item.name}
                     </TableCell>
                     <TableCell className="px-4 py-4 font-normal text-gray-800 border border-gray-100 dark:border-white/[0.05] text-theme-sm dark:text-gray-400 whitespace-nowrap ">
-                      {item.location}
+                      {item.categoryName}
                     </TableCell>
                     <TableCell className="px-4 py-4 font-normal text-gray-800 border dark:border-white/[0.05] border-gray-100 text-theme-sm dark:text-gray-400 whitespace-nowrap ">
-                      {item.age}
+                      {formatPrice(item.price)}
                     </TableCell>
                     <TableCell className="px-4 py-4 font-normal text-gray-800 border border-gray-100 dark:border-white/[0.05] text-theme-sm dark:text-white/90 whitespace-nowrap">
-                      <Badge
-                        size="sm"
-                        color={
-                          item.age < 30
-                            ? "success"
-                            : item.age < 50
-                              ? "warning"
-                              : "error"
-                        }
-                      >
-                        {"item.status"}
-                      </Badge>
+                      {item.isBorrow
+                        ? (
+                          <Badge
+                            size="sm"
+                            color={item.remainingDays < 0 ? "error" : item.remainingDays <= 3 ? "warning" : "info"}
+                          >
+                            {item.remainingDays >= 0 ? `Còn ${item.remainingDays} ngày` : `Quá hạn ${Math.abs(item.remainingDays)} ngày`}
+                          </Badge>
+                        )
+                        : (
+                          <Badge
+                            size="sm"
+                            color={getStatusColor(item.status)}
+                          >
+                            {getStatusLabel(item.status)}
+                          </Badge>
+                        )}
                     </TableCell>
                     <TableCell className="px-4 py-4 font-normal text-gray-800 border border-gray-100 dark:border-white/[0.05] text-theme-sm dark:text-white/90 whitespace-nowrap ">
-                      <div className="flex items-center w-full gap-2">
-                        <Pencil
-                          className="w-4 h-4 cursor-pointer hover:text-gray"
-                          onClick={() => navigate('/equipment-detail')}
-                        />
-                        <Trash2Icon className="w-4 h-4 cursor-pointer hover:text-error-500" />
+                      <div className="flex items-center justify-center w-full gap-2">
+                        <span title="Xem">
+                          <EyeIcon className="w-4 h-4 cursor-pointer hover:text-gray"
+                            onClick={() => handleOpenModal(item.id)}
+                          />
+                        </span>
+                        {item.isBorrow && (<span title="Trả">
+                          <RotateCcwIcon className="w-4 h-4 cursor-pointer hover:text-gray"
+                          // onClick={() => handleReturnEquipment(item.id)}
+                          />
+                        </span>)}
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
+                )}
+              />
             </Table>
           </div>
         </div>
@@ -140,6 +187,12 @@ export default function MyEquipment() {
           onPageChange={handlePageChange}
         />
       </div>
-    </div>
+
+      <EquipmentModal
+        id={selectedEquipmentId ?? 0}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+      />
+    </div >
   );
 }

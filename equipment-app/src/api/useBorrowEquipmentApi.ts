@@ -2,7 +2,7 @@ import { createApi } from '@reduxjs/toolkit/query/react';
 import { baseQueryWithReauth } from '../utils/baseQuery';
 import { BaseResponse, PagingDataModel } from '../types/Response';
 import { PaginationParam } from '../types/PagingParam';
-import { BorrowEquipmentEntity, BorrowEquipmentPaging, BorrowEquipmentResponseModel } from '../types/BorrowEquipment';
+import { BorrowEquipmentEntity, BorrowEquipmentPaging, BorrowEquipmentResponseModel, RequestBorrowEquipmentPaging } from '../types/BorrowEquipment';
 
 export const useBorrowEquipmentApi = createApi({
     reducerPath: 'borrowEquipmentApi',
@@ -36,6 +36,31 @@ export const useBorrowEquipmentApi = createApi({
             }),
             invalidatesTags: ['BorrowEquipment'],
         }),
+        getRequestBorrowEquipmentPaging: builder.mutation<
+            BaseResponse<PagingDataModel<RequestBorrowEquipmentPaging>>,
+            { param: PaginationParam }
+        >({
+            query: ({ param }) => ({
+                url: '/borrow-equipment/request/paging',
+                method: 'POST',
+                body: param,
+            }),
+            invalidatesTags: ['BorrowEquipment'],
+        }),
+        approveRequestBorrowEquipment: builder.mutation<BaseResponse<boolean>, { id: number }>({
+            query: ({ id }) => ({
+                url: `/borrow-equipment/approve/${id}`,
+                method: 'PUT',
+            }),
+            invalidatesTags: ['BorrowEquipment'],
+        }),
+        rejectRequestBorrowEquipment: builder.mutation<BaseResponse<boolean>, { id: number }>({
+            query: ({ id }) => ({
+                url: `/borrow-equipment/reject/${id}`,
+                method: 'PUT',
+            }),
+            invalidatesTags: ['BorrowEquipment'],
+        }),
     }),
 });
 
@@ -43,4 +68,7 @@ export const {
     useGetListBorrowEquipmentPagingMutation,
     useBorrowEquipmentMutation,
     useReturnEquipmentMutation,
+    useGetRequestBorrowEquipmentPagingMutation,
+    useApproveRequestBorrowEquipmentMutation,
+    useRejectRequestBorrowEquipmentMutation,
 } = useBorrowEquipmentApi;

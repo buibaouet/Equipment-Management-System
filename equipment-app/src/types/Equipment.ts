@@ -37,6 +37,22 @@ export interface EquipmentPagingResponse {
     status: EquipmentStatusEnum,
 }
 
+export interface MyEquipmentPagingResponse {
+    id: number,
+    code: string,
+    name: string,
+    categoryId: number,
+    categoryName: string,
+    price: number,
+    departmentId: number,
+    departmentName: string,
+    ownerId: number | undefined,
+    ownerName: string | undefined,
+    status: EquipmentStatusEnum,
+    isBorrow: boolean,
+    remainingDays: number,
+}
+
 export interface EquipmentResponseModel {
     isSuccess: boolean;
     codeError: string;

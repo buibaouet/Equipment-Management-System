@@ -1,152 +1,136 @@
 import {
   Table,
-  TableBody,
   TableCell,
-  TableHeader,
   TableRow,
 } from "../../components/ui/table";
 import PaginationWithIcon from "../../components/ui/table/PaginationWithIcon";
 import {
-  Pencil,
-  Trash2Icon,
-  SeparatorHorizontal,
+  EyeIcon,
+  CheckIcon,
+  XIcon,
 } from "lucide-react";
-import { useNavigate } from "react-router";
-import Badge from "../../components/ui/badge/Badge";
+import { useState } from "react";
 import useApprovedRequest from "./useApprovedRequest";
 import PageMeta from "../../components/common/PageMeta";
-
-
-type SortKey = "name" | "position" | "location" | "age" | "date" | "salary";
-
+import TableBodyContent from "../../components/ui/table/TableBodyContent";
+import HeaderTable from "../../components/ui/table/HeaderTable";
+import { RequestBorrowEquipmentPaging } from "../../types/BorrowEquipment";
+import EquipmentModal from "../Equipment/EquipmentModal";
 
 export default function ApprovedRequest() {
-  const navigate = useNavigate();
   const {
     handleSort,
     currentPage,
     handlePageChange,
     totalItems,
     totalPages,
-    currentData
+    currentData,
+    isLoading,
+    handleApprove,
+    handleReject,
   } = useApprovedRequest();
 
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedEquipmentId, setSelectedEquipmentId] = useState<number | null>(null);
+
+  const handleOpenModal = (equipmentId: number) => {
+    setSelectedEquipmentId(equipmentId);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
+
   const arrColumns = [
-    { key: "type", label: "Loại" },
-    { key: "code", label: "Mã thiết bị" },
-    { key: "name", label: "Tên thiết bị" },
-    { key: "categoryName", label: "Loại thiết bị" },
-    { key: "price", label: "Giá trị" },
-    { key: "owner", label: "Người mượn" },
-    { key: "status", label: "Trạng thái" },
+    { key: "equipmentCode", label: "Mã thiết bị", sortable: true },
+    { key: "equipmentName", label: "Tên thiết bị", sortable: true },
+    { key: "categoryName", label: "Loại thiết bị", sortable: false },
+    { key: "departmentName", label: "Phòng ban", sortable: false },
+    { key: "borrowerName", label: "Người mượn", sortable: true },
+    { key: "fromDate", label: "Thời gian mượn", sortable: false },
   ];
+
+  const formatDate = (date: Date | string) => {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    return new Intl.DateTimeFormat('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    }).format(dateObj);
+  };
+
+  const formatDateRange = (fromDate: Date | string, toDate: Date | string) => {
+    return `${formatDate(fromDate)} - ${formatDate(toDate)}`;
+  };
 
   return (
     <div>
       <PageMeta
-        title="Duyệt yêu cầu mượn trả"
-        description="Duyệt yêu cầu mượn trả"
+        title="Duyệt yêu cầu mượn"
+        description="Duyệt yêu cầu mượn"
       />
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
         <div className="flex flex-col justify-between gap-5 border-b border-gray-200 px-5 py-4 sm:flex-row sm:items-center dark:border-gray-800">
           <div>
             <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-              Duyệt yêu cầu mượn trả
+              Duyệt yêu cầu mượn
             </h3>
           </div>
         </div>
         <div className="max-w-full overflow-x-auto custom-scrollbar">
           <div>
             <Table>
-              <TableHeader className="border-t border-gray-100 dark:border-white/[0.05]">
-                <TableRow>
-                  {arrColumns.map(({ key, label }) => (
-                    <TableCell
-                      key={key}
-                      isHeader
-                      className="px-4 py-3 border border-gray-100 dark:border-white/[0.05]"
-                    >
-                      <div
-                        className="flex items-center justify-between cursor-pointer"
-                        onClick={() => handleSort(key as SortKey)}
-                      >
-                        <p className="font-medium text-gray-700 text-theme-xs dark:text-gray-400">
-                          {label}
-                        </p>
-                        <button className="text-gray-500">
-                          <SeparatorHorizontal className="h-3 w-3" />
-                        </button>
-                      </div>
-                    </TableCell>
-                  ))}
-                  <TableCell
-                    isHeader
-                    className="px-4 py-3 border border-gray-100 dark:border-white/[0.05]"
-                  >
-                    <p className="font-medium text-gray-700 text-theme-xs dark:text-gray-400">
-                      Thao tác
-                    </p>
-                  </TableCell>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {currentData.map((item: any, i: number) => (
-                  <TableRow key={i + 1}>
-                    <TableCell className="px-4 py-4 font-normal text-gray-800 border border-gray-100 dark:border-white/[0.05] text-theme-sm dark:text-white/90 whitespace-nowrap">
-                      <Badge
-                        size="sm"
-                        color={
-                          item.age < 30
-                            ? "success"
-                            : item.age < 50
-                              ? "warning"
-                              : "error"
-                        }
-                      >
-                        {"item.status"}
-                      </Badge>
-                    </TableCell>
+              <HeaderTable arrColumns={arrColumns} handleSort={handleSort} />
+              <TableBodyContent
+                isLoading={isLoading}
+                data={currentData}
+                columns={arrColumns}
+                renderRow={(item: RequestBorrowEquipmentPaging, index: number) => (
+                  <TableRow key={item.id || index + 1}>
                     <TableCell className="px-4 py-4 font-medium text-gray-800 border border-gray-100 dark:border-white/[0.05] dark:text-white text-theme-sm whitespace-nowrap ">
-                      {item["name"]}
+                      {item.equipmentCode}
                     </TableCell>
                     <TableCell className="px-4 py-4 font-normal text-gray-800 border border-gray-100 dark:border-white/[0.05] text-theme-sm dark:text-gray-400 whitespace-nowrap ">
-                      {item.position}
+                      {item.equipmentName}
                     </TableCell>
                     <TableCell className="px-4 py-4 font-normal text-gray-800 border border-gray-100 dark:border-white/[0.05] text-theme-sm dark:text-gray-400 whitespace-nowrap ">
-                      {item.location}
-                    </TableCell>
-                    <TableCell className="px-4 py-4 font-normal text-gray-800 border dark:border-white/[0.05] border-gray-100 text-theme-sm dark:text-gray-400 whitespace-nowrap ">
-                      {item.age}
+                      {item.categoryName}
                     </TableCell>
                     <TableCell className="px-4 py-4 font-normal text-gray-800 border border-gray-100 dark:border-white/[0.05] text-theme-sm dark:text-gray-400 whitespace-nowrap ">
-                      {item.location}
+                      {item.departmentName}
                     </TableCell>
-                    <TableCell className="px-4 py-4 font-normal text-gray-800 border border-gray-100 dark:border-white/[0.05] text-theme-sm dark:text-white/90 whitespace-nowrap">
-                      <Badge
-                        size="sm"
-                        color={
-                          item.age < 30
-                            ? "success"
-                            : item.age < 50
-                              ? "warning"
-                              : "error"
-                        }
-                      >
-                        {"item.status"}
-                      </Badge>
+                    <TableCell className="px-4 py-4 font-normal text-gray-800 border border-gray-100 dark:border-white/[0.05] text-theme-sm dark:text-gray-400 whitespace-nowrap ">
+                      {item.borrowerName}
+                    </TableCell>
+                    <TableCell className="px-4 py-4 font-normal text-gray-800 border border-gray-100 dark:border-white/[0.05] text-theme-sm dark:text-gray-400 whitespace-nowrap ">
+                      {formatDateRange(item.fromDate, item.toDate)}
                     </TableCell>
                     <TableCell className="px-4 py-4 font-normal text-gray-800 border border-gray-100 dark:border-white/[0.05] text-theme-sm dark:text-white/90 whitespace-nowrap ">
-                      <div className="flex items-center w-full gap-2">
-                        <Pencil
-                          className="w-4 h-4 cursor-pointer hover:text-gray"
-                          onClick={() => navigate('/equipment-detail')}
-                        />
-                        <Trash2Icon className="w-4 h-4 cursor-pointer hover:text-error-500" />
+                      <div className="flex items-center justify-center w-full gap-2">
+                        <span title="Duyệt">
+                          <CheckIcon 
+                            className="w-4 h-4 cursor-pointer hover:text-success-500 text-success-600 dark:text-success-400" 
+                            onClick={() => handleApprove(item.id)}
+                          />
+                        </span>
+                        <span title="Từ chối">
+                          <XIcon 
+                            className="w-4 h-4 cursor-pointer hover:text-error-500 text-error-600 dark:text-error-400" 
+                            onClick={() => handleReject(item.id)}
+                          />
+                        </span>
+                        <span title="Xem chi tiết">
+                          <EyeIcon 
+                            className="w-4 h-4 cursor-pointer hover:text-gray" 
+                            onClick={() => handleOpenModal(item.equipmentId)}
+                          />
+                        </span>
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
+                )}
+              />
             </Table>
           </div>
         </div>
@@ -158,6 +142,12 @@ export default function ApprovedRequest() {
           onPageChange={handlePageChange}
         />
       </div>
+
+      <EquipmentModal
+        id={selectedEquipmentId ?? 0}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+      />
     </div>
   );
 }
