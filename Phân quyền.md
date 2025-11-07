@@ -144,10 +144,12 @@ Mỗi nhóm người dùng sẽ có quyền hạn, chức năng và giới hạn
 |------------|:----:|:-------------:|:-----:|
 | Đăng nhập / Đăng xuất / Đổi mật khẩu | ✅ | ✅ | ✅ |
 | Cập nhật thông tin cá nhân | ✅ | ✅ | ✅ |
+| Dashboard | ✅ | ✅ | ✅ |
 | Xem danh sách thiết bị | ✅ | ✅ | ✅ |
 | Thêm / Sửa / Xóa thiết bị | ❌ | ✅ (trong dự án) | ✅ (toàn hệ thống) |
-| Mượn / Trả thiết bị | ✅ | ✅ | ✅ |
-| Duyệt yêu cầu mượn / trả | ✅ (có giới hạn) | ✅ (trong dự án) | ✅ (tất cả) |
+| Thiết bị của tôi (sở hữu và đang mượn) | ✅ | ✅ | ❌ |
+| Mượn / Trả thiết bị | ✅ | ✅ | ❌ |
+| Duyệt yêu cầu mượn / trả | ✅ (thiết bị sở hữu) | ✅ (trong dự án) | ✅ (tất cả) |
 | Quản lý bảo dưỡng thiết bị | ❌ | ✅ (trong dự án) | ✅ (toàn hệ thống) |
 | Quản lý danh mục thiết bị | ❌ | ❌ | ✅ |
 | Quản lý phòng ban | ❌ | ❌ | ✅ |
