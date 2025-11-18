@@ -40,8 +40,23 @@ public class BorrowEquipment : BaseEntity
     public DateTime? ApprovedDate { get; set; }
 
     /// <summary>
-    /// Lý do từ chối (nếu có)
+    /// Trạng thái thiết bị sau khi trả
     /// </summary>
-    public string? RejectionReason { get; set; }
+    public Enumerations.EquipmentStatus? StatusAfterReturn { get; set; }
+
+    /// <summary>
+    /// Ngay trả thiết bị
+    /// </summary>
+    public DateTime? ReturnedDate { get; set; }
+    
+    /// <summary>
+    /// Hình thức xử lý khi trả thiết bị
+    /// </summary>
+    public Enumerations.ReturnEquipmentProcessing? ProcessingForm { get; set; }
+
+    /// <summary>
+    /// Ghi chú hình thức xử lý khi trả thiết bị (nếu có)
+    /// </summary>
+    public string? ProcessingNote { get; set; }
 }
 

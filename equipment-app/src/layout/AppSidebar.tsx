@@ -6,7 +6,6 @@ import {
   ChartNoAxesColumn,
   RotateCwSquareIcon,
   AlignEndVertical,
-  TableConfig,
   BookMarked,
   Computer,
   ListChecksIcon
@@ -56,11 +55,6 @@ const AppSidebar: React.FC = () => {
         path: "/borrow-request",
       },
       {
-        icon: <TableConfig />,
-        name: "Bảo dưỡng thiết bị",
-        path: "/maintenance",
-      },
-      {
         icon: <BookMarked />,
         name: "Danh mục thiết bị",
         path: "/category",
@@ -95,11 +89,6 @@ const AppSidebar: React.FC = () => {
           icon: <ListChecksIcon />,
           name: "Duyệt yêu cầu mượn",
           path: "/borrow-request",
-        },
-        {
-          icon: <TableConfig />,
-          name: "Bảo dưỡng thiết bị",
-          path: "/maintenance",
         },
       ];
     }

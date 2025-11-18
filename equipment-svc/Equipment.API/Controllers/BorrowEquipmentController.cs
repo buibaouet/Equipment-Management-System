@@ -168,13 +168,9 @@ public class BorrowEquipmentController : ControllerBase
     /// Từ chối yêu cầu mượn thiết bị
     /// </summary>
     /// <param name="id"></param>
-    /// <param name="rejectionReason"></param>
     /// <returns></returns>
     [HttpPut("reject/{id}")]
-    public async Task<ActionResult> RejectBorrowRequest(
-        int id,
-        [FromBody] string? rejectionReason = null
-    )
+    public async Task<ActionResult> RejectBorrowRequest(int id)
     {
         try
         {
@@ -189,8 +185,7 @@ public class BorrowEquipmentController : ControllerBase
 
             var res = await _borrowEquipmentService.RejectBorrowRequest(
                 id,
-                currentUserId.Value,
-                rejectionReason
+                currentUserId.Value
             );
             if (res.StatusCode != StatusCodes.Status200OK)
             {
@@ -227,6 +222,44 @@ public class BorrowEquipmentController : ControllerBase
             }
             
             var res = await _borrowEquipmentService.GetRequestPaging(param, currentUserId.Value);
+            if (res.StatusCode != StatusCodes.Status200OK)
+            {
+                return StatusCode(res.StatusCode, res.Message);
+            }
+            return Ok(res);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                "Xảy ra lỗi trong quá trình xử lý: \n" + ex.Message + ex.StackTrace
+            );
+        }
+    }
+    
+    /// <summary>
+    /// Lấy thông tin chi tiết yêu cầu mượn thiết bị
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    [HttpGet("{id}")]
+    public async Task<ActionResult> GetById(int id)
+    {
+        try
+        {
+            var currentUserId = GetCurrentUserId();
+            if (currentUserId == null)
+            {
+                return StatusCode(
+                    StatusCodes.Status401Unauthorized,
+                    "Không thể xác định người dùng"
+                );
+            }
+
+            var res = await _borrowEquipmentService.GetById(
+                id,
+                currentUserId.Value
+            );
             if (res.StatusCode != StatusCodes.Status200OK)
             {
                 return StatusCode(res.StatusCode, res.Message);

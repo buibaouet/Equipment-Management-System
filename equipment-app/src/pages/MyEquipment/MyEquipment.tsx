@@ -16,6 +16,8 @@ import TableBodyContent from "../../components/ui/table/TableBodyContent";
 import HeaderTable from "../../components/ui/table/HeaderTable";
 import { useState } from "react";
 import EquipmentModal from "../Equipment/EquipmentModal";
+import ReturnEquipmentModal from "../BorrowReturn/ReturnEquipmentModal";
+import { BorrowEquipmentPaging } from "../../types/BorrowEquipment";
 
 export default function MyEquipment() {
   const {
@@ -26,6 +28,8 @@ export default function MyEquipment() {
     totalPages,
     currentData,
     isLoading,
+    borrowRecordMap,
+    fetchMyEquipments,
   } = useMyEquipment();
 
   const arrColumns = [
@@ -39,6 +43,9 @@ export default function MyEquipment() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEquipmentId, setSelectedEquipmentId] = useState<number | null>(null);
+  const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
+  const [selectedBorrowRecord, setSelectedBorrowRecord] = useState<BorrowEquipmentPaging | null>(null);
+
   const handleOpenModal = (equipmentId: number) => {
     setSelectedEquipmentId(equipmentId);
     setIsModalOpen(true);
@@ -46,6 +53,23 @@ export default function MyEquipment() {
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
+  };
+
+  const handleReturnEquipment = (equipmentId: number) => {
+    const borrowRecord = borrowRecordMap.get(equipmentId);
+    if (borrowRecord) {
+      setSelectedBorrowRecord(borrowRecord);
+      setIsReturnModalOpen(true);
+    }
+  };
+
+  const handleCloseReturnModal = () => {
+    setIsReturnModalOpen(false);
+    setSelectedBorrowRecord(null);
+  };
+
+  const handleReturnSuccess = () => {
+    fetchMyEquipments();
   };
 
   const getStatusLabel = (status: EquipmentStatusEnum) => {
@@ -168,7 +192,7 @@ export default function MyEquipment() {
                         </span>
                         {item.isBorrow && (<span title="Trả">
                           <RotateCcwIcon className="w-4 h-4 cursor-pointer hover:text-gray"
-                          // onClick={() => handleReturnEquipment(item.id)}
+                            onClick={() => handleReturnEquipment(item.id)}
                           />
                         </span>)}
                       </div>
@@ -192,6 +216,13 @@ export default function MyEquipment() {
         id={selectedEquipmentId ?? 0}
         isOpen={isModalOpen}
         onClose={handleCloseModal}
+      />
+
+      <ReturnEquipmentModal
+        isOpen={isReturnModalOpen}
+        onClose={handleCloseReturnModal}
+        equipment={selectedBorrowRecord ?? undefined}
+        actionCallback={handleReturnSuccess}
       />
     </div >
   );

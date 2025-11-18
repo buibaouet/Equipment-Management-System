@@ -10,15 +10,18 @@ import {
   RotateCcwIcon,
   HardDriveDownload,
   RefreshCcwIcon,
+  Info,
 } from "lucide-react";
 import Badge from "../../components/ui/badge/Badge";
 import useBorrowReturn from "./useBorrowReturn";
 import PageMeta from "../../components/common/PageMeta";
 import HeaderTable from "../../components/ui/table/HeaderTable";
 import { BorrowEditMode, BorrowEquipmentStatusEnum } from "../../utils/enumerations";
+import { BorrowEquipmentPaging } from "../../types/BorrowEquipment";
 import TableBodyContent from "../../components/ui/table/TableBodyContent";
 import BorrowEquipmentModal from "./BorrowEquipmentModal";
 import ReturnEquipmentModal from "./ReturnEquipmentModal";
+import BorrowReturnInfoModal from "./BorrowReturnInfoModal";
 
 export default function BorrowReturnList() {
   const {
@@ -34,10 +37,14 @@ export default function BorrowReturnList() {
     selectedItem,
     isReturnModalOpen,
     selectedReturnItem,
+    isInfoModalOpen,
+    selectedInfoId,
     openReturnModal,
     closeReturnModal,
     openBorrowModal,
     closeModal,
+    openInfoModal,
+    closeInfoModal,
     fetchBorrowRecords,
   } = useBorrowReturn();
 
@@ -81,7 +88,7 @@ export default function BorrowReturnList() {
                 isLoading={isLoading}
                 data={borrowRecords}
                 columns={arrColumns}
-                renderRow={(item: any, index: number) => (
+                renderRow={(item: BorrowEquipmentPaging, index: number) => (
                   <TableRow key={index + 1}>
                     <TableCell className="px-4 py-3.5 font-medium text-gray-800 border border-gray-100 dark:border-white/[0.05] dark:text-white text-theme-sm whitespace-nowrap ">
                       {item.equipmentCode}
@@ -135,6 +142,15 @@ export default function BorrowReturnList() {
                     </TableCell>
                     <TableCell className="px-4 py-3.5 font-normal text-gray-800 border border-gray-100 dark:border-white/[0.05] text-theme-sm dark:text-white/90 whitespace-nowrap ">
                       <div className="flex items-center justify-center w-full gap-2">
+                        <button
+                          type="button"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-full text-gray-500 transition hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-white"
+                          onClick={() => openInfoModal(item.id)}
+                          aria-label="Xem chi tiết"
+                          title="Xem chi tiết"
+                        >
+                          <Info className="w-4 h-4" />
+                        </button>
                         {item.status === BorrowEquipmentStatusEnum.Borrowed && (
                           <span
                             className="flex items-center gap-2 cursor-pointer"
@@ -199,6 +215,12 @@ export default function BorrowReturnList() {
         onClose={closeReturnModal}
         equipment={selectedReturnItem ?? undefined}
         actionCallback={fetchBorrowRecords}
+      />
+
+      <BorrowReturnInfoModal
+        isOpen={isInfoModalOpen}
+        onClose={closeInfoModal}
+        recordId={selectedInfoId ?? undefined}
       />
     </div>
   );

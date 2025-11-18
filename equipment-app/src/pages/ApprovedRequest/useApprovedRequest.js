@@ -5,6 +5,7 @@ import {
   useApproveRequestBorrowEquipmentMutation,
   useRejectRequestBorrowEquipmentMutation
 } from "../../api/useBorrowEquipmentApi";
+import { toast } from "sonner";
 
 /**
  * useApprovedRequest encapsulates data, filtering, sorting and pagination logic

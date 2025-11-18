@@ -10,7 +10,6 @@ import ChangePassword from "./pages/AuthPages/ChangePassword";
 import Logout from "./pages/AuthPages/Logout";
 import BorrowReturnList from "./pages/BorrowReturn/BorrowReturnList";
 import MyEquipment from "./pages/MyEquipment/MyEquipment";
-import Maintenance from "./pages/Maintenance/Maintenance";
 import ApprovedRequest from "./pages/ApprovedRequest/ApprovedRequest";
 import DepartmentList from "./pages/Department/DepartmentList";
 import CategoryList from "./pages/Category/CategoryList";
@@ -76,7 +75,6 @@ export default function App() {
 
           <Route element={<PrivateRoute allowedRoles={[RoleEnum.Admin, RoleEnum.Manager]}> <AppLayout /> </PrivateRoute>}>
             <Route path="/equipment-detail" element={<EquipmentDetail />} />
-            <Route path="/maintenance" element={<Maintenance />} />
           </Route>
 
           <Route element={<PrivateRoute requireAdmin> <AppLayout /> </PrivateRoute>}>

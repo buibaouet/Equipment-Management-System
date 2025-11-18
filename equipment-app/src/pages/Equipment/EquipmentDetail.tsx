@@ -20,6 +20,7 @@ const EquipmentDetail: React.FC = () => {
     formData,
     errors,
     isLoadingSave,
+    isDepartmentDisabled,
     handleValueChange,
     handleCancel,
     handleSave
@@ -49,7 +50,7 @@ const EquipmentDetail: React.FC = () => {
                         defaultValue={String(formData.status)}
                         onChange={(e) => handleValueChange(e, 'status')}
                         placeholder="Chọn trạng thái"
-                        disabled={editMode === EditMode.View || formData.status === EquipmentStatusEnum.Borrowed || formData.status === EquipmentStatusEnum.Maintenance}
+                        disabled={editMode === EditMode.View || formData.status === EquipmentStatusEnum.Borrowed}
                       />
                     </div>
                   </>
@@ -110,7 +111,7 @@ const EquipmentDetail: React.FC = () => {
                     placeholder="Chọn phòng ban"
                     error={!!errors.departmentId}
                     hint={errors.departmentId}
-                    disabled={editMode === EditMode.View}
+                    disabled={editMode === EditMode.View || isDepartmentDisabled}
                     required
                   />
                 </div>

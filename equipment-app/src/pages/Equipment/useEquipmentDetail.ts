@@ -2,19 +2,21 @@ import { useEffect, useMemo, useState } from "react";
 import { useGetDepartmentListQuery } from "../../api/useDepartmentApi";
 import { useGetUserListQuery } from "../../api/useUserApi";
 import { useGetCategoryListQuery } from "../../api/useCategoryApi";
-import { EditMode, EquipmentStatusEnum } from "../../utils/enumerations";
+import { EditMode, EquipmentStatusEnum, RoleEnum } from "../../utils/enumerations";
 import { useCreateOrUpdateEquipmentMutation, useGetEquipmentByIdQuery } from "../../api/useEquipmentApi";
 import { useParams } from "react-router";
 import { EquipmentEntity, EquipmentErrors } from "../../types/Equipment";
 import useGoBack from "../../hooks/useGoBack";
 import { toast } from "sonner";
 import { useNavigate } from "react-router";
+import { useAuth } from "../../hooks/useAuth";
 
 export default function useEquipmentDetail() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const editMode = id ? EditMode.Edit : EditMode.Add;
   const goBack = useGoBack();
+  const { currentUser } = useAuth();
 
   const { data: equipmentData } = useGetEquipmentByIdQuery({ id: Number(id) }, { skip: !id });
   const { data: departmentData, isLoading: isLoadingDepartments } = useGetDepartmentListQuery({});
@@ -38,6 +40,16 @@ export default function useEquipmentDetail() {
     status: EquipmentStatusEnum.Available,
   });
 
+  // Auto-fill department for managers when creating new equipment
+  useEffect(() => {
+    if (editMode === EditMode.Add && currentUser?.role === RoleEnum.Manager && currentUser.departmentId) {
+      setFormData((prev) => ({
+        ...prev,
+        departmentId: currentUser.departmentId,
+      }));
+    }
+  }, [editMode, currentUser]);
+
   useEffect(() => {
     if (equipmentData?.data) {
       const data = { ...equipmentData.data };
@@ -45,11 +57,20 @@ export default function useEquipmentDetail() {
       if (data.importDate && typeof data.importDate === 'string') {
         data.importDate = new Date(data.importDate);
       }
+      // Ensure managers can only edit equipment from their department
+      if (currentUser?.role === RoleEnum.Manager && currentUser.departmentId) {
+        data.departmentId = currentUser.departmentId;
+      }
       setFormData(data);
     }
-  }, [equipmentData]);
+  }, [equipmentData, currentUser]);
 
   const handleValueChange = (value: string, field: keyof EquipmentEntity) => {
+    // Prevent managers from changing department
+    if (field === 'departmentId' && currentUser?.role === RoleEnum.Manager) {
+      return;
+    }
+
     let valueParsed: any = value;
     
     // Convert importDate ISO string to Date object
@@ -76,13 +97,26 @@ export default function useEquipmentDetail() {
   };
 
   // Get department options for dropdown
+  // For managers, only show their department
   const departmentOptions = useMemo(() => {
     if (!departmentData?.data) return [];
-    return departmentData.data.map((dept) => ({
+    const departments = departmentData.data;
+    
+    // If user is a manager, filter to only their department
+    if (currentUser?.role === RoleEnum.Manager && currentUser.departmentId) {
+      return departments
+        .filter((dept) => dept.id === currentUser.departmentId)
+        .map((dept) => ({
+          value: String(dept.id),
+          label: dept.name,
+        }));
+    }
+    
+    return departments.map((dept) => ({
       value: String(dept.id),
       label: dept.name,
     }));
-  }, [departmentData]);
+  }, [departmentData, currentUser]);
 
   // Get category options for dropdown
   const categoryOptions = useMemo(() => {
@@ -105,10 +139,11 @@ export default function useEquipmentDetail() {
   // Get status options for dropdown
   const statusOptions = useMemo(() => {
     return Object.values(EquipmentStatusEnum).filter(
-      v => typeof v === "number" && v !== EquipmentStatusEnum.Borrowed && v !== EquipmentStatusEnum.Maintenance
+      v => typeof v === "number" && v !== EquipmentStatusEnum.Borrowed
     ).map((status: number) => ({
       value: String(status),
       label: status === EquipmentStatusEnum.Available ? "Còn sử dụng" :
+        status === EquipmentStatusEnum.Maintenance ? "Đang bảo dưỡng" :
         status === EquipmentStatusEnum.Lost ? "Đã mất" :
           status === EquipmentStatusEnum.BrokenPart ? "Hỏng một phần" :
             status === EquipmentStatusEnum.Broken ? "Đã hỏng" :
@@ -208,6 +243,11 @@ export default function useEquipmentDetail() {
     }
   };
 
+  // Check if department select should be disabled (for managers)
+  const isDepartmentDisabled = useMemo(() => {
+    return currentUser?.role === RoleEnum.Manager;
+  }, [currentUser]);
+
   return {
     editMode,
     departmentOptions,
@@ -220,6 +260,7 @@ export default function useEquipmentDetail() {
     formData,
     errors,
     isLoadingSave,
+    isDepartmentDisabled,
     setFormData,
     handleValueChange,
     handleCancel,

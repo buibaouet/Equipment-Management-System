@@ -188,7 +188,7 @@ const BorrowEquipmentModal: React.FC<BorrowEquipmentModalProps> = ({
               error={!!errors.equipmentId}
               hint={errors.equipmentId}
               required
-              disabled={mode === BorrowEditMode.Edit || mode === BorrowEditMode.Reborrow} // Disable equipment selection in edit/reborrow mode
+              disabled={mode === BorrowEditMode.Edit} // Disable equipment selection in edit mode
             />
           </div>
 

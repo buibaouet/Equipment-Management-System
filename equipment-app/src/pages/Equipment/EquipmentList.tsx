@@ -6,12 +6,12 @@ import {
 } from "../../components/ui/table";
 import PaginationWithIcon from "../../components/ui/table/PaginationWithIcon";
 import {
-  Pencil,
   ArrowBigDownDash,
   PlusCircle,
   SearchIcon,
   EyeIcon,
-  EllipsisVerticalIcon
+  EllipsisVerticalIcon,
+  Pencil
 } from "lucide-react";
 import { useNavigate } from "react-router";
 import Badge from "../../components/ui/badge/Badge";
@@ -19,16 +19,20 @@ import useEquipmentList from "./useEquipmentList";
 import FilterDropdown from "./FilterDropdown";
 import PageMeta from "../../components/common/PageMeta";
 import HeaderTable from "../../components/ui/table/HeaderTable";
-import { EquipmentStatusEnum } from "../../utils/enumerations";
+import { EquipmentStatusEnum, RoleEnum, BorrowEditMode, BorrowEquipmentStatusEnum } from "../../utils/enumerations";
 import { useAuth } from "../../hooks/useAuth";
 import TableBodyContent from "../../components/ui/table/TableBodyContent";
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import EquipmentModal from "./EquipmentModal";
 import TableDropdown from "../../components/common/TableDropdown";
+import BorrowEquipmentModal from "../BorrowReturn/BorrowEquipmentModal";
+import ReturnEquipmentModal from "../BorrowReturn/ReturnEquipmentModal";
+import { useGetListBorrowEquipmentPagingMutation } from "../../api/useBorrowEquipmentApi";
+import { BorrowEquipmentPaging } from "../../types/BorrowEquipment";
 
 export default function EquipmentList() {
   const navigate = useNavigate();
-  const { isAdmin, isManagerOrAdmin } = useAuth();
+  const { isAdmin, isManagerOrAdmin, currentUser } = useAuth();
   const {
     showFilter,
     setShowFilter,
@@ -43,8 +47,12 @@ export default function EquipmentList() {
     categoryId,
     departmentId,
     status,
-    isLoading
+    isLoading,
+    fetchEquipments
   } = useEquipmentList();
+
+  const [getBorrowEquipmentPaging] = useGetListBorrowEquipmentPagingMutation();
+  const [borrowRecords, setBorrowRecords] = useState<BorrowEquipmentPaging[]>([]);
 
   const arrColumns = [
     { key: "code", label: "Mã thiết bị", sortable: true },
@@ -57,6 +65,47 @@ export default function EquipmentList() {
   ];
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEquipmentId, setSelectedEquipmentId] = useState<number | null>(null);
+  const [isBorrowModalOpen, setIsBorrowModalOpen] = useState(false);
+  const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
+  const [selectedBorrowRecord, setSelectedBorrowRecord] = useState<BorrowEquipmentPaging | null>(null);
+  const [borrowEquipmentId, setBorrowEquipmentId] = useState<number | null>(null);
+
+  // Fetch borrow records for current user to get borrow record IDs
+  useEffect(() => {
+    const fetchBorrowRecords = async () => {
+      if (!currentUser || isAdmin()) return; // Admin doesn't need borrow records
+
+      try {
+        const param = {
+          pageIndex: 1,
+          pageSize: 1000, // Get all records for current user
+          orderBy: "",
+          keyword: '',
+        };
+        const response = await getBorrowEquipmentPaging({ param }).unwrap();
+        if (response.statusCode === 200 && response.data) {
+          const data = response.data.data;
+          setBorrowRecords(Array.isArray(data) ? data : []);
+        }
+      } catch (err) {
+        console.error("Error fetching borrow records:", err);
+      }
+    };
+
+    fetchBorrowRecords();
+  }, [currentUser, isAdmin, getBorrowEquipmentPaging]);
+
+  // Create a map of equipmentId -> borrowRecord for quick lookup
+  const borrowRecordMap = useMemo(() => {
+    const map = new Map<number, BorrowEquipmentPaging>();
+    borrowRecords.forEach(record => {
+      if (record.status === BorrowEquipmentStatusEnum.Borrowed) { // Borrowed status
+        map.set(record.equipmentId, record);
+      }
+    });
+    return map;
+  }, [borrowRecords]);
+
   const handleOpenModal = (equipmentId: number) => {
     setSelectedEquipmentId(equipmentId);
     setIsModalOpen(true);
@@ -64,6 +113,75 @@ export default function EquipmentList() {
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
+  };
+
+  const handleOpenBorrowModal = (equipmentId: number) => {
+    setBorrowEquipmentId(equipmentId);
+    setIsBorrowModalOpen(true);
+  };
+
+  const handleCloseBorrowModal = () => {
+    setIsBorrowModalOpen(false);
+    setBorrowEquipmentId(null);
+  };
+
+  const handleOpenReturnModal = (equipmentId: number) => {
+    const borrowRecord = borrowRecordMap.get(equipmentId);
+    if (borrowRecord) {
+      setSelectedBorrowRecord(borrowRecord);
+      setIsReturnModalOpen(true);
+    }
+  };
+
+  const handleCloseReturnModal = () => {
+    setIsReturnModalOpen(false);
+    setSelectedBorrowRecord(null);
+  };
+
+  const handleRefresh = () => {
+    fetchEquipments();
+    // Refresh borrow records
+    if (currentUser && !isAdmin()) {
+      const param = {
+        pageIndex: 1,
+        pageSize: 1000,
+        orderBy: "",
+        keyword: '',
+      };
+      getBorrowEquipmentPaging({ param }).unwrap().then(response => {
+        if (response.statusCode === 200 && response.data) {
+          const data = response.data.data;
+          setBorrowRecords(Array.isArray(data) ? data : []);
+        }
+      }).catch(err => console.error("Error fetching borrow records:", err));
+    }
+  };
+
+  // Permission check functions
+  const canEditEquipment = (item: any): boolean => {
+    if (isAdmin()) return true;
+    if (currentUser?.role === RoleEnum.Manager) {
+      return item.departmentId === currentUser.departmentId;
+    }
+    return false;
+  };
+
+  const canBorrowEquipment = (item: any): boolean => {
+    if (!currentUser || item.ownerId === currentUser.id) return false;
+    // User or Manager can borrow available equipment
+    if (currentUser.role === RoleEnum.User || currentUser.role === RoleEnum.Manager) {
+      return item.status === EquipmentStatusEnum.Available;
+    }
+    return false;
+  };
+
+  const canReturnEquipment = (item: any): boolean => {
+    if (!currentUser || item.ownerId === currentUser.id) return false;
+    // Can return if equipment is borrowed and owned by current user
+    if (item.status === EquipmentStatusEnum.Borrowed) {
+      return borrowRecordMap.has(item.id);
+    }
+    return false;
   };
 
   return (
@@ -187,41 +305,44 @@ export default function EquipmentList() {
                             onClick={() => handleOpenModal(item.id)}
                           />
                         </span>
-                        {/* <span title="Sửa">
-                          <Pencil
-                            className="w-4 h-4 cursor-pointer hover:text-gray"
-                            onClick={() => navigate(`/equipment-detail/${item.id}`)}
+                        {canEditEquipment(item) && (
+                          <span title="Sửa">
+                            <Pencil
+                              className="w-4 h-4 cursor-pointer hover:text-gray"
+                              onClick={() => navigate(`/equipment-detail/${item.id}`)}
+                            />
+                          </span>
+                        )}
+                        {(canBorrowEquipment(item) || canReturnEquipment(item)) && (
+                          <TableDropdown
+                            className="h-4 w-4"
+                            dropdownButton={
+                              <button className="text-gray-500 dark:text-gray-400" title="Thêm thao tác">
+                                <EllipsisVerticalIcon className="w-4 h-4" />
+                              </button>
+                            }
+                            dropdownContent={
+                              <>
+                                {canBorrowEquipment(item) && (
+                                  <button
+                                    className="text-xs flex w-full rounded-lg px-3 py-2 text-left font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+                                    onClick={() => handleOpenBorrowModal(item.id)}
+                                  >
+                                    Mượn thiết bị
+                                  </button>
+                                )}
+                                {canReturnEquipment(item) && (
+                                  <button
+                                    className="text-xs flex w-full rounded-lg px-3 py-2 text-left font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+                                    onClick={() => handleOpenReturnModal(item.id)}
+                                  >
+                                    Trả thiết bị
+                                  </button>
+                                )}
+                              </>
+                            }
                           />
-                        </span> */}
-                        <TableDropdown
-                          className="h-4 w-4"
-                          dropdownButton={
-                            <button className="text-gray-500 dark:text-gray-400" title="Thêm thao tác">
-                              <EllipsisVerticalIcon className="w-4 h-4" />
-                            </button>
-                          }
-                          dropdownContent={
-                            <>
-                              <button
-                                className="text-xs flex w-full rounded-lg px-3 py-2 text-left font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
-                                onClick={() => navigate(`/equipment-detail/${item.id}`)}
-                                title="Sửa"
-                              >
-                                Sửa thiết bị
-                              </button>
-                              <button
-                                className="text-xs flex w-full rounded-lg px-3 py-2 text-left font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
-                              >
-                                Mượn thiết bị
-                              </button>
-                              <button
-                                className="text-xs flex w-full rounded-lg px-3 py-2 text-left font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
-                              >
-                                Trả thiết bị
-                              </button>
-                            </>
-                          }
-                        />
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -243,6 +364,23 @@ export default function EquipmentList() {
         id={selectedEquipmentId ?? 0}
         isOpen={isModalOpen}
         onClose={handleCloseModal}
+      />
+
+      {borrowEquipmentId && (
+        <BorrowEquipmentModal
+          isOpen={isBorrowModalOpen}
+          onClose={handleCloseBorrowModal}
+          initialData={{ id: 0, equipmentId: borrowEquipmentId, fromDate: new Date(), toDate: new Date() } as any}
+          mode={BorrowEditMode.Create}
+          actionCallback={handleRefresh}
+        />
+      )}
+
+      <ReturnEquipmentModal
+        isOpen={isReturnModalOpen}
+        onClose={handleCloseReturnModal}
+        equipment={selectedBorrowRecord}
+        actionCallback={handleRefresh}
       />
     </div>
   );

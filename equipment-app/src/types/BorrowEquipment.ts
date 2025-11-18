@@ -1,4 +1,4 @@
-import { BorrowEquipmentStatusEnum } from "../utils/enumerations";
+import { BorrowEquipmentStatusEnum, EquipmentStatusEnum, ProcessingFormEnum } from "../utils/enumerations";
 
 export interface BorrowEquipmentEntity {
     id: number,
@@ -37,4 +37,32 @@ export interface BorrowEquipmentResponseModel {
     equipmentIdError: string;
     fromDateError: string;
     toDateError: string;
+}
+
+export interface ReturnEquipmentPayload {
+    id: number;
+    status: number;
+    processingForm?: number;
+    processingNote?: string | null;
+}
+
+export interface BorrowEquipmentDataModel {
+    id: number;
+    equipmentId: number;
+    equipmentCode: string;
+    equipmentName: string;
+    categoryName: string;
+    departmentName: string;
+    fromDate: Date;
+    toDate: Date;
+    borrowerId: number;
+    borrowerName: string;
+    approvedByUserId: number;
+    approvedByName: string;
+    approvedDate: Date;
+    returnedDate: Date;
+    status: BorrowEquipmentStatusEnum;
+    statusAfterReturn?: EquipmentStatusEnum;
+    processingForm?: ProcessingFormEnum;
+    processingNote?: string;
 }

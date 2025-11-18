@@ -32,12 +32,19 @@ export enum BorrowEquipmentStatusEnum {
   Returned = 3, // Đã trả
 }
 
+export enum ProcessingFormEnum {
+  Repair = 1,
+  BuyNew = 2,
+  Compensation = 3,
+}
+
 export default {
   EditMode,
   BorrowEditMode,
   RoleEnum,
   EquipmentStatusEnum,
-  BorrowEquipmentStatusEnum
+  BorrowEquipmentStatusEnum,
+  ProcessingFormEnum
 };
 
 export const PAGINATION_CONFIG = {

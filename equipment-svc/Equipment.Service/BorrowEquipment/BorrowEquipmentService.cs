@@ -75,6 +75,50 @@ public class BorrowEquipmentService : IBorrowEquipmentService
         return new Response<PagingDataModel<BorrowEquipmentPagingModel>>(resultData);
     }
 
+    public async Task<Response<BorrowEquipmentDataModel>> GetById(int id, int currentUserId)
+    {
+        var borrowRequest = await _borrowEquipmentRepository.GetByIdAsync(id);
+        if (borrowRequest == null || borrowRequest.RequestedByUserId != currentUserId)
+        {
+            return new Response<BorrowEquipmentDataModel>(
+                StatusCodes.Status404NotFound,
+                "Yêu cầu mượn không tồn tại"
+            );
+        }
+
+        var equipment = await _equipmentRepository.GetByIdAsync(borrowRequest.EquipmentId);
+        var category = await _equipmentCategoryRepository.GetByIdAsync(equipment?.CategoryId ?? 0);
+        var department = await _departmentRepository.GetByIdAsync(equipment?.DepartmentId ?? 0);
+        var userRequest = await _userRepository.GetByIdAsync(borrowRequest.RequestedByUserId);
+        var userApproved = borrowRequest.ApprovedByUserId.HasValue
+            ? await _userRepository.GetByIdAsync(borrowRequest.ApprovedByUserId.Value)
+            : null;
+
+        var borrowModel = new BorrowEquipmentDataModel
+        {
+            Id = borrowRequest.Id,
+            EquipmentId = borrowRequest.EquipmentId,
+            EquipmentCode = equipment?.Code ?? "-",
+            EquipmentName = equipment?.Name ?? "-",
+            CategoryName = category?.Name ?? "-",
+            DepartmentName = department?.Name ?? "-",
+            FromDate = borrowRequest.FromDate,
+            ToDate = borrowRequest.ToDate,
+            Status = borrowRequest.Status,
+            BorrowerId = borrowRequest.RequestedByUserId,
+            BorrowerName = userRequest?.UserName + " - " + userRequest?.FullName,
+            ApprovedByUserId = borrowRequest.ApprovedByUserId,
+            ApprovedByName =
+                userApproved != null ? userApproved.UserName + " - " + userApproved.FullName : null,
+            ApprovedDate = borrowRequest.ApprovedDate,
+            ReturnedDate = borrowRequest.ReturnedDate,
+            StatusAfterReturn = borrowRequest.StatusAfterReturn,
+            ProcessingForm = borrowRequest.ProcessingForm,
+            ProcessingNote = borrowRequest.ProcessingNote,
+        };
+        return new Response<BorrowEquipmentDataModel>(borrowModel);
+    }
+
     public async Task<
         Response<PagingDataModel<BorrowEquipmentRequestPagingModel>>
     > GetRequestPaging(PaginationParam param, int currentUserId)
@@ -95,10 +139,6 @@ public class BorrowEquipmentService : IBorrowEquipmentService
                 : x.OwnerId == currentUserId
             )
         );
-
-        var requestBorrow = await _borrowEquipmentRepository
-            .GetListAsync(x => x.Status == Enumerations.BorrowEquipmentStatus.Pendding)
-            .ToListAsync();
 
         Expression<Func<Domain.Entities.BorrowEquipment, bool>> expression = e =>
             e.Id > 0
@@ -309,6 +349,10 @@ public class BorrowEquipmentService : IBorrowEquipmentService
             await _equipmentRepository.UpdateAsync(equipment);
 
             borrowRequest.Status = Enumerations.BorrowEquipmentStatus.Returned;
+            borrowRequest.StatusAfterReturn = param.Status;
+            borrowRequest.ReturnedDate = DateTime.Now;
+            borrowRequest.ProcessingForm = param.ProcessingForm;
+            borrowRequest.ProcessingNote = param.ProcessingNote;
             await _borrowEquipmentRepository.UpdateAsync(borrowRequest);
 
             return new Response<bool>(true);
@@ -429,7 +473,7 @@ public class BorrowEquipmentService : IBorrowEquipmentService
             borrowRequest.Status = Enumerations.BorrowEquipmentStatus.Borrowed;
             borrowRequest.ApprovedByUserId = currentUserId;
             borrowRequest.ApprovedDate = DateTime.Now;
-            borrowRequest.RejectionReason = null;
+            borrowRequest.ProcessingNote = null;
 
             await _borrowEquipmentRepository.UpdateAsync(borrowRequest);
 
@@ -448,11 +492,7 @@ public class BorrowEquipmentService : IBorrowEquipmentService
         }
     }
 
-    public async Task<Response<bool>> RejectBorrowRequest(
-        int id,
-        int currentUserId,
-        string? rejectionReason
-    )
+    public async Task<Response<bool>> RejectBorrowRequest(int id, int currentUserId)
     {
         try
         {
@@ -530,7 +570,6 @@ public class BorrowEquipmentService : IBorrowEquipmentService
             borrowRequest.Status = Enumerations.BorrowEquipmentStatus.Rejected;
             borrowRequest.ApprovedByUserId = currentUserId;
             borrowRequest.ApprovedDate = DateTime.Now;
-            borrowRequest.RejectionReason = rejectionReason;
 
             await _borrowEquipmentRepository.UpdateAsync(borrowRequest);
 

@@ -26,4 +26,11 @@ public class Enumerations
         Rejected = 2, // Từ chối
         Returned = 3, // Đã trả
     }
+    
+    public enum ReturnEquipmentProcessing
+    {
+        Repair = 1, // Sửa chữa
+        BuyNew = 2, // Mua mới
+        Compensation = 3, // Bồi thường
+    }
 }

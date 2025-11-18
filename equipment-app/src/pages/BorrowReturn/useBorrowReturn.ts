@@ -14,7 +14,7 @@ export default function useBorrowReturn() {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortKey, setSortKey] = useState("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
-  const [borrowRecords, setBorrowRecords] = useState<any[]>([]);
+  const [borrowRecords, setBorrowRecords] = useState<BorrowEquipmentPaging[]>([]);
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
 
@@ -26,6 +26,8 @@ export default function useBorrowReturn() {
   // Return modal state
   const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
   const [selectedReturnItem, setSelectedReturnItem] = useState<BorrowEquipmentPaging | null>(null);
+  const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
+  const [selectedInfoId, setSelectedInfoId] = useState<number | null>(null);
 
   // Fetch equipment from API
   const fetchBorrowRecords = useCallback(
@@ -43,7 +45,7 @@ export default function useBorrowReturn() {
         const response = await getBorrowEquipmentPaging({ param: param }).unwrap();
 
         if (response.statusCode === 200 && response.data) {
-          setBorrowRecords((response.data.data as unknown as any[]) || []);
+          setBorrowRecords((response.data.data || []) as BorrowEquipmentPaging[]);
           setTotalItems(response.data.totalRecords || 0);
           setTotalPages(response.data.totalPages || 0);
         }
@@ -84,6 +86,16 @@ export default function useBorrowReturn() {
     setSelectedReturnItem(null);
   }, []);
 
+  const openInfoModal = useCallback((id: number) => {
+    setSelectedInfoId(id);
+    setIsInfoModalOpen(true);
+  }, []);
+
+  const closeInfoModal = useCallback(() => {
+    setIsInfoModalOpen(false);
+    setSelectedInfoId(null);
+  }, []);
+
   // Modal handlers
   const openBorrowModal = useCallback((item: BorrowEquipmentEntity | null, mode: BorrowEditMode) => {
     setSelectedItem(item);
@@ -116,6 +128,8 @@ export default function useBorrowReturn() {
     // Return modal state
     isReturnModalOpen,
     selectedReturnItem,
+    isInfoModalOpen,
+    selectedInfoId,
 
     // Actions
     handlePageChange,
@@ -123,6 +137,8 @@ export default function useBorrowReturn() {
     fetchBorrowRecords,
     openReturnModal,
     closeReturnModal,
+    openInfoModal,
+    closeInfoModal,
     openBorrowModal,
     closeModal,
   };
