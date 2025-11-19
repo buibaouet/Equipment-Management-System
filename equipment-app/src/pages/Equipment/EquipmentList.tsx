@@ -1,10 +1,6 @@
-import Button from "../../components/ui/button/Button";
-import {
-  Table,
-  TableCell,
-  TableRow
-} from "../../components/ui/table";
-import PaginationWithIcon from "../../components/ui/table/PaginationWithIcon";
+import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router";
+import { toast } from "sonner";
 import {
   ArrowBigDownDash,
   PlusCircle,
@@ -13,7 +9,13 @@ import {
   EllipsisVerticalIcon,
   Pencil
 } from "lucide-react";
-import { useNavigate } from "react-router";
+import Button from "../../components/ui/button/Button";
+import {
+  Table,
+  TableCell,
+  TableRow
+} from "../../components/ui/table";
+import PaginationWithIcon from "../../components/ui/table/PaginationWithIcon";
 import Badge from "../../components/ui/badge/Badge";
 import useEquipmentList from "./useEquipmentList";
 import FilterDropdown from "./FilterDropdown";
@@ -22,14 +24,15 @@ import HeaderTable from "../../components/ui/table/HeaderTable";
 import { EquipmentStatusEnum, RoleEnum, BorrowEditMode, BorrowEquipmentStatusEnum } from "../../utils/enumerations";
 import { useAuth } from "../../hooks/useAuth";
 import TableBodyContent from "../../components/ui/table/TableBodyContent";
-import { useState, useEffect, useMemo } from "react";
 import EquipmentModal from "./EquipmentModal";
 import TableDropdown from "../../components/common/TableDropdown";
 import BorrowEquipmentModal from "../BorrowReturn/BorrowEquipmentModal";
 import ReturnEquipmentModal from "../BorrowReturn/ReturnEquipmentModal";
 import EquipmentHistoryModal from "./EquipmentHistoryModal";
 import { useGetListBorrowEquipmentPagingMutation } from "../../api/useBorrowEquipmentApi";
-import { BorrowEquipmentPaging } from "../../types/BorrowEquipment";
+import { useExportEquipmentMutation } from "../../api/useEquipmentApi";
+import { BorrowEquipmentEntity, BorrowEquipmentPaging } from "../../types/BorrowEquipment";
+import { EquipmentPagingResponse } from "../../types/Equipment";
 
 export default function EquipmentList() {
   const navigate = useNavigate();
@@ -53,6 +56,7 @@ export default function EquipmentList() {
   } = useEquipmentList();
 
   const [getBorrowEquipmentPaging] = useGetListBorrowEquipmentPagingMutation();
+  const [exportEquipment] = useExportEquipmentMutation();
   const [borrowRecords, setBorrowRecords] = useState<BorrowEquipmentPaging[]>([]);
 
   const arrColumns = [
@@ -72,6 +76,7 @@ export default function EquipmentList() {
   const [borrowEquipmentId, setBorrowEquipmentId] = useState<number | null>(null);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [historyEquipmentId, setHistoryEquipmentId] = useState<number | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   // Fetch borrow records for current user to get borrow record IDs
   useEffect(() => {
@@ -170,8 +175,32 @@ export default function EquipmentList() {
     }
   };
 
+  const handleExportData = async () => {
+    try {
+      setIsExporting(true);
+      const blob = await exportEquipment().unwrap();
+      const fileName = `Danh_sach_thiet_bi_${new Date().toISOString().split("T")[0]}.xlsx`;
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Xuất dữ liệu thành công");
+    } catch (error) {
+      toast.error("Có lỗi xảy ra khi xuất dữ liệu");
+      console.log(error);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   // Permission check functions
-  const canEditEquipment = (item: any): boolean => {
+  const canEditEquipment = (item: EquipmentPagingResponse): boolean => {
     if (isAdmin()) return true;
     if (currentUser?.role === RoleEnum.Manager) {
       return item.departmentId === currentUser.departmentId;
@@ -179,7 +208,7 @@ export default function EquipmentList() {
     return false;
   };
 
-  const canBorrowEquipment = (item: any): boolean => {
+  const canBorrowEquipment = (item: EquipmentPagingResponse): boolean => {
     if (!currentUser || item.ownerId === currentUser.id) return false;
     // User or Manager can borrow available equipment
     if (currentUser.role === RoleEnum.User || currentUser.role === RoleEnum.Manager) {
@@ -188,7 +217,7 @@ export default function EquipmentList() {
     return false;
   };
 
-  const canReturnEquipment = (item: any): boolean => {
+  const canReturnEquipment = (item: EquipmentPagingResponse): boolean => {
     if (!currentUser || item.ownerId === currentUser.id) return false;
     // Can return if equipment is borrowed and owned by current user
     if (item.status === EquipmentStatusEnum.Borrowed) {
@@ -213,8 +242,12 @@ export default function EquipmentList() {
 
           <div className="flex gap-3">
             {isAdmin() && (
-              <Button variant="outline">
-                Xuất dữ liệu
+              <Button
+                variant="outline"
+                onClick={handleExportData}
+                disabled={isExporting}
+              >
+                {isExporting ? "Đang xuất..." : "Xuất dữ liệu"}
                 <ArrowBigDownDash className="w-5 h-5" />
               </Button>
             )}
@@ -256,7 +289,7 @@ export default function EquipmentList() {
                 isLoading={isLoading}
                 data={currentData}
                 columns={arrColumns}
-                renderRow={(item: any, index: number) => (
+                renderRow={(item: EquipmentPagingResponse, index: number) => (
                   <TableRow key={index + 1}>
                     <TableCell className="px-4 py-3.5 font-medium text-gray-800 border border-gray-100 dark:border-white/[0.05] dark:text-white text-theme-sm whitespace-nowrap ">
                       {item.code}
@@ -387,7 +420,12 @@ export default function EquipmentList() {
         <BorrowEquipmentModal
           isOpen={isBorrowModalOpen}
           onClose={handleCloseBorrowModal}
-          initialData={{ id: 0, equipmentId: borrowEquipmentId, fromDate: new Date(), toDate: new Date() } as any}
+          initialData={{
+            id: 0,
+            equipmentId: borrowEquipmentId,
+            fromDate: new Date(),
+            toDate: new Date(),
+          } satisfies BorrowEquipmentEntity}
           mode={BorrowEditMode.Create}
           actionCallback={handleRefresh}
         />

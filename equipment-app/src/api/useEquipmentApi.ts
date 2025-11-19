@@ -9,6 +9,13 @@ export const useEquipmentApi = createApi({
     baseQuery: baseQueryWithReauth,
     tagTypes: ['Equipment'],
     endpoints: (builder) => ({
+        exportEquipment: builder.mutation<Blob, void>({
+            query: () => ({
+                url: '/equipment/export',
+                method: 'GET',
+                responseHandler: (response: Response) => response.blob(),
+            }),
+        }),
         getListEquipmentPaging: builder.mutation<
             BaseResponse<PagingDataModel<EquipmentPagingResponse>>,
             { param: EquipmentPagingParam }
@@ -27,7 +34,7 @@ export const useEquipmentApi = createApi({
             }),
             providesTags: ['Equipment'],
         }),
-        getEquipmentList: builder.query<BaseResponse<EquipmentModel[]>, {}>({
+        getEquipmentList: builder.query<BaseResponse<EquipmentModel[]>, void>({
             query: () => ({
                 method: 'GET',
                 url: '/equipment/available',
@@ -71,6 +78,7 @@ export const useEquipmentApi = createApi({
 });
 
 export const {
+    useExportEquipmentMutation,
     useGetListEquipmentPagingMutation,
     useGetEquipmentByIdQuery,
     useGetEquipmentListQuery,

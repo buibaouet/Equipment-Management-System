@@ -23,6 +23,7 @@ public static class DependencyInjectionExtension
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IBorrowEquipmentService, BorrowEquipmentService>();
         services.AddScoped<IEquipmentHistoryService, EquipmentHistoryService>();
+        services.AddScoped<IExportEquipmentService, ExportEquipmentService>();
         
         // Register Repositories
         services.AddScoped<IEquipmentCategoryRepository, EquipmentCategoryRepository>();

@@ -12,10 +12,15 @@ namespace Equipment.API.Controllers;
 public class EquipmentController : ControllerBase
 {
     private readonly IEquipmentService _equipmentService;
+    private readonly IExportEquipmentService _exportEquipmentService;
 
-    public EquipmentController(IEquipmentService equipmentService)
+    public EquipmentController(
+        IEquipmentService equipmentService,
+        IExportEquipmentService exportEquipmentService
+    )
     {
         _equipmentService = equipmentService;
+        _exportEquipmentService = exportEquipmentService;
     }
 
     /// <summary>
@@ -76,7 +81,9 @@ public class EquipmentController : ControllerBase
     /// <ParamPaging name="equipment"></ParamPaging>
     /// <returns></returns>
     [HttpPost]
-    public async Task<ActionResult> CreateOrUpdateEquipment([FromBody] Domain.Entities.Equipment equipment)
+    public async Task<ActionResult> CreateOrUpdateEquipment(
+        [FromBody] Domain.Entities.Equipment equipment
+    )
     {
         try
         {
@@ -89,7 +96,10 @@ public class EquipmentController : ControllerBase
                 );
             }
 
-            var res = await _equipmentService.CreateOrUpdateEquipment(equipment, currentUserId.Value);
+            var res = await _equipmentService.CreateOrUpdateEquipment(
+                equipment,
+                currentUserId.Value
+            );
             if (res.StatusCode != StatusCodes.Status200OK)
             {
                 return StatusCode(res.StatusCode, res.Message);
@@ -104,7 +114,7 @@ public class EquipmentController : ControllerBase
             );
         }
     }
-    
+
     /// <summary>
     /// Lấy lịch sử thay đổi của thiết bị
     /// </summary>
@@ -130,7 +140,7 @@ public class EquipmentController : ControllerBase
             );
         }
     }
-    
+
     /// <summary>
     /// Lấy danh sách thiết bị còn sẵn
     /// </summary>
@@ -148,7 +158,7 @@ public class EquipmentController : ControllerBase
                     "Không thể xác định người dùng"
                 );
             }
-            
+
             var res = await _equipmentService.GetListEquipmentAvaiable(currentUserId.Value);
             if (res.StatusCode != StatusCodes.Status200OK)
             {
@@ -164,8 +174,7 @@ public class EquipmentController : ControllerBase
             );
         }
     }
-    
-    
+
     /// <summary>
     /// Lấy danh sách thiết bị phân trang thiet bị của tôi
     /// </summary>
@@ -184,7 +193,7 @@ public class EquipmentController : ControllerBase
                     "Không thể xác định người dùng"
                 );
             }
-            
+
             var res = await _equipmentService.GetPagingMyEquipment(param, currentUserId.Value);
             if (res.StatusCode != StatusCodes.Status200OK)
             {
@@ -201,7 +210,21 @@ public class EquipmentController : ControllerBase
         }
     }
 
-    
+    /// <summary>
+    /// Xuất file danh sách thiết bị
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet("export")]
+    public async Task<FileResult> ExportEquipment()
+    {
+        var file = await _exportEquipmentService.ExportEquipment();
+        return File(
+            file,
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "Danh_sach_thiet_bi.xlsx"
+        );
+    }
+
     private int? GetCurrentUserId()
     {
         // JWT token stores user ID in "sub" claim (JwtRegisteredClaimNames.Sub)
