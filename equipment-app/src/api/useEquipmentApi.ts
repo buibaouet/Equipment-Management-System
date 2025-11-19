@@ -1,7 +1,7 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { baseQueryWithReauth } from '../utils/baseQuery';
 import { BaseResponse, PagingDataModel } from '../types/Response';
-import { EquipmentModel, EquipmentPagingResponse, EquipmentPagingParam, EquipmentResponseModel, EquipmentEntity, MyEquipmentPagingResponse } from '../types/Equipment';
+import { EquipmentModel, EquipmentPagingResponse, EquipmentPagingParam, EquipmentResponseModel, EquipmentEntity, MyEquipmentPagingResponse, EquipmentHistoryModel } from '../types/Equipment';
 import { PaginationParam } from '../types/PagingParam';
 
 export const useEquipmentApi = createApi({
@@ -60,6 +60,13 @@ export const useEquipmentApi = createApi({
             }),
             invalidatesTags: ['Equipment'],
         }),
+        getEquipmentHistoryById: builder.query<BaseResponse<EquipmentHistoryModel[]>, { id: number }>({
+            query: ({ id }) => ({
+                method: 'GET',
+                url: `/equipment/${id}/history`,
+            }),
+            providesTags: ['Equipment'],
+        }),
     }),
 });
 
@@ -70,4 +77,5 @@ export const {
     useCreateOrUpdateEquipmentMutation,
     useUpdateEquipmentStatusMutation,
     useGetListMyEquipmentPagingMutation,
+    useGetEquipmentHistoryByIdQuery
 } = useEquipmentApi;

@@ -5,6 +5,7 @@ using Equipment.Service.BorrowEquipment;
 using Equipment.Service.Department;
 using Equipment.Service.Equipment;
 using Equipment.Service.EquipmentCategory;
+using Equipment.Service.EquipmentHistory;
 using Equipment.Service.User;
 
 namespace Equipment.API.Extensions;
@@ -21,6 +22,7 @@ public static class DependencyInjectionExtension
         services.AddScoped<IDepartmentService, DepartmentService>();
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IBorrowEquipmentService, BorrowEquipmentService>();
+        services.AddScoped<IEquipmentHistoryService, EquipmentHistoryService>();
         
         // Register Repositories
         services.AddScoped<IEquipmentCategoryRepository, EquipmentCategoryRepository>();
@@ -29,5 +31,6 @@ public static class DependencyInjectionExtension
         services.AddScoped<IEquipmentRepository, EquipmentRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         services.AddScoped<IBorrowEquipmentRepository, BorrowEquipmentRepository>();
+        services.AddScoped<IEquipmentHistoryRepository, EquipmentHistoryRepository>();
     }
 }

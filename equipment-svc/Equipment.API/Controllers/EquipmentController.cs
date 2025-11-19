@@ -1,12 +1,14 @@
 using Equipment.Domain.Entities;
 using Equipment.Domain.Models;
 using Equipment.Service.Equipment;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Equipment.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class EquipmentController : ControllerBase
 {
     private readonly IEquipmentService _equipmentService;
@@ -78,7 +80,42 @@ public class EquipmentController : ControllerBase
     {
         try
         {
-            var res = await _equipmentService.CreateOrUpdateEquipment(equipment);
+            var currentUserId = GetCurrentUserId();
+            if (currentUserId == null)
+            {
+                return StatusCode(
+                    StatusCodes.Status401Unauthorized,
+                    "Không thể xác định người dùng"
+                );
+            }
+
+            var res = await _equipmentService.CreateOrUpdateEquipment(equipment, currentUserId.Value);
+            if (res.StatusCode != StatusCodes.Status200OK)
+            {
+                return StatusCode(res.StatusCode, res.Message);
+            }
+            return Ok(res);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                "Xảy ra lỗi trong quá trình xử lý: \n" + ex.Message + ex.StackTrace
+            );
+        }
+    }
+    
+    /// <summary>
+    /// Lấy lịch sử thay đổi của thiết bị
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    [HttpGet("{id}/history")]
+    public async Task<ActionResult> GetHistory(int id)
+    {
+        try
+        {
+            var res = await _equipmentService.GetHistory(id);
             if (res.StatusCode != StatusCodes.Status200OK)
             {
                 return StatusCode(res.StatusCode, res.Message);

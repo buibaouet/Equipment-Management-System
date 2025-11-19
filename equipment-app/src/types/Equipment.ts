@@ -1,4 +1,4 @@
-import { EquipmentStatusEnum } from "../utils/enumerations";
+import { EquipmentHistoryAction, EquipmentStatusEnum } from "../utils/enumerations";
 import { PaginationParam } from "./PagingParam";
 
 export interface EquipmentEntity {
@@ -79,3 +79,21 @@ export interface EquipmentErrors {
     departmentId: string,
     categoryId: string,
 }
+
+export interface EquipmentHistoryModel {
+    id: number;
+    equipmentId: number;
+    action: EquipmentHistoryAction;
+    actionName: string;
+    description: string;
+    changes: EquipmentHistoryChangeModel[];
+    actorUserId?: number | null;
+    actorUserName?: string | null;
+    createdDate?: Date | null;
+}
+
+export interface EquipmentHistoryChangeModel {
+    field: string;
+    oldValue?: string | null;
+    newValue?: string | null;
+  }

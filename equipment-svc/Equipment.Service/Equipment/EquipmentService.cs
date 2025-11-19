@@ -1,9 +1,12 @@
+using System.Globalization;
 using System.Linq.Expressions;
 using Equipment.Domain.Constant;
 using Equipment.Domain.IRepositories;
 using Equipment.Domain.Models;
+using Equipment.Domain.Models.EquipmentHistoryModel;
 using Equipment.Domain.Models.EquipmentModel;
 using Equipment.Domain.Models.ReponseModel;
+using Equipment.Service.EquipmentHistory;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,13 +19,15 @@ public class EquipmentService : IEquipmentService
     private readonly IDepartmentRepository _departmentRepository;
     private readonly IUserRepository _userRepository;
     private readonly IBorrowEquipmentRepository _borrowEquipmentRepository;
+    private readonly IEquipmentHistoryService _equipmentHistoryService;
 
     public EquipmentService(
         IEquipmentRepository equipmentRepository,
         IEquipmentCategoryRepository equipmentCategoryRepository,
         IDepartmentRepository departmentRepository,
         IUserRepository userRepository,
-        IBorrowEquipmentRepository borrowEquipmentRepository
+        IBorrowEquipmentRepository borrowEquipmentRepository,
+        IEquipmentHistoryService equipmentHistoryService
     )
     {
         _equipmentRepository = equipmentRepository;
@@ -30,6 +35,7 @@ public class EquipmentService : IEquipmentService
         _departmentRepository = departmentRepository;
         _userRepository = userRepository;
         _borrowEquipmentRepository = borrowEquipmentRepository;
+        _equipmentHistoryService = equipmentHistoryService;
     }
 
     public async Task<Response<Domain.Entities.Equipment>> GetById(int id)
@@ -90,7 +96,8 @@ public class EquipmentService : IEquipmentService
     }
 
     public async Task<Response<EquipmentResponseModel>> CreateOrUpdateEquipment(
-        Domain.Entities.Equipment equipment
+        Domain.Entities.Equipment equipment,
+        int currentUserId
     )
     {
         try
@@ -191,17 +198,31 @@ public class EquipmentService : IEquipmentService
                 );
             }
 
+            var actor = await _userRepository.GetByIdAsync(currentUserId);
+            var actorDisplayName = GetUserDisplayName(actor);
+
             // Thêm mới
             if (equipment.Id == 0)
             {
                 equipment.Status = Enumerations.EquipmentStatus.Available;
                 await _equipmentRepository.CreateAsync(equipment);
+
+                var creationChanges = await BuildEquipmentChanges(null, equipment);
+
+                await _equipmentHistoryService.LogAsync(
+                    equipment.Id,
+                    Enumerations.EquipmentHistoryAction.Created,
+                    $"{actorDisplayName ?? $"Người dùng {currentUserId}"} đã tạo thiết bị {equipment.Code}",
+                    currentUserId,
+                    actorDisplayName,
+                    creationChanges
+                );
             }
             else // Cập nhật
             {
-                var existingCategory = await _equipmentRepository.GetByIdAsync(equipment.Id);
+                var existingEquipment = await _equipmentRepository.GetByIdAsync(equipment.Id);
 
-                if (existingCategory == null)
+                if (existingEquipment == null)
                 {
                     return new Response<EquipmentResponseModel>(
                         StatusCodes.Status404NotFound,
@@ -209,19 +230,33 @@ public class EquipmentService : IEquipmentService
                     );
                 }
 
-                existingCategory.Code = equipment.Code;
-                existingCategory.Name = equipment.Name;
-                existingCategory.Description = equipment.Description;
-                existingCategory.ImportDate = equipment.ImportDate;
-                existingCategory.Manufacturer = equipment.Manufacturer;
-                existingCategory.OriginOfGoods = equipment.OriginOfGoods;
-                existingCategory.Price = equipment.Price;
-                existingCategory.CategoryId = equipment.CategoryId;
-                existingCategory.DepartmentId = equipment.DepartmentId;
-                existingCategory.OwnerId = equipment.OwnerId;
-                existingCategory.Status = equipment.Status;
+                var changes = await BuildEquipmentChanges(existingEquipment, equipment);
 
-                await _equipmentRepository.UpdateAsync(existingCategory);
+                existingEquipment.Code = equipment.Code;
+                existingEquipment.Name = equipment.Name;
+                existingEquipment.Description = equipment.Description;
+                existingEquipment.ImportDate = equipment.ImportDate;
+                existingEquipment.Manufacturer = equipment.Manufacturer;
+                existingEquipment.OriginOfGoods = equipment.OriginOfGoods;
+                existingEquipment.Price = equipment.Price;
+                existingEquipment.CategoryId = equipment.CategoryId;
+                existingEquipment.DepartmentId = equipment.DepartmentId;
+                existingEquipment.OwnerId = equipment.OwnerId;
+                existingEquipment.Status = equipment.Status;
+
+                await _equipmentRepository.UpdateAsync(existingEquipment);
+
+                if (changes.Any())
+                {
+                    await _equipmentHistoryService.LogAsync(
+                        equipment.Id,
+                        Enumerations.EquipmentHistoryAction.Updated,
+                        $"{actorDisplayName ?? $"Người dùng {currentUserId}"} đã cập nhật thiết bị {equipment.Code}",
+                        currentUserId,
+                        actorDisplayName,
+                        changes
+                    );
+                }
             }
 
             return new Response<EquipmentResponseModel>(
@@ -235,6 +270,22 @@ public class EquipmentService : IEquipmentService
                 $"Error creating category: {ex.Message}"
             );
         }
+    }
+
+    public async Task<Response<List<EquipmentHistoryModel>>> GetHistory(
+        int equipmentId
+    )
+    {
+        var equipment = await _equipmentRepository.GetByIdAsync(equipmentId);
+        if (equipment == null)
+        {
+            return new Response<List<EquipmentHistoryModel>>(
+                StatusCodes.Status404NotFound,
+                "Không tìm thấy thiết bị"
+            );
+        }
+
+        return await _equipmentHistoryService.GetHistoryAsync(equipmentId);
     }
 
     public async Task<Response<List<EquipmentModel>>> GetListEquipmentAvaiable(int userId)
@@ -326,5 +377,100 @@ public class EquipmentService : IEquipmentService
         resultData.TotalRecords = pagingData.TotalRecords;
 
         return new Response<PagingDataModel<MyEquipmentPagingModel>>(resultData);
+    }
+
+    private async Task<List<EquipmentHistoryChangeModel>> BuildEquipmentChanges(
+        Domain.Entities.Equipment? oldEquipment,
+        Domain.Entities.Equipment newEquipment
+    )
+    {
+        var changes = new List<EquipmentHistoryChangeModel>();
+        
+        var oldCategory = await _equipmentCategoryRepository.GetByIdAsync(oldEquipment?.CategoryId ?? 0);
+        var oldDepartment = await _departmentRepository.GetByIdAsync(oldEquipment?.DepartmentId ?? 0);
+        var oldOwner = await _userRepository.GetByIdAsync(oldEquipment?.OwnerId ?? 0);
+        
+        var newCategory = await _equipmentCategoryRepository.GetByIdAsync(newEquipment?.CategoryId ?? 0);
+        var newDepartment = await _departmentRepository.GetByIdAsync(newEquipment?.DepartmentId ?? 0);
+        var newOwner = await _userRepository.GetByIdAsync(newEquipment?.OwnerId ?? 0);
+        
+        Dictionary<int, string> statusName = new()
+        {
+            { (int)Enumerations.EquipmentStatus.Available, "Còn sử dụng" },
+            { (int)Enumerations.EquipmentStatus.Borrowed, "Đang mượn" },
+            { (int)Enumerations.EquipmentStatus.Maintenance, "Đang bảo dưỡng" },
+            { (int)Enumerations.EquipmentStatus.Lost, "Đã mất" },
+            { (int)Enumerations.EquipmentStatus.BrokenPart, "Hỏng một phần" },
+            { (int)Enumerations.EquipmentStatus.Broken, "Đã hỏng" },
+        };
+
+        Compare(changes, "Mã thiết bị", oldEquipment?.Code, newEquipment.Code);
+        Compare(changes, "Tên thiết bị", oldEquipment?.Name, newEquipment.Name);
+        Compare(changes, "Mô tả", oldEquipment?.Description, newEquipment.Description);
+        Compare(changes, "Ngày nhập", oldEquipment?.ImportDate, newEquipment.ImportDate);
+        Compare(changes, "Hãng sản xuất", oldEquipment?.Manufacturer, newEquipment.Manufacturer);
+        Compare(changes, "Xuất xứ", oldEquipment?.OriginOfGoods, newEquipment.OriginOfGoods);
+        Compare(changes, "Giá tiền", oldEquipment?.Price, newEquipment.Price);
+        Compare(changes, "Danh mục", oldCategory?.Name, newCategory?.Name);
+        Compare(changes, "Phòng ban", oldDepartment?.Name, newDepartment?.Name);
+        Compare(changes, "Chủ sở hữu", oldOwner?.FullName, newOwner?.FullName);
+        Compare(changes, "Trạng thái", oldEquipment != null ? statusName[(int)oldEquipment.Status] : null, statusName[(int)newEquipment.Status]);
+
+        return changes;
+    }
+
+    private static void Compare(
+        ICollection<EquipmentHistoryChangeModel> changes,
+        string field,
+        object? oldValue,
+        object? newValue
+    )
+    {
+        if (oldValue == null && newValue == null)
+        {
+            return;
+        }
+
+        if (Equals(oldValue, newValue))
+        {
+            return;
+        }
+
+        changes.Add(
+            new EquipmentHistoryChangeModel
+            {
+                Field = field,
+                OldValue = FormatValue(oldValue),
+                NewValue = FormatValue(newValue),
+            }
+        );
+    }
+
+    private static string? FormatValue(object? value)
+    {
+        return value switch
+        {
+            null => null,
+            DateTime dateTime => dateTime.ToString("dd/MM/yyyy"),
+            DateTimeOffset dateTimeOffset => dateTimeOffset.ToString("dd/MM/yyyy"),
+            decimal decimalValue => decimalValue.ToString("N2", CultureInfo.InvariantCulture),
+            Enumerations.EquipmentStatus status => status.ToString(),
+            _ => value.ToString(),
+        };
+    }
+
+    private static string? GetUserDisplayName(Domain.Entities.User? user)
+    {
+        if (user == null)
+        {
+            return null;
+        }
+
+        if (string.IsNullOrWhiteSpace(user.FullName))
+        {
+            return user.UserName;
+        }
+
+        return $"{user.UserName} - {user.FullName}";
     }
 }

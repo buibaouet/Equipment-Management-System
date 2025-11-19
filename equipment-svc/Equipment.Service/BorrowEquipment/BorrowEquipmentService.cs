@@ -3,9 +3,10 @@ using Equipment.Domain.Constant;
 using Equipment.Domain.IRepositories;
 using Equipment.Domain.Models;
 using Equipment.Domain.Models.BorrowEquipmentModel;
+using Equipment.Domain.Models.EquipmentHistoryModel;
 using Equipment.Domain.Models.ReponseModel;
+using Equipment.Service.EquipmentHistory;
 using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
 
 namespace Equipment.Service.BorrowEquipment;
 
@@ -16,13 +17,15 @@ public class BorrowEquipmentService : IBorrowEquipmentService
     private readonly IUserRepository _userRepository;
     private readonly IDepartmentRepository _departmentRepository;
     private readonly IEquipmentCategoryRepository _equipmentCategoryRepository;
+    private readonly IEquipmentHistoryService _equipmentHistoryService;
 
     public BorrowEquipmentService(
         IBorrowEquipmentRepository borrowEquipmentRepository,
         IEquipmentRepository equipmentRepository,
         IUserRepository userRepository,
         IDepartmentRepository departmentRepository,
-        IEquipmentCategoryRepository equipmentCategoryRepository
+        IEquipmentCategoryRepository equipmentCategoryRepository,
+        IEquipmentHistoryService equipmentHistoryService
     )
     {
         _borrowEquipmentRepository = borrowEquipmentRepository;
@@ -30,6 +33,7 @@ public class BorrowEquipmentService : IBorrowEquipmentService
         _userRepository = userRepository;
         _departmentRepository = departmentRepository;
         _equipmentCategoryRepository = equipmentCategoryRepository;
+        _equipmentHistoryService = equipmentHistoryService;
     }
 
     public async Task<Response<PagingDataModel<BorrowEquipmentPagingModel>>> GetPaging(
@@ -281,6 +285,20 @@ public class BorrowEquipmentService : IBorrowEquipmentService
             if (borrowEquipment.Id == 0)
             {
                 await _borrowEquipmentRepository.CreateAsync(borrowEquipment);
+
+                var borrower = await _userRepository.GetByIdAsync(currentUserId);
+                var borrowerDisplayName = GetUserDisplayName(borrower);
+
+                var changes = BuildBorrowRequestChanges(borrowEquipment, borrowerDisplayName);
+
+                await _equipmentHistoryService.LogAsync(
+                    borrowEquipment.EquipmentId,
+                    Enumerations.EquipmentHistoryAction.BorrowRequested,
+                    $"{borrowerDisplayName ?? $"Người dùng {currentUserId}"} đã gửi yêu cầu mượn thiết bị",
+                    currentUserId,
+                    borrowerDisplayName,
+                    changes
+                );
             }
             else
             {
@@ -318,7 +336,7 @@ public class BorrowEquipmentService : IBorrowEquipmentService
         }
     }
 
-    public async Task<Response<bool>> ReturnEquipment(ReturnEquipmentModel param)
+    public async Task<Response<bool>> ReturnEquipment(ReturnEquipmentModel param, int currentUserId)
     {
         try
         {
@@ -345,6 +363,12 @@ public class BorrowEquipmentService : IBorrowEquipmentService
                 return new Response<bool>(StatusCodes.Status404NotFound, "Không tìm thấy thiết bị");
             }
 
+            var currentUser = await _userRepository.GetByIdAsync(currentUserId);
+            var borrower = await _userRepository.GetByIdAsync(borrowRequest.RequestedByUserId);
+            var actorDisplay = GetUserDisplayName(currentUser);
+            var borrowerDisplay = GetUserDisplayName(borrower);
+            var previousEquipmentStatus = equipment.Status;
+
             equipment.Status = param.Status;
             await _equipmentRepository.UpdateAsync(equipment);
 
@@ -354,6 +378,23 @@ public class BorrowEquipmentService : IBorrowEquipmentService
             borrowRequest.ProcessingForm = param.ProcessingForm;
             borrowRequest.ProcessingNote = param.ProcessingNote;
             await _borrowEquipmentRepository.UpdateAsync(borrowRequest);
+
+            var changes = BuildReturnChanges(
+                borrowRequest,
+                previousEquipmentStatus,
+                param.Status,
+                borrowerDisplay,
+                param
+            );
+
+            await _equipmentHistoryService.LogAsync(
+                borrowRequest.EquipmentId,
+                Enumerations.EquipmentHistoryAction.Returned,
+                $"{actorDisplay ?? $"Người dùng {currentUserId}"} đã trả thiết bị",
+                currentUserId,
+                actorDisplay,
+                changes
+            );
 
             return new Response<bool>(true);
         }
@@ -481,6 +522,20 @@ public class BorrowEquipmentService : IBorrowEquipmentService
             equipment.Status = Enumerations.EquipmentStatus.Borrowed;
             await _equipmentRepository.UpdateAsync(equipment);
 
+            var borrower = await _userRepository.GetByIdAsync(borrowRequest.RequestedByUserId);
+            var borrowerDisplay = GetUserDisplayName(borrower);
+            var approverDisplay = GetUserDisplayName(currentUser);
+            var changes = BuildBorrowRequestChanges(borrowRequest, borrowerDisplay);
+
+            await _equipmentHistoryService.LogAsync(
+                borrowRequest.EquipmentId,
+                Enumerations.EquipmentHistoryAction.BorrowApproved,
+                $"{approverDisplay ?? $"Người dùng {currentUserId}"} đã phê duyệt yêu cầu mượn cho {borrowerDisplay ?? $"người dùng {borrowRequest.RequestedByUserId}"}",
+                currentUserId,
+                approverDisplay,
+                changes
+            );
+
             return new Response<bool>(true);
         }
         catch (Exception ex)
@@ -573,6 +628,20 @@ public class BorrowEquipmentService : IBorrowEquipmentService
 
             await _borrowEquipmentRepository.UpdateAsync(borrowRequest);
 
+            var borrower = await _userRepository.GetByIdAsync(borrowRequest.RequestedByUserId);
+            var borrowerDisplay = GetUserDisplayName(borrower);
+            var approverDisplay = GetUserDisplayName(currentUser);
+            var changes = BuildBorrowRequestChanges(borrowRequest, borrowerDisplay);
+
+            await _equipmentHistoryService.LogAsync(
+                borrowRequest.EquipmentId,
+                Enumerations.EquipmentHistoryAction.BorrowRejected,
+                $"{approverDisplay ?? $"Người dùng {currentUserId}"} đã từ chối yêu cầu mượn của {borrowerDisplay ?? $"người dùng {borrowRequest.RequestedByUserId}"}",
+                currentUserId,
+                approverDisplay,
+                changes
+            );
+
             return new Response<bool>(true);
         }
         catch (Exception ex)
@@ -582,5 +651,96 @@ public class BorrowEquipmentService : IBorrowEquipmentService
                 $"Error rejecting borrow request: {ex.Message}"
             );
         }
+    }
+
+    private static List<EquipmentHistoryChangeModel> BuildBorrowRequestChanges(
+        Domain.Entities.BorrowEquipment borrowEquipment,
+        string? borrowerDisplayName
+    )
+    {
+        var borrowerText = borrowerDisplayName ?? $"Người dùng {borrowEquipment.RequestedByUserId}";
+
+        return new List<EquipmentHistoryChangeModel>
+        {
+            new() { Field = "Người mượn", NewValue = borrowerText },
+            new() { Field = "Từ ngày", NewValue = borrowEquipment.FromDate.ToString("dd/MM/yyyy") },
+            new() { Field = "Đến ngày", NewValue = borrowEquipment.ToDate.ToString("dd/MM/yyyy") },
+        };
+    }
+
+    private static List<EquipmentHistoryChangeModel> BuildReturnChanges(
+        Domain.Entities.BorrowEquipment borrowEquipment,
+        Enumerations.EquipmentStatus previousStatus,
+        Enumerations.EquipmentStatus newStatus,
+        string? borrowerDisplayName,
+        ReturnEquipmentModel param
+    )
+    {
+        var borrowerText = borrowerDisplayName ?? $"Người dùng {borrowEquipment.RequestedByUserId}";
+
+        Dictionary<int, string> statusName = new()
+        {
+            { (int)Enumerations.EquipmentStatus.Available, "Còn sử dụng" },
+            { (int)Enumerations.EquipmentStatus.Borrowed, "Đang mượn" },
+            { (int)Enumerations.EquipmentStatus.Maintenance, "Đang bảo dưỡng" },
+            { (int)Enumerations.EquipmentStatus.Lost, "Đã mất" },
+            { (int)Enumerations.EquipmentStatus.BrokenPart, "Hỏng một phần" },
+            { (int)Enumerations.EquipmentStatus.Broken, "Đã hỏng" },
+        };
+
+        var changes = new List<EquipmentHistoryChangeModel>
+        {
+            new() { Field = "Người mượn", NewValue = borrowerText },
+            new()
+            {
+                Field = "Trạng thái thiết bị",
+                OldValue = statusName[(int)previousStatus],
+                NewValue = statusName[(int)newStatus],
+            },
+        };
+
+        if (param.ProcessingForm.HasValue)
+        {
+            changes.Add(
+                new EquipmentHistoryChangeModel
+                {
+                    Field = "Hình thức xử lý",
+                    NewValue =
+                        param.ProcessingForm.Value == Enumerations.ReturnEquipmentProcessing.Repair
+                            ? "Sửa chữa"
+                        : param.ProcessingForm.Value == Enumerations.ReturnEquipmentProcessing.BuyNew
+                            ? "Mua mới"
+                        : "Bồi thường",
+                }
+            );
+        }
+
+        if (!string.IsNullOrWhiteSpace(param.ProcessingNote))
+        {
+            changes.Add(
+                new EquipmentHistoryChangeModel
+                {
+                    Field = "Ghi chú xử lý",
+                    NewValue = param.ProcessingNote,
+                }
+            );
+        }
+
+        return changes;
+    }
+
+    private static string? GetUserDisplayName(Domain.Entities.User? user)
+    {
+        if (user == null)
+        {
+            return null;
+        }
+
+        if (string.IsNullOrWhiteSpace(user.FullName))
+        {
+            return user.UserName;
+        }
+
+        return $"{user.UserName} - {user.FullName}";
     }
 }

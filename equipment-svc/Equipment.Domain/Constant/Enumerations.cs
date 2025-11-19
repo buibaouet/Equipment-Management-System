@@ -33,4 +33,14 @@ public class Enumerations
         BuyNew = 2, // Mua mới
         Compensation = 3, // Bồi thường
     }
+
+    public enum EquipmentHistoryAction
+    {
+        Created = 1,
+        Updated = 2,
+        BorrowRequested = 3,
+        BorrowApproved = 4,
+        BorrowRejected = 5,
+        Returned = 6,
+    }
 }

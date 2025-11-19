@@ -38,13 +38,23 @@ export enum ProcessingFormEnum {
   Compensation = 3,
 }
 
+export enum EquipmentHistoryAction {
+  Created = 1, // Tạo mới
+  Updated = 2, // Cập nhật thông tin
+  BorrowRequested = 3, // Yêu cầu mượn thiết bị
+  BorrowApproved = 4, // Duyệt Yêu cầu mượn thiết bị
+  BorrowRejected = 5, // Từ chối Yêu cầu mượn thiết bị
+  Returned = 6, // Trả thiết bị
+}
+
 export default {
   EditMode,
   BorrowEditMode,
   RoleEnum,
   EquipmentStatusEnum,
   BorrowEquipmentStatusEnum,
-  ProcessingFormEnum
+  ProcessingFormEnum,
+  EquipmentHistoryAction
 };
 
 export const PAGINATION_CONFIG = {

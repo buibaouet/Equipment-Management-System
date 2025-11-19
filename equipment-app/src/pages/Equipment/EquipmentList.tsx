@@ -27,6 +27,7 @@ import EquipmentModal from "./EquipmentModal";
 import TableDropdown from "../../components/common/TableDropdown";
 import BorrowEquipmentModal from "../BorrowReturn/BorrowEquipmentModal";
 import ReturnEquipmentModal from "../BorrowReturn/ReturnEquipmentModal";
+import EquipmentHistoryModal from "./EquipmentHistoryModal";
 import { useGetListBorrowEquipmentPagingMutation } from "../../api/useBorrowEquipmentApi";
 import { BorrowEquipmentPaging } from "../../types/BorrowEquipment";
 
@@ -69,6 +70,8 @@ export default function EquipmentList() {
   const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
   const [selectedBorrowRecord, setSelectedBorrowRecord] = useState<BorrowEquipmentPaging | null>(null);
   const [borrowEquipmentId, setBorrowEquipmentId] = useState<number | null>(null);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  const [historyEquipmentId, setHistoryEquipmentId] = useState<number | null>(null);
 
   // Fetch borrow records for current user to get borrow record IDs
   useEffect(() => {
@@ -136,6 +139,16 @@ export default function EquipmentList() {
   const handleCloseReturnModal = () => {
     setIsReturnModalOpen(false);
     setSelectedBorrowRecord(null);
+  };
+
+  const handleOpenHistoryEquipmentModal = (equipmentId: number) => {
+    setHistoryEquipmentId(equipmentId);
+    setIsHistoryModalOpen(true);
+  };
+
+  const handleCloseHistoryModal = () => {
+    setIsHistoryModalOpen(false);
+    setHistoryEquipmentId(null);
   };
 
   const handleRefresh = () => {
@@ -313,36 +326,40 @@ export default function EquipmentList() {
                             />
                           </span>
                         )}
-                        {(canBorrowEquipment(item) || canReturnEquipment(item)) && (
-                          <TableDropdown
-                            className="h-4 w-4"
-                            dropdownButton={
-                              <button className="text-gray-500 dark:text-gray-400" title="Thêm thao tác">
-                                <EllipsisVerticalIcon className="w-4 h-4" />
+                        <TableDropdown
+                          className="h-4 w-4"
+                          dropdownButton={
+                            <button className="text-gray-500 dark:text-gray-400" title="Thêm thao tác">
+                              <EllipsisVerticalIcon className="w-4 h-4" />
+                            </button>
+                          }
+                          dropdownContent={
+                            <>
+                              {canBorrowEquipment(item) && (
+                                <button
+                                  className="text-xs flex w-full rounded-lg px-3 py-2 text-left font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+                                  onClick={() => handleOpenBorrowModal(item.id)}
+                                >
+                                  Mượn thiết bị
+                                </button>
+                              )}
+                              {canReturnEquipment(item) && (
+                                <button
+                                  className="text-xs flex w-full rounded-lg px-3 py-2 text-left font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+                                  onClick={() => handleOpenReturnModal(item.id)}
+                                >
+                                  Trả thiết bị
+                                </button>
+                              )}
+                              <button
+                                className="text-xs flex w-full rounded-lg px-3 py-2 text-left font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+                                onClick={() => handleOpenHistoryEquipmentModal(item.id)}
+                              >
+                                Lịch sử thiết bị
                               </button>
-                            }
-                            dropdownContent={
-                              <>
-                                {canBorrowEquipment(item) && (
-                                  <button
-                                    className="text-xs flex w-full rounded-lg px-3 py-2 text-left font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
-                                    onClick={() => handleOpenBorrowModal(item.id)}
-                                  >
-                                    Mượn thiết bị
-                                  </button>
-                                )}
-                                {canReturnEquipment(item) && (
-                                  <button
-                                    className="text-xs flex w-full rounded-lg px-3 py-2 text-left font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
-                                    onClick={() => handleOpenReturnModal(item.id)}
-                                  >
-                                    Trả thiết bị
-                                  </button>
-                                )}
-                              </>
-                            }
-                          />
-                        )}
+                            </>
+                          }
+                        />
                       </div>
                     </TableCell>
                   </TableRow>
@@ -381,6 +398,12 @@ export default function EquipmentList() {
         onClose={handleCloseReturnModal}
         equipment={selectedBorrowRecord}
         actionCallback={handleRefresh}
+      />
+
+      <EquipmentHistoryModal
+        isOpen={isHistoryModalOpen}
+        onClose={handleCloseHistoryModal}
+        equipmentId={historyEquipmentId}
       />
     </div>
   );

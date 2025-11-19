@@ -23,7 +23,7 @@ public interface IBorrowEquipmentService
         Domain.Entities.BorrowEquipment borrowEquipment,
         int currentUserId
     );
-    Task<Response<bool>> ReturnEquipment(ReturnEquipmentModel param);
+    Task<Response<bool>> ReturnEquipment(ReturnEquipmentModel param, int currentUserId);
     Task<Response<bool>> ApproveBorrowRequest(int id, int currentUserId);
     Task<Response<bool>> RejectBorrowRequest(int id, int currentUserId);
 }

@@ -14,6 +14,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Equipment.Domain.Entities.Equipment> Equipments { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
     public DbSet<BorrowEquipment> BorrowEquipments { get; set; }
+    public DbSet<EquipmentHistory> EquipmentHistories { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -82,6 +83,22 @@ public class ApplicationDbContext : DbContext
             builder.ToTable("BorrowEquipments");
 
             builder.HasKey(x => x.Id);
+        });
+
+        modelBuilder.Entity<EquipmentHistory>(builder =>
+        {
+            builder.ToTable("EquipmentHistories");
+
+            builder.HasKey(x => x.Id);
+
+            builder.HasIndex(x => x.EquipmentId)
+                .HasDatabaseName("IX_EquipmentHistories_EquipmentId");
+
+            builder.Property(x => x.Action)
+                .IsRequired();
+
+            builder.Property(x => x.Description)
+                .HasMaxLength(1000);
         });
     }
 }

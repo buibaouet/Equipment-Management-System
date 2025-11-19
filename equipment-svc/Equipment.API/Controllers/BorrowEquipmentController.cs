@@ -113,7 +113,7 @@ public class BorrowEquipmentController : ControllerBase
                 );
             }
 
-            var res = await _borrowEquipmentService.ReturnEquipment(param);
+            var res = await _borrowEquipmentService.ReturnEquipment(param, currentUserId.Value);
             if (res.StatusCode != StatusCodes.Status200OK)
             {
                 return StatusCode(res.StatusCode, res.Message);
