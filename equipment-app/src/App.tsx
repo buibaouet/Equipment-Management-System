@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router";
-import Ecommerce from "./pages/Dashboard/Ecommerce";
+import Dashboard from "./pages/Dashboard/Dashboard";
 import EquipmentDetail from "./pages/Equipment/EquipmentDetail";
 import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
@@ -60,7 +60,7 @@ export default function App() {
 
           {/* Dashboard Layout */}
           <Route element={<PrivateRoute> <AppLayout /> </PrivateRoute>}>
-            <Route index path="/" element={<Ecommerce />} />
+            <Route index path="/" element={<Dashboard />} />
             <Route path="/equipment-list" element={<EquipmentList />} />
             <Route path="/equipment-detail/:id" element={<EquipmentDetail />} />
             <Route path="/borrow-request" element={<ApprovedRequest />} />

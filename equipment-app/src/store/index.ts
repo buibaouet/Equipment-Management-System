@@ -5,6 +5,7 @@ import { useDepartmentApi } from '../api/useDepartmentApi';
 import { useCategoryApi } from '../api/useCategoryApi';
 import { useEquipmentApi } from '../api/useEquipmentApi';
 import { useBorrowEquipmentApi } from '../api/useBorrowEquipmentApi';
+import { useDashboardApi } from '../api/useDashboardApi';
 
 export const store = configureStore({
   reducer: {
@@ -14,6 +15,7 @@ export const store = configureStore({
     [useCategoryApi.reducerPath]: useCategoryApi.reducer,
     [useEquipmentApi.reducerPath]: useEquipmentApi.reducer,
     [useBorrowEquipmentApi.reducerPath]: useBorrowEquipmentApi.reducer,
+    [useDashboardApi.reducerPath]: useDashboardApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
@@ -23,6 +25,7 @@ export const store = configureStore({
       useCategoryApi.middleware,
       useEquipmentApi.middleware,
       useBorrowEquipmentApi.middleware,
+      useDashboardApi.middleware
     ),
 });
 

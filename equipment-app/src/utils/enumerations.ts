@@ -47,6 +47,12 @@ export enum EquipmentHistoryAction {
   Returned = 6, // Trả thiết bị
 }
 
+export enum ChartPeriodType {
+  Week = 1,
+  Month = 2,
+  Quarter = 3,
+}
+
 export default {
   EditMode,
   BorrowEditMode,
@@ -54,7 +60,8 @@ export default {
   EquipmentStatusEnum,
   BorrowEquipmentStatusEnum,
   ProcessingFormEnum,
-  EquipmentHistoryAction
+  EquipmentHistoryAction,
+  ChartPeriodType,
 };
 
 export const PAGINATION_CONFIG = {

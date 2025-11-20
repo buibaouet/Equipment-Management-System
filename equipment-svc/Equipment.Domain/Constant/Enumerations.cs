@@ -43,4 +43,11 @@ public class Enumerations
         BorrowRejected = 5,
         Returned = 6,
     }
+    
+    public enum ChartPeriodType
+    {
+        Week = 1,
+        Month = 2,
+        Quarter = 3
+    }
 }
