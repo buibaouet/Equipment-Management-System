@@ -40,6 +40,8 @@ export default function useEquipmentDetail() {
     categoryId: 0,
     ownerId: 0,
     status: EquipmentStatusEnum.Available,
+    reasonBroken: null,
+    solutionBroken: null,
   });
 
   // Auto-fill department for managers when creating new equipment
@@ -63,30 +65,54 @@ export default function useEquipmentDetail() {
       if (currentUser?.role === RoleEnum.Manager && currentUser.departmentId) {
         data.departmentId = currentUser.departmentId;
       }
-      setFormData(data);
+      setFormData({
+        ...data,
+        reasonBroken: data.reasonBroken ?? null,
+        solutionBroken: data.solutionBroken ?? null,
+      });
     }
   }, [equipmentData, currentUser]);
 
-  const handleValueChange = (value: string, field: keyof EquipmentEntity) => {
+  const handleValueChange = (value: string | null, field: keyof EquipmentEntity) => {
     // Prevent managers from changing department
     if (field === 'departmentId' && currentUser?.role === RoleEnum.Manager) {
       return;
     }
 
-    let valueParsed: any = value;
+    let valueParsed: string | number | Date | null = value;
     
     // Convert importDate ISO string to Date object
     if (field === 'importDate' && value) {
       valueParsed = new Date(value);
     } else if (field === 'price' || field === 'departmentId' || field === 'categoryId' || field === 'ownerId' || field === 'id') {
       valueParsed = Number(value);
+    } else if (field === 'status') {
+      valueParsed = Number(value);
     }
 
     if (valueParsed !== undefined) {
-      setFormData((prev: EquipmentEntity) => ({
-        ...prev,
-        [field]: valueParsed,
-      }));
+      setFormData((prev: EquipmentEntity) => {
+        const nextForm = {
+          ...prev,
+          [field]: valueParsed,
+        } as EquipmentEntity;
+
+        if (field === 'status' && valueParsed !== EquipmentStatusEnum.Broken) {
+          if (prev.reasonBroken !== null || prev.solutionBroken !== null) {
+            nextForm.reasonBroken = null;
+            nextForm.solutionBroken = null;
+          }
+          if (errors.reasonBroken || errors.solutionBroken) {
+            setErrors(prevErrors => ({
+              ...prevErrors,
+              reasonBroken: undefined,
+              solutionBroken: undefined,
+            }));
+          }
+        }
+
+        return nextForm;
+      });
 
       // Clear error when user starts typing
       if (errors[field as keyof EquipmentErrors]) {
@@ -150,7 +176,7 @@ export default function useEquipmentDetail() {
             status === EquipmentStatusEnum.Broken ? "Đã hỏng" :
               "",
     }));
-  }, [EquipmentStatusEnum]);
+  }, []);
 
   const handleCancel = () => {
     // Reset form data to original values
@@ -167,6 +193,8 @@ export default function useEquipmentDetail() {
       categoryId: 0,
       ownerId: 0,
       status: EquipmentStatusEnum.Available,
+      reasonBroken: null,
+      solutionBroken: null,
     });
 
     goBack();
@@ -196,6 +224,15 @@ export default function useEquipmentDetail() {
 
     if (!formData.departmentId) {
       newErrors.departmentId = "Vui lòng chọn phòng ban";
+    }
+
+    if (formData.status == EquipmentStatusEnum.Broken) {
+      if (!formData.reasonBroken || !formData.reasonBroken.trim()) {
+        newErrors.reasonBroken = "Vui lòng nhập lý do hỏng";
+      }
+      if (!formData.solutionBroken || !formData.solutionBroken.trim()) {
+        newErrors.solutionBroken = "Vui lòng nhập hướng xử lý";
+      }
     }
 
     setErrors(newErrors);
@@ -233,14 +270,21 @@ export default function useEquipmentDetail() {
         if (response.data.priceError) {
           newErrors.price = response.data.priceError;
         }
+        if (response.data.reasonBrokenError) {
+          newErrors.reasonBroken = response.data.reasonBrokenError;
+        }
+        if (response.data.solutionBrokenError) {
+          newErrors.solutionBroken = response.data.solutionBrokenError;
+        }
 
         setErrors(newErrors);
       }
       else {
         toast.error(response?.message || `Có lỗi xảy ra khi ${editMode == EditMode.Add ? 'thêm mới' : 'chỉnh sửa'} thiết bị`);
       }
-    } catch (error: any) {
-      toast.error(error.data?.message || `Có lỗi xảy ra khi ${editMode == EditMode.Add ? 'thêm mới' : 'chỉnh sửa'} thiết bị`);
+    } catch (error: unknown) {
+      const apiError = error as { data?: { message?: string } };
+      toast.error(apiError?.data?.message || `Có lỗi xảy ra khi ${editMode == EditMode.Add ? 'thêm mới' : 'chỉnh sửa'} thiết bị`);
     }
   };
 

@@ -14,6 +14,8 @@ export interface EquipmentEntity {
     departmentId: number,
     categoryId: number,
     status: EquipmentStatusEnum,
+    reasonBroken: string | null,
+    solutionBroken: string | null,
 }
 
 export interface EquipmentPagingParam {
@@ -60,6 +62,8 @@ export interface EquipmentResponseModel {
     categoryIdError: string;
     departmentIdError: string;
     priceError: string;
+    reasonBrokenError?: string;
+    solutionBrokenError?: string;
 }
 
 export interface EquipmentModel {
@@ -78,6 +82,8 @@ export interface EquipmentErrors {
     price: string,
     departmentId: string,
     categoryId: string,
+    reasonBroken: string,
+    solutionBroken: string,
 }
 
 export interface EquipmentHistoryModel {

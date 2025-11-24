@@ -42,4 +42,12 @@ public class Equipment : BaseEntity
     public int CategoryId { get; set; }
     public int DepartmentId { get; set; }
     public int? OwnerId { get; set; }
+    /// <summary>
+    /// Lý do hỏng
+    /// </summary>
+    public string? ReasonBroken { get; set; }
+    /// <summary>
+    /// Hướng giải quyết
+    /// </summary>
+    public string? SolutionBroken { get; set; }
 }

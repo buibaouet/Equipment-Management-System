@@ -68,7 +68,7 @@ export default function useFilterDropdown({ onApplyFilter, initialFilters }: Fil
               status === EquipmentStatusEnum.Broken ? "Đã hỏng" :
                 "",
     }));
-  }, [EquipmentStatusEnum]);
+  }, []);
 
   return {
     departmentOptions,

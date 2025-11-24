@@ -38,11 +38,17 @@ const EquipmentModal: React.FC<EquipmentModalProps> = ({ id, isOpen, onClose }) 
     categoryId: 0,
     ownerId: 0,
     status: EquipmentStatusEnum.Available,
+    reasonBroken: null,
+    solutionBroken: null,
   });
 
   useEffect(() => {
     if (equipmentData?.data) {
-      setFormData(equipmentData.data);
+      setFormData({
+        ...equipmentData.data,
+        reasonBroken: equipmentData.data.reasonBroken ?? null,
+        solutionBroken: equipmentData.data.solutionBroken ?? null,
+      });
     }
   }, [equipmentData]);
 
@@ -87,7 +93,12 @@ const EquipmentModal: React.FC<EquipmentModalProps> = ({ id, isOpen, onClose }) 
               status === EquipmentStatusEnum.Broken ? "Đã hỏng" :
                 "",
     }));
-  }, [EquipmentStatusEnum]);
+  }, []);
+
+  const isBrokenStatus = useMemo(
+    () => formData.status == EquipmentStatusEnum.Broken,
+    [formData.status]
+  );
 
   return (
     <Modal
@@ -205,12 +216,34 @@ const EquipmentModal: React.FC<EquipmentModalProps> = ({ id, isOpen, onClose }) 
                   <div className="col-span-full">
                     <Label>Thông tin khác</Label>
                     <TextArea
-                      rows={6}
+                      rows={3}
                       value={formData.description}
                       placeholder="Thông tin thiết bị"
                       disabled={true}
                     />
                   </div>
+                {isBrokenStatus && (
+                  <div className="col-span-full grid grid-cols-1 gap-5 md:grid-cols-2">
+                    <div>
+                      <Label>Lý do hỏng</Label>
+                      <TextArea
+                        rows={3}
+                        value={formData.reasonBroken ?? ""}
+                        placeholder="Mô tả lý do thiết bị bị hỏng"
+                        disabled={true}
+                      />
+                    </div>
+                    <div>
+                      <Label>Hướng xử lý</Label>
+                      <TextArea
+                        rows={3}
+                        value={formData.solutionBroken ?? ""}
+                        placeholder="Nhập phương án xử lý"
+                        disabled={true}
+                      />
+                    </div>
+                  </div>
+                )}
                 </div>
               </div>
             </div>

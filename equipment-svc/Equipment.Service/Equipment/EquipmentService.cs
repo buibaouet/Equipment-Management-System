@@ -242,6 +242,8 @@ public class EquipmentService : IEquipmentService
                 existingEquipment.CategoryId = equipment.CategoryId;
                 existingEquipment.DepartmentId = equipment.DepartmentId;
                 existingEquipment.OwnerId = equipment.OwnerId;
+                existingEquipment.ReasonBroken = equipment.ReasonBroken;
+                existingEquipment.SolutionBroken = equipment.SolutionBroken;
                 existingEquipment.Status = equipment.Status;
 
                 await _equipmentRepository.UpdateAsync(existingEquipment);
@@ -413,6 +415,8 @@ public class EquipmentService : IEquipmentService
         Compare(changes, "Danh mục", oldCategory?.Name, newCategory?.Name);
         Compare(changes, "Phòng ban", oldDepartment?.Name, newDepartment?.Name);
         Compare(changes, "Chủ sở hữu", oldOwner?.FullName, newOwner?.FullName);
+        Compare(changes, "Lý do hỏng", oldEquipment?.ReasonBroken, newEquipment?.ReasonBroken);
+        Compare(changes, "Hướng xử lý", oldEquipment?.SolutionBroken, newEquipment?.SolutionBroken);
         Compare(changes, "Trạng thái", oldEquipment != null ? statusName[(int)oldEquipment.Status] : null, statusName[(int)newEquipment.Status]);
 
         return changes;

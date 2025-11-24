@@ -9,6 +9,7 @@ import { EditMode, EquipmentStatusEnum } from "../../utils/enumerations";
 import CurrencyInput from "../../components/form/input/CurrencyInputField";
 import { CheckIcon, XIcon } from "lucide-react";
 import useEquipmentDetail from "./useEquipmentDetail";
+import { useMemo } from "react";
 
 const EquipmentDetail: React.FC = () => {
   const {
@@ -25,6 +26,8 @@ const EquipmentDetail: React.FC = () => {
     handleCancel,
     handleSave
   } = useEquipmentDetail();
+
+  const isBrokenStatus = useMemo(() => formData.status == EquipmentStatusEnum.Broken, [formData.status]);
 
   return (
     <div>
@@ -185,6 +188,38 @@ const EquipmentDetail: React.FC = () => {
                         disabled={editMode === EditMode.View}
                       />
                     </div>
+                    {isBrokenStatus && (
+                      <div className="col-span-full grid grid-cols-1 gap-5 md:grid-cols-2">
+                        <div>
+                          <Label>
+                            Lý do hỏng<span className="text-error-500">*</span>
+                          </Label>
+                          <TextArea
+                            rows={4}
+                            value={formData.reasonBroken ?? ""}
+                            onChange={(e) => handleValueChange(e, 'reasonBroken')}
+                            placeholder="Mô tả lý do thiết bị bị hỏng"
+                            disabled={editMode === EditMode.View}
+                            error={!!errors.reasonBroken}
+                            hint={errors.reasonBroken}
+                          />
+                        </div>
+                        <div>
+                          <Label>
+                            Hướng xử lý<span className="text-error-500">*</span>
+                          </Label>
+                          <TextArea
+                            rows={4}
+                            value={formData.solutionBroken ?? ""}
+                            onChange={(e) => handleValueChange(e, 'solutionBroken')}
+                            placeholder="Nhập phương án xử lý"
+                            disabled={editMode === EditMode.View}
+                            error={!!errors.solutionBroken}
+                            hint={errors.solutionBroken}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
