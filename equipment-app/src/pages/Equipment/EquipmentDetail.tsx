@@ -192,26 +192,28 @@ const EquipmentDetail: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={handleCancel}
-            className="flex items-center gap-2"
-          >
-            <XIcon className="w-4 h-4" />
-            Hủy
-          </Button>
-          <Button
-            size="sm"
-            onClick={handleSave}
-            className="flex items-center gap-2"
-            disabled={isLoadingSave}
-          >
-            <CheckIcon className="w-4 h-4" />
-            {isLoadingSave ? 'Đang lưu...' : 'Lưu'}
-          </Button>
-        </div>
+        {editMode !== EditMode.View && (
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleCancel}
+              className="flex items-center gap-2"
+            >
+              <XIcon className="w-4 h-4" />
+              Hủy
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleSave}
+              className="flex items-center gap-2"
+              disabled={isLoadingSave}
+            >
+              <CheckIcon className="w-4 h-4" />
+              {isLoadingSave ? 'Đang lưu...' : 'Lưu'}
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

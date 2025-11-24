@@ -201,6 +201,7 @@ export default function EquipmentList() {
 
   // Permission check functions
   const canEditEquipment = (item: EquipmentPagingResponse): boolean => {
+    if (currentUser?.role === RoleEnum.Supervisor) return false; // Supervisor is read-only
     if (isAdmin()) return true;
     if (currentUser?.role === RoleEnum.Manager) {
       return item.departmentId === currentUser.departmentId;
@@ -209,6 +210,7 @@ export default function EquipmentList() {
   };
 
   const canBorrowEquipment = (item: EquipmentPagingResponse): boolean => {
+    if (currentUser?.role === RoleEnum.Supervisor) return false; // Supervisor is read-only
     if (!currentUser || item.ownerId === currentUser.id) return false;
     // User or Manager can borrow available equipment
     if (currentUser.role === RoleEnum.User || currentUser.role === RoleEnum.Manager) {
@@ -218,6 +220,7 @@ export default function EquipmentList() {
   };
 
   const canReturnEquipment = (item: EquipmentPagingResponse): boolean => {
+    if (currentUser?.role === RoleEnum.Supervisor) return false; // Supervisor is read-only
     if (!currentUser || item.ownerId === currentUser.id) return false;
     // Can return if equipment is borrowed and owned by current user
     if (item.status === EquipmentStatusEnum.Borrowed) {

@@ -15,9 +15,10 @@ interface UserInfoModalProps {
     onClose: () => void;
     user: UserEntity | null;
     callbackAction?: () => void; // Callback to refresh the list
+    readOnly?: boolean; // If true, all fields are disabled (view mode)
 }
 
-export default function UserInfoModal({ isOpen, onClose, user, callbackAction }: UserInfoModalProps) {
+export default function UserInfoModal({ isOpen, onClose, user, callbackAction, readOnly = false }: UserInfoModalProps) {
     const [updateUser, { isLoading: isUpdating }] = useUpdateRoleDepartmentUserMutation();
     const { data: departmentData, isLoading: isLoadingDepartments } = useGetDepartmentListQuery({});
     
@@ -89,6 +90,7 @@ export default function UserInfoModal({ isOpen, onClose, user, callbackAction }:
     const roleOptions = [
         { value: String(RoleEnum.Manager), label: "Quản lý phòng ban" },
         { value: String(RoleEnum.User), label: "Người dùng" },
+        { value: String(RoleEnum.Supervisor), label: "Giám sát viên" },
     ];
 
     const handleRoleChange = (value: string) => {
@@ -110,10 +112,10 @@ export default function UserInfoModal({ isOpen, onClose, user, callbackAction }:
             <div className="p-6 sm:p-8">
                 <div className="mb-6">
                     <h2 className="text-xl font-semibold text-gray-800 dark:text-white/90">
-                        Thông tin người dùng
+                        {readOnly ? "Xem thông tin người dùng" : "Thông tin người dùng"}
                     </h2>
                     <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                        Xem và chỉnh sửa thông tin chi tiết của người dùng
+                        {readOnly ? "Xem thông tin chi tiết của người dùng" : "Xem và chỉnh sửa thông tin chi tiết của người dùng"}
                     </p>
                 </div>
 
@@ -154,6 +156,7 @@ export default function UserInfoModal({ isOpen, onClose, user, callbackAction }:
                                 defaultValue={String(formData.departmentId)}
                                 onChange={handleDepartmentChange}
                                 placeholder="Chọn phòng ban"
+                                disabled={readOnly}
                             />
                         )}
                     </div>
@@ -166,21 +169,28 @@ export default function UserInfoModal({ isOpen, onClose, user, callbackAction }:
                             defaultValue={String(formData.role)}
                             onChange={handleRoleChange}
                             placeholder="Chọn vai trò"
+                            disabled={readOnly}
                         />
                     </div>
                 </div>
 
                 {/* Action Buttons */}
                 <div className="flex justify-end gap-3 mt-8 pt-6 border-t border-gray-200 dark:border-gray-800">
-                    <>
-                        <Button variant="outline" onClick={handleCancel} disabled={isUpdating}>
-                            Hủy
+                    {readOnly ? (
+                        <Button variant="outline" onClick={onClose}>
+                            Đóng
                         </Button>
-                        <Button onClick={handleSave} disabled={isUpdating}>
-                            {isUpdating && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                            {isUpdating ? "Đang lưu..." : "Lưu thay đổi"}
-                        </Button>
-                    </>
+                    ) : (
+                        <>
+                            <Button variant="outline" onClick={handleCancel} disabled={isUpdating}>
+                                Hủy
+                            </Button>
+                            <Button onClick={handleSave} disabled={isUpdating}>
+                                {isUpdating && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                                {isUpdating ? "Đang lưu..." : "Lưu thay đổi"}
+                            </Button>
+                        </>
+                    )}
                 </div>
             </div>
         </Modal>

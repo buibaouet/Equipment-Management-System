@@ -14,6 +14,7 @@ export enum RoleEnum {
   Admin = 1,
   Manager = 2,
   User = 3,
+  Supervisor = 4,
 }
 
 export enum EquipmentStatusEnum {

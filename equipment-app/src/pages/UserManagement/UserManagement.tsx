@@ -7,6 +7,7 @@ import PaginationWithIcon from "../../components/ui/table/PaginationWithIcon";
 import {
   Pencil,
   SearchIcon,
+  Eye,
 } from "lucide-react";
 import Badge from "../../components/ui/badge/Badge";
 import useUserManagement from "./useUserManagement";
@@ -18,6 +19,7 @@ import { useState } from "react";
 import { UserEntity } from "../../types/User";
 import HeaderTable from "../../components/ui/table/HeaderTable";
 import TableBodyContent from "../../components/ui/table/TableBodyContent";
+import { useAuth } from "../../hooks/useAuth";
 
 export default function UserManagement() {
   const {
@@ -31,13 +33,29 @@ export default function UserManagement() {
     refreshUsers,
     isLoading
   } = useUserManagement();
+  const { currentUser } = useAuth();
+  const isSupervisor = currentUser?.role === RoleEnum.Supervisor;
 
   const { isOpen, openModal, closeModal } = useModal();
   const [selectedUser, setSelectedUser] = useState<UserEntity | null>(null);
+  const [isViewMode, setIsViewMode] = useState(false);
 
   const handleEditUser = (user: UserEntity) => {
     setSelectedUser(user);
+    setIsViewMode(false);
     openModal();
+  };
+
+  const handleViewUser = (user: UserEntity) => {
+    setSelectedUser(user);
+    setIsViewMode(true);
+    openModal();
+  };
+
+  const handleCloseModal = () => {
+    closeModal();
+    setSelectedUser(null);
+    setIsViewMode(false);
   };
 
   const arrColumns = [
@@ -105,25 +123,39 @@ export default function UserManagement() {
                             ? "success"
                             : item.role == RoleEnum.Manager
                               ? "warning"
-                              : "primary"
+                              : item.role == RoleEnum.Supervisor
+                                ? "info"
+                                : "primary"
                         }
                       >
                         {item.role == RoleEnum.Admin
                           ? "Quản trị viên"
                           : item.role == RoleEnum.Manager
                             ? "Quản lý phòng ban"
-                            : "Người dùng"}
+                            : item.role == RoleEnum.Supervisor
+                              ? "Giám sát viên"
+                              : "Người dùng"}
                       </Badge>
                     </TableCell>
                     <TableCell className="px-4 py-4 font-normal text-gray-800 border border-gray-100 dark:border-white/[0.05] text-theme-sm dark:text-white/90 whitespace-nowrap ">
-                      <div className="flex items-center justify-center w-full gap-2" title="Sửa">
-                        {item.role != RoleEnum.Admin
-                          ? (<Pencil
-                            className="w-4 h-4 cursor-pointer hover:text-brand-600 transition-colors"
-                            onClick={() => handleEditUser(item)}
-                          />)
-                          :
-                          (<></>)}
+                      <div className="flex items-center justify-center w-full gap-2">
+                        {isSupervisor ? (
+                          <span title="Xem">
+                            <Eye
+                              className="w-4 h-4 cursor-pointer hover:text-brand-600 transition-colors"
+                              onClick={() => handleViewUser(item)}
+                            />
+                          </span>
+                        ) : (
+                          item.role != RoleEnum.Admin && (
+                            <span title="Sửa">
+                              <Pencil
+                                className="w-4 h-4 cursor-pointer hover:text-brand-600 transition-colors"
+                                onClick={() => handleEditUser(item)}
+                              />
+                            </span>
+                          )
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -144,9 +176,10 @@ export default function UserManagement() {
       {/* User Info Modal */}
       <UserInfoModal
         isOpen={isOpen}
-        onClose={closeModal}
+        onClose={handleCloseModal}
         user={selectedUser}
         callbackAction={refreshUsers}
+        readOnly={isViewMode}
       />
     </div>
   );

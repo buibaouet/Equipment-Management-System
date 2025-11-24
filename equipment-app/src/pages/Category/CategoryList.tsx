@@ -10,7 +10,8 @@ import {
   Pencil,
   PlusCircle,
   PauseCircleIcon,
-  PlayCircleIcon
+  PlayCircleIcon,
+  Eye
 } from "lucide-react";
 import Badge from "../../components/ui/badge/Badge";
 import useCategoryList from "./useCategoryList";
@@ -19,6 +20,8 @@ import HeaderTable from "../../components/ui/table/HeaderTable";
 import CategoryModal from "./CategoryModal";
 import { CategoryEntity } from "../../types/Category";
 import TableBodyContent from "../../components/ui/table/TableBodyContent";
+import { useAuth } from "../../hooks/useAuth";
+import { RoleEnum } from "../../utils/enumerations";
 
 export default function CategoryList() {
   const {
@@ -32,6 +35,8 @@ export default function CategoryList() {
     handleActiveCategory,
     isLoading
   } = useCategoryList();
+  const { currentUser } = useAuth();
+  const isSupervisor = currentUser?.role === RoleEnum.Supervisor;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<CategoryEntity | null>(null);
@@ -41,14 +46,24 @@ export default function CategoryList() {
     setIsModalOpen(true);
   };
 
+  const [isViewMode, setIsViewMode] = useState(false);
+
   const handleEditCategory = (category: CategoryEntity) => {
     setSelectedCategory(category);
+    setIsViewMode(false);
+    setIsModalOpen(true);
+  };
+
+  const handleViewCategory = (category: CategoryEntity) => {
+    setSelectedCategory(category);
+    setIsViewMode(true);
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedCategory(null);
+    setIsViewMode(false);
   };
 
   const arrColumns = [
@@ -73,10 +88,12 @@ export default function CategoryList() {
           </div>
 
           <div className="flex gap-3">
-            <Button variant="primary" onClick={handleOpenModal}>
-              <PlusCircle className="w-5 h-5" />
-              Thêm mới
-            </Button>
+            {!isSupervisor && (
+              <Button variant="primary" onClick={handleOpenModal}>
+                <PlusCircle className="w-5 h-5" />
+                Thêm mới
+              </Button>
+            )}
           </div>
         </div>
         <div className="max-w-full overflow-x-auto custom-scrollbar">
@@ -108,28 +125,39 @@ export default function CategoryList() {
                     </TableCell>
                     <TableCell className="px-4 py-4 font-normal text-gray-800 border border-gray-100 dark:border-white/[0.05] text-theme-sm dark:text-white/90 whitespace-nowrap ">
                       <div className="flex items-center justify-center w-full gap-2">
-                        <span title="Sửa">
-                          <Pencil
-                            className="w-4 h-4 cursor-pointer hover:text-gray"
-                            onClick={() => handleEditCategory(item)}
-                          />
-                        </span>
-                        {item.isActive
-                          ? (
-                            <span title="Ngừng hoạt động">
-                              <PauseCircleIcon
-                                className="w-4 h-4 cursor-pointer hover:text-error-500"
-                                onClick={() => handleActiveCategory(item.id)}
-                              />
-                            </span>
-                          )
-                          : <span title="Hoạt động lại">
-                            <PlayCircleIcon
-                              className="w-4 h-4 cursor-pointer hover:text-error-500"
-                              onClick={() => handleActiveCategory(item.id)}
+                        {isSupervisor ? (
+                          <span title="Xem">
+                            <Eye
+                              className="w-4 h-4 cursor-pointer hover:text-brand-600 transition-colors"
+                              onClick={() => handleViewCategory(item)}
                             />
                           </span>
-                        }
+                        ) : (
+                          <>
+                            <span title="Sửa">
+                              <Pencil
+                                className="w-4 h-4 cursor-pointer hover:text-gray"
+                                onClick={() => handleEditCategory(item)}
+                              />
+                            </span>
+                            {item.isActive
+                              ? (
+                                <span title="Ngừng hoạt động">
+                                  <PauseCircleIcon
+                                    className="w-4 h-4 cursor-pointer hover:text-error-500"
+                                    onClick={() => handleActiveCategory(item.id)}
+                                  />
+                                </span>
+                              )
+                              : <span title="Hoạt động lại">
+                                <PlayCircleIcon
+                                  className="w-4 h-4 cursor-pointer hover:text-error-500"
+                                  onClick={() => handleActiveCategory(item.id)}
+                                />
+                              </span>
+                            }
+                          </>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -152,6 +180,7 @@ export default function CategoryList() {
         onClose={handleCloseModal}
         initialData={selectedCategory}
         callbackAction={refreshCategories}
+        readOnly={isViewMode}
       />
     </div>
   );

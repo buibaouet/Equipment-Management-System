@@ -9,7 +9,8 @@ import {
   Pencil,
   PauseCircleIcon,
   PlayCircleIcon,
-  PlusCircle
+  PlusCircle,
+  Eye
 } from "lucide-react";
 import Badge from "../../components/ui/badge/Badge";
 import useDepartmentList from "./useDepartmentList";
@@ -19,6 +20,8 @@ import { useState } from "react";
 import { DepartmentEntity } from "../../types/Department";
 import HeaderTable from "../../components/ui/table/HeaderTable";
 import TableBodyContent from "../../components/ui/table/TableBodyContent";
+import { useAuth } from "../../hooks/useAuth";
+import { RoleEnum } from "../../utils/enumerations";
 
 export default function DepartmentList() {
   const {
@@ -32,23 +35,35 @@ export default function DepartmentList() {
     handleActiveDepartment,
     isLoading
   } = useDepartmentList();
+  const { currentUser } = useAuth();
+  const isSupervisor = currentUser?.role === RoleEnum.Supervisor;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState<DepartmentEntity | null>(null);
+  const [isViewMode, setIsViewMode] = useState(false);
 
   const handleOpenModal = () => {
     setSelectedDepartment(null); // Clear selected department for "Add new"
+    setIsViewMode(false);
     setIsModalOpen(true);
   };
 
   const handleEditDepartment = (department: DepartmentEntity) => {
     setSelectedDepartment(department);
+    setIsViewMode(false);
+    setIsModalOpen(true);
+  };
+
+  const handleViewDepartment = (department: DepartmentEntity) => {
+    setSelectedDepartment(department);
+    setIsViewMode(true);
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedDepartment(null);
+    setIsViewMode(false);
   };
 
   const arrColumns = [
@@ -75,10 +90,12 @@ export default function DepartmentList() {
           </div>
 
           <div className="flex gap-3">
-            <Button variant="primary" onClick={handleOpenModal}>
-              <PlusCircle className="w-5 h-5" />
-              Thêm mới
-            </Button>
+            {!isSupervisor && (
+              <Button variant="primary" onClick={handleOpenModal}>
+                <PlusCircle className="w-5 h-5" />
+                Thêm mới
+              </Button>
+            )}
           </div>
         </div>
         <div className="max-w-full overflow-x-auto custom-scrollbar">
@@ -116,28 +133,39 @@ export default function DepartmentList() {
                     </TableCell>
                     <TableCell className="px-4 py-4 font-normal text-gray-800 border border-gray-100 dark:border-white/[0.05] text-theme-sm dark:text-white/90 whitespace-nowrap ">
                       <div className="flex items-center justify-center w-full gap-2">
-                        <span title="Sửa">
-                          <Pencil
-                            className="w-4 h-4 cursor-pointer hover:text-gray"
-                            onClick={() => handleEditDepartment(item)}
-                          />
-                        </span>
-                        {item.isActive
-                          ? (
-                            <span title="Ngừng hoạt động">
-                              <PauseCircleIcon
-                                className="w-4 h-4 cursor-pointer hover:text-error-500"
-                                onClick={() => handleActiveDepartment(item)}
-                              />
-                            </span>
-                          )
-                          : <span title="Hoạt động lại">
-                            <PlayCircleIcon
-                              className="w-4 h-4 cursor-pointer hover:text-error-500"
-                              onClick={() => handleActiveDepartment(item)}
+                        {isSupervisor ? (
+                          <span title="Xem">
+                            <Eye
+                              className="w-4 h-4 cursor-pointer hover:text-brand-600 transition-colors"
+                              onClick={() => handleViewDepartment(item)}
                             />
                           </span>
-                        }
+                        ) : (
+                          <>
+                            <span title="Sửa">
+                              <Pencil
+                                className="w-4 h-4 cursor-pointer hover:text-gray"
+                                onClick={() => handleEditDepartment(item)}
+                              />
+                            </span>
+                            {item.isActive
+                              ? (
+                                <span title="Ngừng hoạt động">
+                                  <PauseCircleIcon
+                                    className="w-4 h-4 cursor-pointer hover:text-error-500"
+                                    onClick={() => handleActiveDepartment(item)}
+                                  />
+                                </span>
+                              )
+                              : <span title="Hoạt động lại">
+                                <PlayCircleIcon
+                                  className="w-4 h-4 cursor-pointer hover:text-error-500"
+                                  onClick={() => handleActiveDepartment(item)}
+                                />
+                              </span>
+                            }
+                          </>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -160,6 +188,7 @@ export default function DepartmentList() {
         onClose={handleCloseModal}
         initialData={selectedDepartment}
         callbackAction={refreshDepartments}
+        readOnly={isViewMode}
       />
     </div>
   );

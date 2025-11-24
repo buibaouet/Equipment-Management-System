@@ -15,6 +15,7 @@ interface DepartmentModalProps {
     onClose: () => void;
     initialData?: DepartmentEntity | null;
     callbackAction: () => void; // Callback to refresh the list
+    readOnly?: boolean; // If true, all fields are disabled (view mode)
 }
 
 export default function DepartmentModal({
@@ -22,6 +23,7 @@ export default function DepartmentModal({
     onClose,
     initialData,
     callbackAction: refreshList,
+    readOnly = false,
 }: DepartmentModalProps) {
     const { data: managerData, isLoading: isLoadingManagers } = useGetManagerListQuery({});
     const [isProcessing, setIsProcessing] = useState(false);
@@ -142,10 +144,10 @@ export default function DepartmentModal({
             <div className="p-6 sm:p-8">
                 <div className="mb-6">
                     <h2 className="text-xl font-semibold text-gray-800 dark:text-white/90">
-                        {initialData ? "Sửa phòng ban" : "Thêm mới phòng ban"}
+                        {readOnly ? "Xem thông tin phòng ban" : initialData ? "Sửa phòng ban" : "Thêm mới phòng ban"}
                     </h2>
                     <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                        {initialData ? "Cập nhật thông tin phòng ban" : "Thêm mới phòng ban vào hệ thống"}
+                        {readOnly ? "Xem thông tin chi tiết phòng ban" : initialData ? "Cập nhật thông tin phòng ban" : "Thêm mới phòng ban vào hệ thống"}
                     </p>
                 </div>
 
@@ -162,6 +164,7 @@ export default function DepartmentModal({
                             error={!!errors.code}
                             hint={errors.code}
                             required
+                            disabled={readOnly}
                         />
                     </div>
 
@@ -177,6 +180,7 @@ export default function DepartmentModal({
                             error={!!errors.name}
                             hint={errors.name}
                             required
+                            disabled={readOnly}
                         />
                     </div>
 
@@ -189,6 +193,7 @@ export default function DepartmentModal({
                             value={formData.description}
                             onChange={(e) => handleInputChange("description", e.target.value)}
                             placeholder="Nhập mô tả phòng ban"
+                            disabled={readOnly}
                         />
                     </div>
 
@@ -222,6 +227,7 @@ export default function DepartmentModal({
                                     }));
                                 }}
                                 placeholder="Chọn người quản lý"
+                                disabled={readOnly}
                             />
                         )}
                     </div>
@@ -237,19 +243,28 @@ export default function DepartmentModal({
                                 defaultValue={formData.isActive ? "true" : "false"}
                                 onChange={(value) => handleInputChange("isActive", value === "true")}
                                 placeholder="Chọn trạng thái"
+                                disabled={readOnly}
                             />
                         </div>
                     )}
 
                     {/* Action Buttons */}
                     <div className="flex justify-end gap-3 mt-8 pt-6 border-t border-gray-200 dark:border-gray-800">
-                        <Button variant="outline" onClick={onClose} disabled={isProcessing}>
-                            Hủy
-                        </Button>
-                        <Button onClick={handleSubmit} disabled={isProcessing}>
-                            {isProcessing && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                            {isProcessing ? "Đang lưu..." : initialData ? "Lưu thay đổi" : "Thêm mới"}
-                        </Button>
+                        {readOnly ? (
+                            <Button variant="outline" onClick={onClose}>
+                                Đóng
+                            </Button>
+                        ) : (
+                            <>
+                                <Button variant="outline" onClick={onClose} disabled={isProcessing}>
+                                    Hủy
+                                </Button>
+                                <Button onClick={handleSubmit} disabled={isProcessing}>
+                                    {isProcessing && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                                    {isProcessing ? "Đang lưu..." : initialData ? "Lưu thay đổi" : "Thêm mới"}
+                                </Button>
+                            </>
+                        )}
                     </div>
                 </form>
             </div>

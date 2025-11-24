@@ -77,7 +77,7 @@ export default function App() {
             <Route path="/equipment-detail" element={<EquipmentDetail />} />
           </Route>
 
-          <Route element={<PrivateRoute requireAdmin> <AppLayout /> </PrivateRoute>}>
+          <Route element={<PrivateRoute allowedRoles={[RoleEnum.Admin, RoleEnum.Supervisor]}> <AppLayout /> </PrivateRoute>}>
             <Route path="/category" element={<CategoryList />} />
             <Route path="/department" element={<DepartmentList />} />
             <Route path="/user" element={<UserManagement />} />

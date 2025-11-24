@@ -71,6 +71,26 @@ const AppSidebar: React.FC = () => {
       },
     ];
   }
+  else if (currentUser?.role === RoleEnum.Supervisor) {
+    menuItems = [
+      ...commonItems,
+      {
+        icon: <BookMarked />,
+        name: "Danh mục thiết bị",
+        path: "/category",
+      },
+      {
+        icon: <Computer />,
+        name: "Danh sách phòng ban",
+        path: "/department",
+      },
+      {
+        icon: <User2 />,
+        name: "Danh sách người dùng",
+        path: "/user",
+      },
+    ];
+  }
   else
     if (currentUser?.role === RoleEnum.Manager) {
       menuItems = [

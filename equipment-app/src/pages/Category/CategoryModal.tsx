@@ -14,6 +14,7 @@ interface CategoryModalProps {
   onClose: () => void;
   initialData?: CategoryEntity | null;
   callbackAction: () => void; // Callback to refresh the list
+  readOnly?: boolean; // If true, all fields are disabled (view mode)
 }
 
 export default function CategoryModal({
@@ -21,6 +22,7 @@ export default function CategoryModal({
   onClose,
   initialData,
   callbackAction: refreshCategories,
+  readOnly = false,
 }: CategoryModalProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [errors, setErrors] = useState<Partial<CategoryEntity>>({});
@@ -102,7 +104,7 @@ export default function CategoryModal({
     setIsProcessing(true);
     try {
       // Add API call to save/update category
-      let response = await saveCreateOrUpdate(formData);
+      const response = await saveCreateOrUpdate(formData);
 
       if (response.data && response.data?.data && response.data.data.isSuccess) {
         // success
@@ -137,10 +139,10 @@ export default function CategoryModal({
       <div className="p-6 sm:p-8">
         <div className="mb-6">
           <h2 className="text-xl font-semibold text-gray-800 dark:text-white/90">
-            {initialData ? "Sửa danh mục" : "Thêm mới danh mục"}
+            {readOnly ? "Xem thông tin danh mục" : initialData ? "Sửa danh mục" : "Thêm mới danh mục"}
           </h2>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            {initialData ? "Cập nhật thông tin danh mục" : "Thêm mới danh mục vào hệ thống"}
+            {readOnly ? "Xem thông tin chi tiết danh mục" : initialData ? "Cập nhật thông tin danh mục" : "Thêm mới danh mục vào hệ thống"}
           </p>
         </div>
 
@@ -162,6 +164,7 @@ export default function CategoryModal({
                 error={!!errors.code}
                 hint={errors.code}
                 required
+                disabled={readOnly}
               />
             </div>
 
@@ -177,6 +180,7 @@ export default function CategoryModal({
                 error={!!errors.name}
                 hint={errors.name}
                 required
+                disabled={readOnly}
               />
             </div>
 
@@ -189,6 +193,7 @@ export default function CategoryModal({
                 value={formData?.description || ""}
                 onChange={(e) => handleInputChange("description", e.target.value)}
                 placeholder="Nhập mô tả danh mục"
+                disabled={readOnly}
               />
             </div>
 
@@ -203,19 +208,28 @@ export default function CategoryModal({
                   defaultValue={formData.isActive ? "true" : "false"}
                   onChange={(value) => handleInputChange("isActive", value === "true")}
                   placeholder="Chọn trạng thái"
+                  disabled={readOnly}
                 />
               </div>
             )}
 
             {/* Action Buttons */}
             <div className="flex justify-end gap-3 mt-8 pt-6 border-t border-gray-200 dark:border-gray-800">
-              <Button variant="outline" onClick={onClose} disabled={isProcessing}>
-                Hủy
-              </Button>
-              <Button onClick={handleSaveCategory} disabled={isProcessing}>
-                {isProcessing && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                {isProcessing ? "Đang lưu..." : initialData ? "Lưu thay đổi" : "Thêm mới"}
-              </Button>
+              {readOnly ? (
+                <Button variant="outline" onClick={onClose}>
+                  Đóng
+                </Button>
+              ) : (
+                <>
+                  <Button variant="outline" onClick={onClose} disabled={isProcessing}>
+                    Hủy
+                  </Button>
+                  <Button onClick={handleSaveCategory} disabled={isProcessing}>
+                    {isProcessing && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                    {isProcessing ? "Đang lưu..." : initialData ? "Lưu thay đổi" : "Thêm mới"}
+                  </Button>
+                </>
+              )}
             </div>
           </form>
         )}

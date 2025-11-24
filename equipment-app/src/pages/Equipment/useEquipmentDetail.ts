@@ -14,9 +14,11 @@ import { useAuth } from "../../hooks/useAuth";
 export default function useEquipmentDetail() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const editMode = id ? EditMode.Edit : EditMode.Add;
   const goBack = useGoBack();
   const { currentUser } = useAuth();
+  // Supervisor is read-only, force View mode
+  const isSupervisor = currentUser?.role === RoleEnum.Supervisor;
+  const editMode = isSupervisor ? EditMode.View : (id ? EditMode.Edit : EditMode.Add);
 
   const { data: equipmentData } = useGetEquipmentByIdQuery({ id: Number(id) }, { skip: !id });
   const { data: departmentData, isLoading: isLoadingDepartments } = useGetDepartmentListQuery({});
