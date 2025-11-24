@@ -680,11 +680,10 @@ public class BorrowEquipmentService : IBorrowEquipmentService
 
         Dictionary<int, string> statusName = new()
         {
-            { (int)Enumerations.EquipmentStatus.Available, "Còn sử dụng" },
-            { (int)Enumerations.EquipmentStatus.Borrowed, "Đang mượn" },
-            { (int)Enumerations.EquipmentStatus.Maintenance, "Đang bảo dưỡng" },
-            { (int)Enumerations.EquipmentStatus.Lost, "Đã mất" },
-            { (int)Enumerations.EquipmentStatus.BrokenPart, "Hỏng một phần" },
+            { (int)Enumerations.EquipmentStatus.Available, "Sẵn sàng" },
+            { (int)Enumerations.EquipmentStatus.Borrowed, "Đang sử dụng" },
+            { (int)Enumerations.EquipmentStatus.Maintenance, "Bảo trì" },
+            { (int)Enumerations.EquipmentStatus.Liquidation, "Thanh lý" },
             { (int)Enumerations.EquipmentStatus.Broken, "Đã hỏng" },
         };
 

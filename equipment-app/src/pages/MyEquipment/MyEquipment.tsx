@@ -103,15 +103,13 @@ export default function MyEquipment() {
   const getStatusLabel = (status: EquipmentStatusEnum) => {
     switch (status) {
       case EquipmentStatusEnum.Available:
-        return "Còn sử dụng";
+        return "Sẵn sàng";
       case EquipmentStatusEnum.Borrowed:
-        return "Đang mượn";
+        return "Đang sử dụng";
       case EquipmentStatusEnum.Maintenance:
-        return "Đang bảo dưỡng";
-      case EquipmentStatusEnum.Lost:
-        return "Đã mất";
-      case EquipmentStatusEnum.BrokenPart:
-        return "Hỏng một phần";
+        return "Bảo trì";
+      case EquipmentStatusEnum.Liquidation:
+        return "Thanh lý";
       case EquipmentStatusEnum.Broken:
         return "Đã hỏng";
       default:
@@ -126,11 +124,9 @@ export default function MyEquipment() {
       case EquipmentStatusEnum.Borrowed:
         return "info";
       case EquipmentStatusEnum.Maintenance:
-        return "primary";
-      case EquipmentStatusEnum.Lost:
-        return "dark";
-      case EquipmentStatusEnum.BrokenPart:
         return "warning";
+      case EquipmentStatusEnum.Liquidation:
+        return "dark";
       case EquipmentStatusEnum.Broken:
         return "error";
       default:

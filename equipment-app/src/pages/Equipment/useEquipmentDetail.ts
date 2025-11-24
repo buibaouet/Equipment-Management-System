@@ -144,10 +144,9 @@ export default function useEquipmentDetail() {
       v => typeof v === "number" && v !== EquipmentStatusEnum.Borrowed
     ).map((status: number) => ({
       value: String(status),
-      label: status === EquipmentStatusEnum.Available ? "Còn sử dụng" :
-        status === EquipmentStatusEnum.Maintenance ? "Đang bảo dưỡng" :
-        status === EquipmentStatusEnum.Lost ? "Đã mất" :
-          status === EquipmentStatusEnum.BrokenPart ? "Hỏng một phần" :
+      label: status === EquipmentStatusEnum.Available ? "Sẵn sàng" :
+        status === EquipmentStatusEnum.Maintenance ? "Bảo trì" :
+          status === EquipmentStatusEnum.Liquidation ? "Thanh lý" :
             status === EquipmentStatusEnum.Broken ? "Đã hỏng" :
               "",
     }));

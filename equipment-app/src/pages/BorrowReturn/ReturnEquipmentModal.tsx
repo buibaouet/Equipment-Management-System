@@ -38,11 +38,9 @@ const ReturnEquipmentModal: React.FC<ReturnEquipmentModalProps> = ({
         value: String(status),
         label:
           status === EquipmentStatusEnum.Available
-            ? "Còn sử dụng"
-            : status === EquipmentStatusEnum.Lost
-              ? "Đã mất"
-              : status === EquipmentStatusEnum.BrokenPart
-                ? "Hỏng một phần"
+            ? "Sẵn sàng"
+            : status === EquipmentStatusEnum.Liquidation
+              ? "Thanh lý"
                 : status === EquipmentStatusEnum.Broken
                   ? "Đã hỏng"
                   : "",
@@ -62,8 +60,7 @@ const ReturnEquipmentModal: React.FC<ReturnEquipmentModalProps> = ({
     const statusValue = Number(selectedStatus);
     return [
       EquipmentStatusEnum.Broken,
-      EquipmentStatusEnum.BrokenPart,
-      EquipmentStatusEnum.Lost,
+      EquipmentStatusEnum.Liquidation,
     ].includes(statusValue);
   }, [selectedStatus]);
 

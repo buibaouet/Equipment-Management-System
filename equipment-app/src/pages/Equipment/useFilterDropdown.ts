@@ -61,13 +61,12 @@ export default function useFilterDropdown({ onApplyFilter, initialFilters }: Fil
       v => typeof v === "number"
     ).map((status: number) => ({
       value: String(status),
-      label: status === EquipmentStatusEnum.Available ? "Còn sử dụng" :
-        status === EquipmentStatusEnum.Borrowed ? "Đang mượn" :
-          status === EquipmentStatusEnum.Maintenance ? "Đang bảo dưỡng" :
-            status === EquipmentStatusEnum.Lost ? "Đã mất" :
-              status === EquipmentStatusEnum.BrokenPart ? "Hỏng một phần" :
-                status === EquipmentStatusEnum.Broken ? "Đã hỏng" :
-                  "",
+      label: status === EquipmentStatusEnum.Available ? "Sẵn sàng" :
+        status === EquipmentStatusEnum.Borrowed ? "Đang sử dụng" :
+          status === EquipmentStatusEnum.Maintenance ? "Bảo trì" :
+            status === EquipmentStatusEnum.Liquidation ? "Thanh lý" :
+              status === EquipmentStatusEnum.Broken ? "Đã hỏng" :
+                "",
     }));
   }, [EquipmentStatusEnum]);
 

@@ -18,12 +18,11 @@ export enum RoleEnum {
 }
 
 export enum EquipmentStatusEnum {
-  Available = 1, // Còn sử dụng
-  Borrowed = 2, // Đang mượn
-  Maintenance = 3, // Đang bảo dưỡng
-  Lost = 4, // Đã mất
-  BrokenPart = 5, // Hỏng một phần
-  Broken = 6, // Đã hỏng
+  Available = 1, // Sẵn sàng
+  Borrowed = 2, // Đang sử dụng
+  Maintenance = 3, // Bảo trì
+  Liquidation = 4, // thanh lý
+  Broken = 5, // Đã hỏng
 }
 
 export enum BorrowEquipmentStatusEnum {

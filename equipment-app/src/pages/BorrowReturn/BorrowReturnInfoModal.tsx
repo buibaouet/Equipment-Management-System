@@ -39,11 +39,10 @@ const statusColorMap: Record<BorrowEquipmentStatusEnum, StatusBadgeColor> = {
 };
 
 const equipmentStatusLabelMap: Record<EquipmentStatusEnum, string> = {
-  [EquipmentStatusEnum.Available]: "Còn sử dụng",
-  [EquipmentStatusEnum.Borrowed]: "Đang mượn",
-  [EquipmentStatusEnum.Maintenance]: "Bảo dưỡng",
-  [EquipmentStatusEnum.Lost]: "Đã mất",
-  [EquipmentStatusEnum.BrokenPart]: "Hỏng một phần",
+  [EquipmentStatusEnum.Available]: "Sẵn sàng",
+  [EquipmentStatusEnum.Borrowed]: "Đang sử dụng",
+  [EquipmentStatusEnum.Maintenance]: "Bảo trì",
+  [EquipmentStatusEnum.Liquidation]: "Thanh lý",
   [EquipmentStatusEnum.Broken]: "Đã hỏng",
 };
 

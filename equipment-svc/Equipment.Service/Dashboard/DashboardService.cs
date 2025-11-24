@@ -72,11 +72,10 @@ public class DashboardService : IDashboardService
 
             var statusNameMap = new Dictionary<Enumerations.EquipmentStatus, string>
             {
-                { Enumerations.EquipmentStatus.Available, "Còn sử dụng" },
-                { Enumerations.EquipmentStatus.Borrowed, "Đang mượn" },
-                { Enumerations.EquipmentStatus.Maintenance, "Đang bảo dưỡng" },
-                { Enumerations.EquipmentStatus.Lost, "Đã mất" },
-                { Enumerations.EquipmentStatus.BrokenPart, "Hỏng một phần" },
+                { Enumerations.EquipmentStatus.Available, "Sẵn sàng" },
+                { Enumerations.EquipmentStatus.Borrowed, "Đang sử dụng" },
+                { Enumerations.EquipmentStatus.Maintenance, "Bảo trì" },
+                { Enumerations.EquipmentStatus.Liquidation, "Thanh lý" },
                 { Enumerations.EquipmentStatus.Broken, "Đã hỏng" }
             };
 

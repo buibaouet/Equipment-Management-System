@@ -344,24 +344,20 @@ export default function EquipmentList() {
                             : item.status === EquipmentStatusEnum.Borrowed
                               ? "info"
                               : item.status === EquipmentStatusEnum.Maintenance
-                                ? "primary"
-                                : item.status === EquipmentStatusEnum.Lost
+                                ? "warning"
+                                : item.status === EquipmentStatusEnum.Liquidation
                                   ? "dark"
-                                  : item.status === EquipmentStatusEnum.BrokenPart
-                                    ? "warning"
                                     : "error"
                         }
                       >
                         {item.status === EquipmentStatusEnum.Available
-                          ? "Còn sử dụng"
+                          ? "Sẵn sàng"
                           : item.status === EquipmentStatusEnum.Borrowed
-                            ? "Đang mượn"
+                            ? "Đang sử dụng"
                             : item.status === EquipmentStatusEnum.Maintenance
-                              ? "Đang bảo dưỡng"
-                              : item.status === EquipmentStatusEnum.Lost
-                                ? "Đã mất"
-                                : item.status === EquipmentStatusEnum.BrokenPart
-                                  ? "Hỏng một phần"
+                              ? "Bảo trì"
+                              : item.status === EquipmentStatusEnum.Liquidation
+                                ? "Thanh lý"
                                   : item.status === EquipmentStatusEnum.Broken
                                     ? "Đã hỏng"
                                     : ""
