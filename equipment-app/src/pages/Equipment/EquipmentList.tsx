@@ -29,6 +29,7 @@ import TableDropdown from "../../components/common/TableDropdown";
 import BorrowEquipmentModal from "../BorrowReturn/BorrowEquipmentModal";
 import ReturnEquipmentModal from "../BorrowReturn/ReturnEquipmentModal";
 import EquipmentHistoryModal from "./EquipmentHistoryModal";
+import EquipmentBorrowReturnHistoryModal from "./EquipmentBorrowReturnHistoryModal";
 import { useGetListBorrowEquipmentPagingMutation } from "../../api/useBorrowEquipmentApi";
 import { useExportEquipmentMutation } from "../../api/useEquipmentApi";
 import { BorrowEquipmentEntity, BorrowEquipmentPaging } from "../../types/BorrowEquipment";
@@ -76,6 +77,8 @@ export default function EquipmentList() {
   const [borrowEquipmentId, setBorrowEquipmentId] = useState<number | null>(null);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [historyEquipmentId, setHistoryEquipmentId] = useState<number | null>(null);
+  const [isBorrowReturnHistoryOpen, setIsBorrowReturnHistoryOpen] = useState(false);
+  const [borrowReturnEquipmentId, setBorrowReturnEquipmentId] = useState<number | null>(null);
   const [isExporting, setIsExporting] = useState(false);
 
   // Fetch borrow records for current user to get borrow record IDs
@@ -156,6 +159,16 @@ export default function EquipmentList() {
     setHistoryEquipmentId(null);
   };
 
+  const handleOpenBorrowReturnHistoryModal = (equipmentId: number) => {
+    setBorrowReturnEquipmentId(equipmentId);
+    setIsBorrowReturnHistoryOpen(true);
+  };
+
+  const handleCloseBorrowReturnHistoryModal = () => {
+    setBorrowReturnEquipmentId(null);
+    setIsBorrowReturnHistoryOpen(false);
+  };
+
   const handleRefresh = () => {
     fetchEquipments();
     // Refresh borrow records
@@ -225,6 +238,14 @@ export default function EquipmentList() {
     // Can return if equipment is borrowed and owned by current user
     if (item.status === EquipmentStatusEnum.Borrowed) {
       return borrowRecordMap.has(item.id);
+    }
+    return false;
+  };
+
+  const canViewBorrowReturnHistory = (item: EquipmentPagingResponse): boolean => {
+    if (isAdmin() || currentUser?.role === RoleEnum.Supervisor) return true;
+    if (currentUser?.role === RoleEnum.Manager) {
+      return item.departmentId === currentUser.departmentId;
     }
     return false;
   };
@@ -393,6 +414,14 @@ export default function EquipmentList() {
                               >
                                 Lịch sử thiết bị
                               </button>
+                              {canViewBorrowReturnHistory(item) && (
+                                <button
+                                className="text-xs flex w-full rounded-lg px-3 py-2 text-left font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+                                onClick={() => handleOpenBorrowReturnHistoryModal(item.id)}
+                                >
+                                  Lịch sử mượn / trả
+                                </button>
+                              )}
                             </>
                           }
                         />
@@ -445,6 +474,12 @@ export default function EquipmentList() {
         isOpen={isHistoryModalOpen}
         onClose={handleCloseHistoryModal}
         equipmentId={historyEquipmentId}
+      />
+
+      <EquipmentBorrowReturnHistoryModal
+        isOpen={isBorrowReturnHistoryOpen}
+        onClose={handleCloseBorrowReturnHistoryModal}
+        equipmentId={borrowReturnEquipmentId}
       />
     </div>
   );

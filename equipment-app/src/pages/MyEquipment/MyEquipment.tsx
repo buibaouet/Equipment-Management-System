@@ -7,6 +7,7 @@ import PaginationWithIcon from "../../components/ui/table/PaginationWithIcon";
 import {
   EyeIcon,
   RotateCcwIcon,
+  EllipsisVerticalIcon,
 } from "lucide-react";
 import Badge from "../../components/ui/badge/Badge";
 import useMyEquipment from "./useMyEquipment";
@@ -18,6 +19,9 @@ import { useState } from "react";
 import EquipmentModal from "../Equipment/EquipmentModal";
 import ReturnEquipmentModal from "../BorrowReturn/ReturnEquipmentModal";
 import { BorrowEquipmentPaging } from "../../types/BorrowEquipment";
+import EquipmentHistoryModal from "../Equipment/EquipmentHistoryModal";
+import EquipmentBorrowReturnHistoryModal from "../Equipment/EquipmentBorrowReturnHistoryModal";
+import TableDropdown from "../../components/common/TableDropdown";
 
 export default function MyEquipment() {
   const {
@@ -45,6 +49,10 @@ export default function MyEquipment() {
   const [selectedEquipmentId, setSelectedEquipmentId] = useState<number | null>(null);
   const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
   const [selectedBorrowRecord, setSelectedBorrowRecord] = useState<BorrowEquipmentPaging | null>(null);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  const [historyEquipmentId, setHistoryEquipmentId] = useState<number | null>(null);
+  const [isBorrowReturnHistoryOpen, setIsBorrowReturnHistoryOpen] = useState(false);
+  const [borrowReturnEquipmentId, setBorrowReturnEquipmentId] = useState<number | null>(null);
 
   const handleOpenModal = (equipmentId: number) => {
     setSelectedEquipmentId(equipmentId);
@@ -66,6 +74,26 @@ export default function MyEquipment() {
   const handleCloseReturnModal = () => {
     setIsReturnModalOpen(false);
     setSelectedBorrowRecord(null);
+  };
+
+  const handleOpenHistoryEquipmentModal = (equipmentId: number) => {
+    setHistoryEquipmentId(equipmentId);
+    setIsHistoryModalOpen(true);
+  };
+
+  const handleCloseHistoryModal = () => {
+    setIsHistoryModalOpen(false);
+    setHistoryEquipmentId(null);
+  };
+
+  const handleOpenBorrowReturnHistoryModal = (equipmentId: number) => {
+    setBorrowReturnEquipmentId(equipmentId);
+    setIsBorrowReturnHistoryOpen(true);
+  };
+
+  const handleCloseBorrowReturnHistoryModal = () => {
+    setBorrowReturnEquipmentId(null);
+    setIsBorrowReturnHistoryOpen(false);
   };
 
   const handleReturnSuccess = () => {
@@ -195,6 +223,30 @@ export default function MyEquipment() {
                             onClick={() => handleReturnEquipment(item.id)}
                           />
                         </span>)}
+                        <TableDropdown
+                          className="h-4 w-4"
+                          dropdownButton={
+                            <button className="text-gray-500 dark:text-gray-400" title="Thêm thao tác">
+                              <EllipsisVerticalIcon className="w-4 h-4" />
+                            </button>
+                          }
+                          dropdownContent={
+                            <>
+                              <button
+                                className="text-xs flex w-full rounded-lg px-3 py-2 text-left font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+                                onClick={() => handleOpenHistoryEquipmentModal(item.id)}
+                              >
+                                Lịch sử thiết bị
+                              </button>
+                              <button
+                                className="text-xs flex w-full rounded-lg px-3 py-2 text-left font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+                                onClick={() => handleOpenBorrowReturnHistoryModal(item.id)}
+                              >
+                                Lịch sử mượn / trả
+                              </button>
+                            </>
+                          }
+                        />
                       </div>
                     </TableCell>
                   </TableRow>
@@ -223,6 +275,16 @@ export default function MyEquipment() {
         onClose={handleCloseReturnModal}
         equipment={selectedBorrowRecord ?? undefined}
         actionCallback={handleReturnSuccess}
+      />
+      <EquipmentHistoryModal
+        isOpen={isHistoryModalOpen}
+        onClose={handleCloseHistoryModal}
+        equipmentId={historyEquipmentId}
+      />
+      <EquipmentBorrowReturnHistoryModal
+        isOpen={isBorrowReturnHistoryOpen}
+        onClose={handleCloseBorrowReturnHistoryModal}
+        equipmentId={borrowReturnEquipmentId}
       />
     </div >
   );

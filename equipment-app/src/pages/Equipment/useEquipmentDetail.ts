@@ -210,7 +210,7 @@ export default function useEquipmentDetail() {
     }
 
     try {
-      let response = await createOrUpdateEquipment(formData).unwrap();
+      const response = await createOrUpdateEquipment(formData).unwrap();
 
       if (response.data && response.data.isSuccess) {
         toast.success(`${editMode == EditMode.Add ? 'Thêm mới' : 'Cập nhật thông tin'} thiết bị thành công`);
