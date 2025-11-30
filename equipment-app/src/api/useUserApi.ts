@@ -42,19 +42,26 @@ export const useUserApi = createApi({
             }),
             invalidatesTags: ['User', 'Manager'],
         }),
-        getManagerList: builder.query<BaseResponse<UserModel[]>, {}>({
-            query: ({ }) => ({
+        getManagerList: builder.query<BaseResponse<UserModel[]>, void>({
+            query: () => ({
                 method: 'GET',
                 url: '/user/managers',
             }),
             providesTags: ['Manager'],
         }),
-        getUserList: builder.query<BaseResponse<UserModel[]>, {}>({
-            query: ({ }) => ({
+        getUserList: builder.query<BaseResponse<UserModel[]>, void>({
+            query: () => ({
                 method: 'GET',
                 url: '/user/active',
             }),
             providesTags: ['Manager'],
+        }),
+        getUserById: builder.query<BaseResponse<UserEntity>, { userId: number }>({
+            query: ({ userId }) => ({
+                url: `/user/${userId}`,
+                method: 'GET',
+            }),
+            providesTags: ['User'],
         }),
     }),
 });
@@ -64,5 +71,6 @@ export const {
     useUpdateUserMutation,
     useUpdateRoleDepartmentUserMutation,
     useGetManagerListQuery,
-    useGetUserListQuery
+    useGetUserListQuery,
+    useGetUserByIdQuery
 } = useUserApi;

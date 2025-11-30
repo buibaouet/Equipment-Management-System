@@ -3,7 +3,6 @@ export interface DashboardModel {
     totalBorrow: number;
     equipmentByCategory: EquipmentByCategoryModel[];
     equipmentByStatus: EquipmentByStatusModel[];
-    userRankingTop: UserRankingTopModel[];
   }
   
   export interface EquipmentByCategoryModel {

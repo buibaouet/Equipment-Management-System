@@ -1,5 +1,6 @@
 using Equipment.Domain.Constant;
 using Equipment.Domain.IRepositories;
+using Equipment.Domain.Models;
 using Equipment.Domain.Models.Dashboard;
 using Equipment.Domain.Models.ReponseModel;
 using Microsoft.AspNetCore.Http;
@@ -89,8 +90,6 @@ public class DashboardService : IDashboardService
                 .OrderByDescending(x => x.Count)
                 .ToList();
 
-            dashboard.UserRankingTop = await GetUserRankingTopAsync();
-
             return new Response<DashboardModel>(dashboard);
         }
         catch (Exception ex)
@@ -145,8 +144,7 @@ public class DashboardService : IDashboardService
                 foreach (var weekStart in weeks)
                 {
                     var weekEnd = weekStart.AddDays(6);
-                    var weekNumber = GetWeekOfYear(weekStart);
-                    var weekLabel = $"Tuần {weekNumber}/{weekStart.Year}";
+                    var weekLabel = $"{weekStart.Date.ToString("dd/MM/yyyy")}-{weekEnd.Date.ToString("dd/MM/yyyy")}";
 
                     var borrowCount = await _borrowEquipmentRepository
                         .GetListAsync(b =>
@@ -168,7 +166,7 @@ public class DashboardService : IDashboardService
 
             case Enumerations.ChartPeriodType.Month:
                 // Last 12 months
-                startDate = now.AddMonths(-11);
+                startDate = new DateTime(now.Year, now.Month, 1).AddMonths(-11);
                 var months = Enumerable
                     .Range(0, 12)
                     .Select(i => startDate.AddMonths(i))
@@ -232,17 +230,6 @@ public class DashboardService : IDashboardService
         return chartData;
     }
 
-    private static int GetWeekOfYear(DateTime date)
-    {
-        var culture = System.Globalization.CultureInfo.CurrentCulture;
-        var calendar = culture.Calendar;
-        return calendar.GetWeekOfYear(
-            date,
-            culture.DateTimeFormat.CalendarWeekRule,
-            culture.DateTimeFormat.FirstDayOfWeek
-        );
-    }
-
     private static DateTime GetQuarterStartDate(DateTime date)
     {
         var quarter = GetQuarter(date);
@@ -254,7 +241,7 @@ public class DashboardService : IDashboardService
         return (date.Month - 1) / 3 + 1;
     }
 
-    private async Task<List<UserRankingTopModel>> GetUserRankingTopAsync()
+    public async Task<Response<PagingDataModel<UserRankingTopModel>>> GetTableRankingTop(PaginationParam param)
     {
         var ranking = new List<UserRankingTopModel>();
 
@@ -304,8 +291,21 @@ public class DashboardService : IDashboardService
             }
         }
 
-        // Sort by total count descending
-        return ranking.OrderByDescending(r => r.TotalCount).Take(10).ToList();
+        // Handle pagination
+        var totalRecords = ranking.Count;
+        var totalPages = (int)Math.Ceiling((double)totalRecords / param.PageSize);
+        var pagedData = ranking
+            .OrderByDescending(r => r.TotalCount)
+            .Skip((param.PageIndex - 1) * param.PageSize)
+            .Take(param.PageSize)
+            .ToList();
+        var pagingResult = new PagingDataModel<UserRankingTopModel>
+        {
+            Data = pagedData,
+            TotalRecords = totalRecords,
+            TotalPages = totalPages
+        };
+        return new Response<PagingDataModel<UserRankingTopModel>>(pagingResult);
     }
 }
 

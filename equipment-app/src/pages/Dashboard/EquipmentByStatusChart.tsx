@@ -4,7 +4,7 @@ import Chart from "react-apexcharts";
 import { useGetDashboardDataQuery } from "../../api/useDashboardApi";
 import { EquipmentByStatusModel } from "../../types/Dashboard";
 
-const STATUS_COLORS = ["#22c55e", "#f97316", "#475467", "#a855f7", "#f43f5e", "#0ea5e9"];
+const STATUS_COLORS = ["#22c55e", "#f97316", "#0ea5e9", "#475467", "#a855f7", ];
 
 export default function EquipmentByStatusChart() {
   const { data, isFetching } = useGetDashboardDataQuery();
@@ -150,7 +150,7 @@ export default function EquipmentByStatusChart() {
             </p>
           )}
         </div>
-        <div className="flex flex-col items-start gap-6 sm:flex-row xl:flex-col w-full max-h-100 overflow-y-auto pr-1">
+        <div className="flex flex-col items-start gap-6 sm:flex-row xl:flex-col w-full h-80 overflow-y-auto pr-1">
           {statusData.map((item, index) => {
             const percentage =
               totalEquipment > 0

@@ -37,24 +37,24 @@ export default function UserManagement() {
   const isSupervisor = currentUser?.role === RoleEnum.Supervisor;
 
   const { isOpen, openModal, closeModal } = useModal();
-  const [selectedUser, setSelectedUser] = useState<UserEntity | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [isViewMode, setIsViewMode] = useState(false);
 
   const handleEditUser = (user: UserEntity) => {
-    setSelectedUser(user);
+    setSelectedUserId(user.id);
     setIsViewMode(false);
     openModal();
   };
 
   const handleViewUser = (user: UserEntity) => {
-    setSelectedUser(user);
+    setSelectedUserId(user.id);
     setIsViewMode(true);
     openModal();
   };
 
   const handleCloseModal = () => {
     closeModal();
-    setSelectedUser(null);
+    setSelectedUserId(null);
     setIsViewMode(false);
   };
 
@@ -177,7 +177,7 @@ export default function UserManagement() {
       <UserInfoModal
         isOpen={isOpen}
         onClose={handleCloseModal}
-        user={selectedUser}
+        userId={selectedUserId}
         callbackAction={refreshUsers}
         readOnly={isViewMode}
       />

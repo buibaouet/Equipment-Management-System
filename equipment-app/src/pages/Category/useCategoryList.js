@@ -55,14 +55,18 @@ export default function useCategoryList() {
   };
 
   const handleActiveCategory = async (categoryId) => {
-    const response = await updateCategoryStatus({ categoryId: categoryId }).unwrap();
+    try {
+      const response = await updateCategoryStatus({ categoryId: categoryId }).unwrap();
 
-    if (response.statusCode === 200 && response.data) {
-      toast.success('Cập nhật trạng thái danh mục thành công');
-      fetchCategories();
-    } else {
-      toast.error('Cập nhật trạng thái danh mục thất bại');
-    }
+      if (response.statusCode === 200 && response.data) {
+        toast.success('Cập nhật trạng thái danh mục thành công');
+        fetchCategories();
+      } else {
+        toast.error(response.message || 'Cập nhật trạng thái danh mục thất bại');
+      }
+    } catch (err) {
+      toast.error(err.data || 'Cập nhật trạng thái danh mục thất bại');
+    };
   };
 
   return {

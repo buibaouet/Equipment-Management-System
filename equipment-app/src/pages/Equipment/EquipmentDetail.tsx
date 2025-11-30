@@ -22,6 +22,7 @@ const EquipmentDetail: React.FC = () => {
     errors,
     isLoadingSave,
     isDepartmentDisabled,
+    selectedCategoryDescription,
     handleValueChange,
     handleCancel,
     handleSave
@@ -116,6 +117,16 @@ const EquipmentDetail: React.FC = () => {
                     hint={errors.departmentId}
                     disabled={editMode === EditMode.View || isDepartmentDisabled}
                     required
+                  />
+                </div>
+                <div className="col-span-full">
+                  <Label>Mô tả danh mục</Label>
+                  <Input
+                    type="text"
+                    name="categoryDescription"
+                    value={selectedCategoryDescription}
+                    disabled={true}
+                    placeholder="Mô tả danh mục"
                   />
                 </div>
                 <div>

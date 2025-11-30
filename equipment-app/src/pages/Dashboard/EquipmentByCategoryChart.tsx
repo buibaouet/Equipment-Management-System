@@ -150,7 +150,7 @@ export default function EquipmentByCategoryChart() {
             </p>
           )}
         </div>
-        <div className="flex flex-col items-start gap-6 sm:flex-row xl:flex-col w-full max-h-100 overflow-y-auto pr-1">
+        <div className="flex flex-col items-start gap-6 sm:flex-row xl:flex-col w-full h-80 overflow-y-auto pr-1">
           {categoryData.map((item, index) => {
             const percentage =
               totalEquipment > 0

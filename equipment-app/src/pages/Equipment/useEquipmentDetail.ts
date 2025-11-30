@@ -288,6 +288,13 @@ export default function useEquipmentDetail() {
     }
   };
 
+  // Get selected category description from categoryData
+  const selectedCategoryDescription = useMemo(() => {
+    if (!categoryData?.data || !formData.categoryId) return "";
+    const selectedCategory = categoryData.data.find(cate => cate.id === formData.categoryId);
+    return selectedCategory?.description || "";
+  }, [categoryData, formData.categoryId]);
+
   // Check if department select should be disabled (for managers)
   const isDepartmentDisabled = useMemo(() => {
     return currentUser?.role === RoleEnum.Manager;
@@ -306,6 +313,7 @@ export default function useEquipmentDetail() {
     errors,
     isLoadingSave,
     isDepartmentDisabled,
+    selectedCategoryDescription,
     setFormData,
     handleValueChange,
     handleCancel,

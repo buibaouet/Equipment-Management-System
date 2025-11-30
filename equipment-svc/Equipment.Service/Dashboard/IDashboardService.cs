@@ -1,4 +1,5 @@
 using Equipment.Domain.Constant;
+using Equipment.Domain.Models;
 using Equipment.Domain.Models.Dashboard;
 using Equipment.Domain.Models.ReponseModel;
 
@@ -8,5 +9,6 @@ public interface IDashboardService
 {
     Task<Response<DashboardModel>> GetDashboardDataAsync();
     Task<Response<List<BorrowReturnChartModel>>> GetDashboardBorrowAsync(Enumerations.ChartPeriodType periodType);
+    Task<Response<PagingDataModel<UserRankingTopModel>>> GetTableRankingTop(PaginationParam param);
 }
 

@@ -1,4 +1,5 @@
 using Equipment.Domain.Constant;
+using Equipment.Domain.Models;
 using Equipment.Service.Dashboard;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -54,6 +55,32 @@ public class DashboardController : ControllerBase
         try
         {
             var res = await _dashboardService.GetDashboardBorrowAsync(periodType);
+            if (res.StatusCode != StatusCodes.Status200OK)
+            {
+                return StatusCode(res.StatusCode, res.Message);
+            }
+            return Ok(res);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                "Xảy ra lỗi trong quá trình xử lý: \n" + ex.Message + ex.StackTrace
+            );
+        }
+    }
+    
+    /// <summary>
+    /// Lấy bảng xếp hạng người nhiều thiết bị nhất
+    /// </summary>
+    /// <param name="param"></param>
+    /// <returns></returns>
+    [HttpPost("top-owners")]
+    public async Task<ActionResult> GetTableRankingTop([FromBody] PaginationParam param)
+    {
+        try
+        {
+            var res = await _dashboardService.GetTableRankingTop(param);
             if (res.StatusCode != StatusCodes.Status200OK)
             {
                 return StatusCode(res.StatusCode, res.Message);

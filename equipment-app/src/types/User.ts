@@ -20,6 +20,8 @@ export interface UpdateUserInfo {
     email: string;
     birthDate: Date | undefined;
     bio: string;
+    phoneNumber: string;
+    address: string;
 }
 
 export interface UserEntity {
@@ -31,6 +33,8 @@ export interface UserEntity {
     role: RoleEnum;
     birthDate: Date;
     bio: string;
+    phoneNumber: string;
+    address: string;
     departmentId: number;
     departmentName: string;
 }
@@ -43,4 +47,11 @@ export interface UpdateUserResponseModel {
 export interface UpdateUserRoleDepartment {
     role: RoleEnum;
     departmentId: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+    birthDate: Date | undefined;
+    bio: string;
+    phoneNumber: string;
+    address: string;
 }

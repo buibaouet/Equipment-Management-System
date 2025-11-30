@@ -58,6 +58,7 @@ public class EquipmentService : IEquipmentService
         Expression<Func<Domain.Entities.Equipment, bool>> expression = equipment =>
             equipment.Id > 0
             && ((param.CategoryId == null) ? true : (equipment.CategoryId == param.CategoryId))
+            && ((param.OwnerId == null) ? true : (equipment.OwnerId == param.OwnerId))
             && ((param.Status == null) ? true : (equipment.Status == param.Status))
             && (
                 (param.DepartmentId == null) ? true : (equipment.DepartmentId == param.DepartmentId)

@@ -2,6 +2,7 @@ export interface CategoryModel {
     id: number;
     code: string;
     name: string;
+    description: string | null;
 }
 
 export interface CategoryEntity {

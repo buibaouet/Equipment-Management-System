@@ -9,11 +9,13 @@ import { ColumnHeader } from "../../../types/Common";
 interface PaginationProps {
   arrColumns: ColumnHeader[];
   handleSort: (key: string) => void;
+  showActionColumn?: boolean
 }
 
 export default function HeaderTable({
   arrColumns,
   handleSort,
+  showActionColumn = true,
 }: PaginationProps) {
   return (
     <TableHeader className="border-t border-gray-100 dark:border-white/[0.05]">
@@ -43,7 +45,7 @@ export default function HeaderTable({
             )}
           </TableCell>
         ))}
-        <TableCell
+        {showActionColumn && (<TableCell
           isHeader
           className="px-4 py-3 border border-gray-100 dark:border-white/[0.05]"
         >
@@ -51,6 +53,7 @@ export default function HeaderTable({
             Thao tác
           </p>
         </TableCell>
+        )}
       </TableRow>
     </TableHeader>
   );

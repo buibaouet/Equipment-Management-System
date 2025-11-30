@@ -1,8 +1,9 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { baseQueryWithReauth } from '../utils/baseQuery';
-import { BaseResponse } from '../types/Response';
-import { BorrowReturnChartModel, DashboardModel } from '../types/Dashboard';
+import { BaseResponse, PagingDataModel } from '../types/Response';
+import { BorrowReturnChartModel, DashboardModel, UserRankingTopModel } from '../types/Dashboard';
 import { ChartPeriodType } from '../utils/enumerations';
+import { PaginationParam } from '../types/PagingParam';
 
 export const useDashboardApi = createApi({
     reducerPath: 'dashboardApi',
@@ -23,10 +24,19 @@ export const useDashboardApi = createApi({
             }),
             providesTags: ['Dashboard'],
         }),
+        getTableRankingTop: builder.mutation<PagingDataModel<UserRankingTopModel>, { param: PaginationParam }>({
+            query: ({ param }) => ({
+                url: '/dashboard/top-owners',
+                method: 'POST',
+                body: param,
+            }),
+            invalidatesTags: ['Dashboard'],
+        }),
     }),
 });
 
 export const {
     useGetDashboardDataQuery,
     useGetDashboardBorrowQuery,
+    useGetTableRankingTopMutation,
 } = useDashboardApi;

@@ -8,4 +8,5 @@ public class EquipmentPagingParam
     public Enumerations.EquipmentStatus? Status { get; set; }
     public int? DepartmentId { get; set; }
     public int? CategoryId { get; set; }
+    public int? OwnerId { get; set; }
 }

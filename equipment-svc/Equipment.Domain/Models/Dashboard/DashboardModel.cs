@@ -6,7 +6,6 @@ public class DashboardModel
     public int TotalBorrow { get; set; }
     public List<EquipmentByCategoryModel> EquipmentByCategory { get; set; } = new();
     public List<EquipmentByStatusModel> EquipmentByStatus { get; set; } = new();
-    public List<UserRankingTopModel> UserRankingTop { get; set; } = new();
 }
 
 public class EquipmentByCategoryModel

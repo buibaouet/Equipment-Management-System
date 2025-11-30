@@ -104,26 +104,25 @@ export default function CategoryModal({
     setIsProcessing(true);
     try {
       // Add API call to save/update category
-      const response = await saveCreateOrUpdate(formData);
+      const response = await saveCreateOrUpdate(formData).unwrap();
 
-      if (response.data && response.data?.data && response.data.data.isSuccess) {
+      if (response.data && response.data.isSuccess) {
         // success
         toast.success(initialData ? "Sửa danh mục thành công!" : "Thêm mới danh mục thành công!");
         onClose();
         refreshCategories(); // Refresh the list after save
       }
-      else if (response.data && response.data?.data && !response.data.data.isSuccess) {
+      else if (response.data && !response.data.isSuccess) {
         const newErrors: Partial<CategoryEntity> = {};
 
-        if (response.data.data.codeError) {
-          newErrors.code = response.data.data.codeError;
+        if (response.data.codeError) {
+          newErrors.code = response.data.codeError;
         }
 
         setErrors(newErrors);
       }
-    } catch (error) {
-      console.error('Error saving category:', error);
-      toast.error("Có lỗi xảy ra khi lưu danh mục");
+    } catch (err) {
+      toast.error(err.data || "Có lỗi xảy ra khi lưu danh mục");
     } finally {
       setIsProcessing(false);
     }

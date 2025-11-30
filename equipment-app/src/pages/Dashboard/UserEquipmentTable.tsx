@@ -1,17 +1,33 @@
 import { useMemo } from "react";
 import {
   Table,
-  TableBody,
   TableCell,
-  TableHeader,
   TableRow,
 } from "../../components/ui/table";
-import { useGetDashboardDataQuery } from "../../api/useDashboardApi";
+import PaginationWithIcon from "../../components/ui/table/PaginationWithIcon";
+import TableBodyContent from "../../components/ui/table/TableBodyContent";
+import useUserEquipmentTable from "./useUserEquipmentTable";
 import { UserRankingTopModel } from "../../types/Dashboard";
+import HeaderTable from "../../components/ui/table/HeaderTable";
 
 export default function UserEquipmentTable() {
-  const { data, isFetching } = useGetDashboardDataQuery();
-  const tableRowData = data?.data?.userRankingTop ?? [];
+  const {
+    rankingData,
+    totalItems,
+    totalPages,
+    currentPage,
+    handlePageChange,
+    isLoading,
+    handleSort,
+  } = useUserEquipmentTable();
+
+  const arrColumns = [
+    { key: "userName", label: "Người dùng", sortable: false },
+    { key: "department", label: "Phòng ban", sortable: false },
+    { key: "ownedCount", label: "Thiết bị sở hữu", sortable: false },
+    { key: "borrowedCount", label: "Thiết bị mượn", sortable: false },
+    { key: "totalCount", label: "Tổng số", sortable: false },
+  ];
 
   const formatNumber = useMemo(
     () => new Intl.NumberFormat("vi-VN"),
@@ -30,67 +46,54 @@ export default function UserEquipmentTable() {
 
       <div className="max-w-full overflow-x-auto custom-scrollbar">
         <Table>
-          <TableHeader className="px-6 py-3 border-t border-gray-100 border-y bg-gray-50 dark:border-gray-800 dark:bg-gray-900">
-            <TableRow>
-              <TableCell className="px-4 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
-              Người dùng
-              </TableCell>
-              <TableCell className="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
-                Phòng ban
-              </TableCell>
-              <TableCell className="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
-                Thiết bị sở hữu
-              </TableCell>
-              <TableCell className="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
-                Thiết bị mượn
-              </TableCell>
-              <TableCell className="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
-                Tổng số
-              </TableCell>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {tableRowData.map((row: UserRankingTopModel) => (
-              <TableRow key={row.userId}>
+          <HeaderTable 
+            arrColumns={arrColumns} 
+            handleSort={handleSort}
+            showActionColumn={false} 
+          />
+          <TableBodyContent
+            isLoading={isLoading}
+            data={rankingData}
+            columns={arrColumns}
+            renderRow={(item: UserRankingTopModel, index: number) => (
+              <TableRow key={item.userId || index}>
                 <TableCell className="px-4 sm:px-6 py-3.5">
                   <p className="text-gray-700 text-theme-sm dark:text-gray-400">
-                  {row.userName}
+                    {item.userName}
                   </p>
                 </TableCell>
                 <TableCell className="px-4 sm:px-6 py-3.5">
                   <p className="text-gray-700 text-theme-sm dark:text-gray-400">
-                    {row.department}
+                    {item.department}
                   </p>
                 </TableCell>
                 <TableCell className="px-4 sm:px-6 py-3.5">
                   <p className="text-gray-700 text-theme-sm dark:text-gray-400">
-                    {formatNumber.format(row.ownedCount)}
+                    {formatNumber.format(item.ownedCount)}
                   </p>
                 </TableCell>
                 <TableCell className="px-4 sm:px-6 py-3.5">
                   <p className="text-gray-700 text-theme-sm dark:text-gray-400">
-                    {formatNumber.format(row.borrowedCount)}
+                    {formatNumber.format(item.borrowedCount)}
                   </p>
                 </TableCell>
                 <TableCell className="px-4 sm:px-6 py-3.5">
                   <p className="text-gray-700 text-theme-sm dark:text-gray-400 font-semibold">
-                    {formatNumber.format(row.totalCount)}
+                    {formatNumber.format(item.totalCount)}
                   </p>
                 </TableCell>
               </TableRow>
-            ))}
-            {!isFetching && tableRowData.length === 0 && (
-              <TableRow>
-                <TableCell
-                  className="px-4 sm:px-6 py-6 text-center text-sm text-gray-500"
-                >
-                  Không có dữ liệu bảng xếp hạng.
-                </TableCell>
-              </TableRow>
             )}
-          </TableBody>
+          />
         </Table>
       </div>
+
+      <PaginationWithIcon
+        totalPages={totalPages}
+        totalItems={totalItems}
+        initialPage={currentPage}
+        onPageChange={handlePageChange}
+      />
     </div>
   );
 }

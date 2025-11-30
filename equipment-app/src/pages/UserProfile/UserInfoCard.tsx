@@ -19,7 +19,9 @@ export default function UserInfoCard() {
     lastName: currentUser?.lastName || '',
     email: currentUser?.email || '',
     birthDate: currentUser?.birthDate ? new Date(currentUser.birthDate) : undefined,
-    bio: currentUser?.bio || ''
+    bio: currentUser?.bio || '',
+    phoneNumber: currentUser?.phoneNumber || '',
+    address: currentUser?.address || ''
   });
   const [errors, setErrors] = useState<Partial<UpdateUserInfo>>({});
 
@@ -126,7 +128,9 @@ export default function UserInfoCard() {
       lastName: currentUser?.lastName || '',
       email: currentUser?.email || '',
       birthDate: currentUser?.birthDate ? new Date(currentUser.birthDate) : undefined,
-      bio: currentUser?.bio || ''
+      bio: currentUser?.bio || '',
+      phoneNumber: currentUser?.phoneNumber || '',
+      address: currentUser?.address || ''
     });
   };
   return (
@@ -180,7 +184,7 @@ export default function UserInfoCard() {
               )}
             </div>
 
-            <div>
+            <div className="lg:col-span-2">
               <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
                 Email
               </p>
@@ -205,6 +209,25 @@ export default function UserInfoCard() {
 
             <div>
               <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                Số điện thoại
+              </p>
+              {isEditing ? (
+                <Input
+                  type="text"
+                  value={formData.phoneNumber}
+                  onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
+                  className="!py-1 !px-2"
+                  placeholder="Nhập số điện thoại"
+                />
+              ) : (
+                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                  {formData.phoneNumber || '-'}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
                 Ngày sinh
               </p>
               {isEditing ? (
@@ -222,6 +245,25 @@ export default function UserInfoCard() {
               ) : (
                 <p className="text-sm font-medium text-gray-800 dark:text-white/90">
                   {formData.birthDate ? new Date(formData.birthDate).toLocaleDateString() : ''}
+                </p>
+              )}
+            </div>
+
+            <div className="lg:col-span-2">
+              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                Địa chỉ
+              </p>
+              {isEditing ? (
+                <Input
+                  type="text"
+                  value={formData.address}
+                  onChange={(e) => handleInputChange('address', e.target.value)}
+                  className="!py-1 !px-2"
+                  placeholder="Nhập địa chỉ"
+                />
+              ) : (
+                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                  {formData.address || '-'}
                 </p>
               )}
             </div>

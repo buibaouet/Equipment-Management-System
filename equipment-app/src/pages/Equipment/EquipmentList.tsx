@@ -52,6 +52,7 @@ export default function EquipmentList() {
     categoryId,
     departmentId,
     status,
+    userId,
     isLoading,
     fetchEquipments
   } = useEquipmentList();
@@ -301,7 +302,7 @@ export default function EquipmentList() {
               showFilter={showFilter}
               setShowFilter={setShowFilter}
               onApplyFilter={handleApplyFilter}
-              initialFilters={{ categoryId, departmentId, status }}
+              initialFilters={{ categoryId, departmentId, status, userId }}
             />
           </div>
         </div>

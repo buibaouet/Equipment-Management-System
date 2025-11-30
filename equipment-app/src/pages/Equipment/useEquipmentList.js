@@ -21,6 +21,7 @@ export default function useEquipmentList() {
   const [categoryId, setCategoryId] = React.useState(undefined);
   const [departmentId, setDepartmentId] = React.useState(undefined);
   const [status, setStatus] = React.useState(undefined);
+  const [userId, setUserId] = React.useState(undefined);
 
   // Fetch users from API
   const fetchEquipments = React.useCallback(async (filters = null, pageOverride = null) => {
@@ -29,6 +30,7 @@ export default function useEquipmentList() {
       const activeCategoryId = filters?.categoryId !== undefined ? filters.categoryId : categoryId;
       const activeDepartmentId = filters?.departmentId !== undefined ? filters.departmentId : departmentId;
       const activeStatus = filters?.status !== undefined ? filters.status : status;
+      const activeUserId = filters?.userId !== undefined ? filters.userId : userId;
       const activePage = pageOverride !== null ? pageOverride : currentPage;
 
       // Ensure param object includes all required properties as per EquipmentPagingParam type
@@ -42,6 +44,7 @@ export default function useEquipmentList() {
         departmentId: activeDepartmentId ? Number(activeDepartmentId) : undefined,
         categoryId: activeCategoryId ? Number(activeCategoryId) : undefined,
         status: activeStatus ? Number(activeStatus) : undefined,
+        ownerId: activeUserId ? Number(activeUserId) : undefined,
       };
 
       // Call the API with the expected structure
@@ -55,7 +58,7 @@ export default function useEquipmentList() {
     } catch (err) {
       console.error('Error fetching users:', err);
     }
-  }, [getEquipmentPaging, sortKey, sortOrder, keyword, currentPage, categoryId, departmentId, status]);
+  }, [getEquipmentPaging, sortKey, sortOrder, keyword, currentPage, categoryId, departmentId, status, userId]);
 
   // Fetch users when dependencies change
   React.useEffect(() => {
@@ -85,6 +88,7 @@ export default function useEquipmentList() {
     setCategoryId(filters?.categoryId || undefined);
     setDepartmentId(filters?.departmentId || undefined);
     setStatus(filters?.status || undefined);
+    setUserId(filters?.userId || undefined);
     // Reset to first page when applying filters and fetch with new filters
     setCurrentPage(1);
     fetchEquipments(filters, 1);
@@ -114,6 +118,7 @@ export default function useEquipmentList() {
     categoryId,
     departmentId,
     status,
+    userId,
     
     // Sort state
     sortKey,

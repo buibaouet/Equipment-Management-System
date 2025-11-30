@@ -3,6 +3,7 @@ using Equipment.Domain.IRepositories;
 using Equipment.Domain.Models;
 using Equipment.Domain.Models.ReponseModel;
 using Equipment.Domain.Models.User;
+using Microsoft.AspNetCore.Http;
 
 namespace Equipment.Service.User;
 
@@ -76,6 +77,8 @@ public class UserService : IUserService
         user.BirthDate = model.BirthDate;
         user.Email = model.Email;
         user.Bio = model.Bio;
+        user.Address = model.Address;
+        user.PhoneNumber = model.PhoneNumber;
 
         await _userRepository.UpdateAsync(user);
 
@@ -91,7 +94,26 @@ public class UserService : IUserService
     {
         var user =
             await _userRepository.GetByIdAsync(id) ?? throw new ArgumentException("User not found");
+        
+        var existsEmail = await _userRepository.ExistAsync(u =>
+            u.Email == param.Email && u.Id != id
+        );
 
+        if (existsEmail)
+        {
+            return new Response<bool>(
+                StatusCodes.Status400BadRequest,
+                "Địa chỉ email đã tồn tại"
+            );
+        }
+
+        user.FirstName = param.FirstName;
+        user.LastName = param.LastName;
+        user.BirthDate = param.BirthDate;
+        user.Email = param.Email;
+        user.Bio = param.Bio;
+        user.Address = param.Address;
+        user.PhoneNumber = param.PhoneNumber;
         user.Role = param.Role;
         user.DepartmentId = param.DepartmentId;
         await _userRepository.UpdateAsync(user);
@@ -159,6 +181,8 @@ public class UserService : IUserService
             DepartmentId = user.DepartmentId,
             DepartmentName = departmentName,
             Bio = user.Bio,
+            PhoneNumber = user.PhoneNumber,
+            Address = user.Address,
         };
     }
 }

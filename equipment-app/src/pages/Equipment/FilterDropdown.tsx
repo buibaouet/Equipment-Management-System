@@ -16,6 +16,7 @@ const FilterDropdown: React.FC<{
     departmentOptions,
     categoryOptions,
     statusOptions,
+    userOptions,
     changeValueFilter,
     cleanFilter,
     applyFilter,
@@ -99,7 +100,7 @@ const FilterDropdown: React.FC<{
         setTimeout(updatePosition, 0);
       });
     }
-  }, [showFilter, categoryOptions, departmentOptions]);
+  }, [showFilter, categoryOptions, departmentOptions, userOptions]);
 
   return (
     <div className="relative" ref={ref}>
@@ -143,6 +144,21 @@ const FilterDropdown: React.FC<{
               }}
               placeholder="Chọn phòng ban"
               defaultValue={filterValue?.departmentId || initialFilters?.departmentId || ""}
+              className="bg-gray-50 dark:bg-gray-800"
+            />
+          </div>
+          <div className="mb-5">
+            <label className="mb-2 block text-xs font-medium text-gray-700 dark:text-gray-300">
+              Người sử dụng
+            </label>
+            <Select
+              key={`user-${filterValue?.userId || 'empty'}`}
+              options={userOptions}
+              onChange={(value) => {
+                changeValueFilter('userId', value);
+              }}
+              placeholder="Chọn người sử dụng"
+              defaultValue={filterValue?.userId || initialFilters?.userId || ""}
               className="bg-gray-50 dark:bg-gray-800"
             />
           </div>

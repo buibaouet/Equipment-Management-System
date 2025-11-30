@@ -23,6 +23,7 @@ export interface EquipmentPagingParam {
     departmentId: number | undefined,
     categoryId: number | undefined,
     status: EquipmentStatusEnum | undefined,
+    ownerId: number | undefined,
 }
 
 export interface EquipmentPagingResponse {

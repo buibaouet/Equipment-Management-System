@@ -43,7 +43,7 @@ public class EquipmentCategoryService : IEquipmentCategoryService
             foreach (var item in pagingData.Data)
             {
                 var quantityEquipment = await _equipmentRepository.CountAsync(x =>
-                    x.DepartmentId == item.Id
+                    x.CategoryId == item.Id
                 );
                 var departmentModel = new CategoryPagingModel
                 {
@@ -112,6 +112,22 @@ public class EquipmentCategoryService : IEquipmentCategoryService
                     );
                 }
 
+                // Cập nhật trạng thái từ hoạt động sang ngừng hoạt động
+                if (existingCategory.IsActive && !category.IsActive)
+                {
+                    var quantityEquipment = await _equipmentRepository.CountAsync(x =>
+                        x.CategoryId == category.Id
+                    );
+
+                    if (quantityEquipment > 0)
+                    {
+                        return new Response<CategoryResponseModel>(
+                            StatusCodes.Status400BadRequest,
+                            "Danh mục đang được sử dụng, không thể ngừng hoạt động"
+                        );
+                    }
+                }
+
                 existingCategory.Code = category.Code;
                 existingCategory.Name = category.Name;
                 existingCategory.Description = category.Description;
@@ -161,6 +177,18 @@ public class EquipmentCategoryService : IEquipmentCategoryService
                 return new Response<bool>(
                     StatusCodes.Status404NotFound,
                     "Danh mục thiết bị không tồn tại"
+                );
+            }
+
+            var quantityEquipment = await _equipmentRepository.CountAsync(x =>
+                x.CategoryId == entity.Id
+            );
+
+            if (entity.IsActive && quantityEquipment > 0)
+            {
+                return new Response<bool>(
+                    StatusCodes.Status400BadRequest,
+                    "Danh mục đang được sử dụng, không thể ngừng hoạt động"
                 );
             }
 

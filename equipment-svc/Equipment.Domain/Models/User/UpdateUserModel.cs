@@ -9,6 +9,8 @@ public class UpdateUserModel
     public DateTime? BirthDate { get; set; }
     public string Email { get; set; } = string.Empty;
     public string? Bio { get; set; } = string.Empty;
+    public string? Address { get; set; } = string.Empty;
+    public string? PhoneNumber { get; set; } = string.Empty;
 }
 
 public class UpdateUserResponseModel
@@ -17,7 +19,7 @@ public class UpdateUserResponseModel
     public string EmailError { get; set; } = string.Empty;
 }
 
-public class UpdateRoleDepartmentUserModel
+public class UpdateRoleDepartmentUserModel : UpdateUserModel
 {
     public Enumerations.Role Role { get; set; }
 

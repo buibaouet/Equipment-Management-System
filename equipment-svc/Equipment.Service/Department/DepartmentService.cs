@@ -128,6 +128,25 @@ public class DepartmentService : IDepartmentService
                     );
                 }
 
+                // Cập nhật trạng thái từ hoạt động sang ngừng hoạt động
+                if (existingDepartment.IsActive && !department.IsActive)
+                {
+                    var quantityEquipment = await _equipmentRepository.CountAsync(x =>
+                        x.DepartmentId == department.Id
+                    );
+                    var quantityUser = await _userRepository.CountAsync(x =>
+                        x.DepartmentId == department.Id
+                    );
+
+                    if (quantityEquipment > 0 || quantityUser > 0)
+                    {
+                        return new Response<DepartmentResponseModel>(
+                            StatusCodes.Status400BadRequest,
+                            "Phòng ban đang được sử dụng, không thể ngừng hoạt động"
+                        );
+                    }
+                }
+
                 existingDepartment.Code = department.Code;
                 existingDepartment.Name = department.Name;
                 existingDepartment.Description = department.Description;
@@ -175,16 +194,13 @@ public class DepartmentService : IDepartmentService
 
             if (entity == null)
             {
-                return new Response<bool>(
-                    StatusCodes.Status404NotFound,
-                    "Phòng ban không tồn tại"
-                );
+                return new Response<bool>(StatusCodes.Status404NotFound, "Phòng ban không tồn tại");
             }
             var quantityEquipment = await _equipmentRepository.CountAsync(x =>
                 x.DepartmentId == entity.Id
             );
             var quantityUser = await _userRepository.CountAsync(x => x.DepartmentId == entity.Id);
-            
+
             if (entity.IsActive && (quantityEquipment > 0 || quantityUser > 0))
             {
                 return new Response<bool>(

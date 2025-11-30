@@ -1,6 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { useGetDepartmentListQuery } from "../../api/useDepartmentApi";
 import { useGetCategoryListQuery } from "../../api/useCategoryApi";
+import { useGetUserListQuery } from "../../api/useUserApi";
 import { EquipmentStatusEnum } from "../../utils/enumerations";
 
 interface FilterProps {
@@ -11,6 +12,7 @@ interface FilterProps {
 export default function useFilterDropdown({ onApplyFilter, initialFilters }: FilterProps) {
   const { data: departmentData } = useGetDepartmentListQuery({});
   const { data: categoryData } = useGetCategoryListQuery({});
+  const { data: userData } = useGetUserListQuery();
 
   const [filterValue, setFilterValue] = useState(initialFilters);
 
@@ -27,6 +29,7 @@ export default function useFilterDropdown({ onApplyFilter, initialFilters }: Fil
       categoryId: undefined,
       departmentId: undefined,
       status: undefined,
+      userId: undefined,
     };
     setFilterValue(clearedFilters);
     // Call onApplyFilter to reload data with cleared filters
@@ -70,10 +73,20 @@ export default function useFilterDropdown({ onApplyFilter, initialFilters }: Fil
     }));
   }, []);
 
+  // Get user options for dropdown
+  const userOptions = useMemo(() => {
+    if (!userData?.data) return [];
+    return userData.data.map((user) => ({
+      value: String(user.id),
+      label: user.fullName || user.userName,
+    }));
+  }, [userData]);
+
   return {
     departmentOptions,
     categoryOptions,
     statusOptions,
+    userOptions,
     changeValueFilter,
     cleanFilter,
     applyFilter,

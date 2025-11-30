@@ -22,9 +22,8 @@ interface EquipmentModalProps {
 const EquipmentModal: React.FC<EquipmentModalProps> = ({ id, isOpen, onClose }) => {
   const { data: equipmentData } = useGetEquipmentByIdQuery({ id: Number(id) }, { skip: !id });
   const { data: departmentData } = useGetDepartmentListQuery({});
-  const { data: userData } = useGetUserListQuery({});
+  const { data: userData } = useGetUserListQuery();
   const { data: categoryData } = useGetCategoryListQuery({});
-
   const [formData, setFormData] = useState<EquipmentEntity>({
     id: 0,
     code: "",
@@ -79,6 +78,13 @@ const EquipmentModal: React.FC<EquipmentModalProps> = ({ id, isOpen, onClose }) 
       label: `${user.userName} - ${user.fullName}`,
     }));
   }, [userData]);
+
+  // Get selected category description from categoryData
+  const selectedCategoryDescription = useMemo(() => {
+    if (!categoryData?.data || !formData.categoryId) return "";
+    const selectedCategory = categoryData.data.find(cate => cate.id === formData.categoryId);
+    return selectedCategory?.description || "";
+  }, [categoryData, formData.categoryId]);
 
   // Get status options for dropdown
   const statusOptions = useMemo(() => {
@@ -164,6 +170,16 @@ const EquipmentModal: React.FC<EquipmentModalProps> = ({ id, isOpen, onClose }) 
                   defaultValue={String(formData.departmentId)}
                   placeholder="Chọn phòng ban"
                   disabled={true}
+                />
+              </div>
+              <div className="col-span-full">
+                <Label>Mô tả danh mục</Label>
+                <Input
+                  type="text"
+                  name="categoryDescription"
+                  value={selectedCategoryDescription}
+                  disabled={true}
+                  placeholder="Mô tả danh mục"
                 />
               </div>
               <div>

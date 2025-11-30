@@ -114,21 +114,21 @@ export default function DepartmentModal({
 
         setIsProcessing(true);
         try {
-            const response = await saveCreateOrUpdate(formData);
+            const response = await saveCreateOrUpdate(formData).unwrap();
 
-            if (response.data?.data?.isSuccess) {
+            if (response.data && response.data?.isSuccess) {
                 toast.success(initialData ? "Sửa phòng ban thành công!" : "Thêm mới phòng ban thành công!");
                 onClose();
                 refreshList(); // Refresh the list after save
-            } else if (response.data?.data?.codeError) {
+            } 
+            else if (response.data && response.data?.codeError) {
                 setErrors(prev => ({
                     ...prev,
-                    code: response.data?.data?.codeError || "Mã phòng ban đã tồn tại"
+                    code: response.data?.codeError || "Mã phòng ban đã tồn tại"
                 }));
             }
-        } catch (error) {
-            console.error('Error saving department:', error);
-            toast.error("Có lỗi xảy ra khi lưu phòng ban");
+        } catch (err) {
+            toast.error(err.data || "Có lỗi xảy ra khi lưu phòng ban");
         } finally {
             setIsProcessing(false);
         }
