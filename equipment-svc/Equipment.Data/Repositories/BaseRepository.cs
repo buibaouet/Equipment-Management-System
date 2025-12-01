@@ -132,6 +132,8 @@ public abstract class BaseRepository<T> : IBaseRepository<T>
     public IQueryable<T> GetListAsync(Expression<Func<T, bool>>? expression = null)
     {
         expression ??= (x => x.Id > 0);
+        // Always filter out deleted items unless explicitly included in expression
+        expression = expression.AndAlso(x => !x.IsDelete);
         var entities = DbSet.Where(expression);
         return entities;
     }
@@ -139,11 +141,15 @@ public abstract class BaseRepository<T> : IBaseRepository<T>
     public async Task<int> CountAsync(Expression<Func<T, bool>>? expression = null)
     {
         expression ??= (x => x.Id > 0);
+        // Always filter out deleted items unless explicitly included in expression
+        expression = expression.AndAlso(x => !x.IsDelete);
         return await DbSet.CountAsync(expression);
     }
 
     public async Task<bool> ExistAsync(Expression<Func<T, bool>> expression)
     {
+        // Always filter out deleted items unless explicitly included in expression
+        expression = expression.AndAlso(x => !x.IsDelete);
         return await DbSet.AnyAsync(expression);
     }
 
@@ -156,6 +162,9 @@ public abstract class BaseRepository<T> : IBaseRepository<T>
         var dbSet = DbContext.Set<TEntity>();
 
         expression ??= (x => x.Id > 0);
+        
+        // Always filter out deleted items unless explicitly included in expression
+        expression = expression.AndAlso(x => !x.IsDelete);
         
         if (!string.IsNullOrEmpty(paginationParam.Keyword))
         {

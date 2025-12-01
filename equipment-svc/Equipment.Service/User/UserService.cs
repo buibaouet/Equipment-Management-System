@@ -12,11 +12,23 @@ public class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
     private readonly IDepartmentRepository _departmentRepository;
+    private readonly IEquipmentRepository _equipmentRepository;
+    private readonly IBorrowEquipmentRepository _borrowEquipmentRepository;
+    private readonly IEquipmentHistoryRepository _equipmentHistoryRepository;
 
-    public UserService(IUserRepository userRepository, IDepartmentRepository departmentRepository)
+    public UserService(
+        IUserRepository userRepository,
+        IDepartmentRepository departmentRepository,
+        IEquipmentRepository equipmentRepository,
+        IBorrowEquipmentRepository borrowEquipmentRepository,
+        IEquipmentHistoryRepository equipmentHistoryRepository
+    )
     {
         _userRepository = userRepository;
         _departmentRepository = departmentRepository;
+        _equipmentRepository = equipmentRepository;
+        _borrowEquipmentRepository = borrowEquipmentRepository;
+        _equipmentHistoryRepository = equipmentHistoryRepository;
     }
 
     public async Task<Response<PagingDataModel<ManaUserResponseModel>>> GetPaging(
@@ -250,5 +262,78 @@ public class UserService : IUserService
             PhoneNumber = user.PhoneNumber,
             Address = user.Address,
         };
+    }
+
+    public async Task<Response<bool>> DeleteUser(int id)
+    {
+        try
+        {
+            var user = await _userRepository.GetByIdAsync(id);
+            if (user == null)
+            {
+                return new Response<bool>(
+                    StatusCodes.Status404NotFound,
+                    "Người dùng không tồn tại"
+                );
+            }
+
+            if (user.IsDelete)
+            {
+                return new Response<bool>(
+                    StatusCodes.Status400BadRequest,
+                    "Người dùng đã bị xóa"
+                );
+            }
+
+            // Check if user is referenced by Equipment (OwnerId)
+            var equipmentCount = await _equipmentRepository.CountAsync(x =>
+                x.OwnerId == id
+            );
+            if (equipmentCount > 0)
+            {
+                return new Response<bool>(
+                    StatusCodes.Status400BadRequest,
+                    "Người dùng đang là chủ sở hữu của thiết bị, không thể xóa"
+                );
+            }
+
+            // Check if user is referenced by BorrowEquipment (RequestedByUserId or ApprovedByUserId)
+            var borrowEquipmentCount = await _borrowEquipmentRepository.CountAsync(x =>
+                x.RequestedByUserId == id || x.ApprovedByUserId == id
+            );
+            if (borrowEquipmentCount > 0)
+            {
+                return new Response<bool>(
+                    StatusCodes.Status400BadRequest,
+                    "Người dùng đang có liên quan đến yêu cầu mượn thiết bị, không thể xóa"
+                );
+            }
+
+            // Check if user is referenced by Department (ManagerId)
+            var departmentCount = await _departmentRepository.CountAsync(x =>
+                x.ManagerId == id
+            );
+            if (departmentCount > 0)
+            {
+                return new Response<bool>(
+                    StatusCodes.Status400BadRequest,
+                    "Người dùng đang là quản lý của phòng ban, không thể xóa"
+                );
+            }
+
+            // Soft delete
+            user.IsDelete = true;
+            user.UpdatedDate = DateTime.Now;
+            await _userRepository.UpdateAsync(user);
+
+            return new Response<bool>(true);
+        }
+        catch (Exception ex)
+        {
+            return new Response<bool>(
+                StatusCodes.Status500InternalServerError,
+                $"Lỗi khi xóa người dùng: {ex.Message}"
+            );
+        }
     }
 }

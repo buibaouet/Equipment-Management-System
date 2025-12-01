@@ -222,4 +222,65 @@ public class DepartmentService : IDepartmentService
             );
         }
     }
+
+    public async Task<Response<bool>> DeleteDepartment(int id)
+    {
+        try
+        {
+            var department = await _departmentRepository.GetByIdAsync(id);
+            if (department == null)
+            {
+                return new Response<bool>(
+                    StatusCodes.Status404NotFound,
+                    "Phòng ban không tồn tại"
+                );
+            }
+
+            if (department.IsDelete)
+            {
+                return new Response<bool>(
+                    StatusCodes.Status400BadRequest,
+                    "Phòng ban đã bị xóa"
+                );
+            }
+
+            // Check if department is referenced by Equipment
+            var equipmentCount = await _equipmentRepository.CountAsync(x =>
+                x.DepartmentId == id
+            );
+            if (equipmentCount > 0)
+            {
+                return new Response<bool>(
+                    StatusCodes.Status400BadRequest,
+                    "Phòng ban đang được sử dụng, không thể xóa"
+                );
+            }
+
+            // Check if department is referenced by User
+            var userCount = await _userRepository.CountAsync(x =>
+                x.DepartmentId == id
+            );
+            if (userCount > 0)
+            {
+                return new Response<bool>(
+                    StatusCodes.Status400BadRequest,
+                    "Phòng ban đang được sử dụng, không thể xóa"
+                );
+            }
+
+            // Soft delete
+            department.IsDelete = true;
+            department.UpdatedDate = DateTime.Now;
+            await _departmentRepository.UpdateAsync(department);
+
+            return new Response<bool>(true);
+        }
+        catch (Exception ex)
+        {
+            return new Response<bool>(
+                StatusCodes.Status500InternalServerError,
+                $"Lỗi khi xóa phòng ban: {ex.Message}"
+            );
+        }
+    }
 }

@@ -205,4 +205,53 @@ public class EquipmentCategoryService : IEquipmentCategoryService
             );
         }
     }
+
+    public async Task<Response<bool>> DeleteCategory(int id)
+    {
+        try
+        {
+            var category = await _repository.GetByIdAsync(id);
+            if (category == null)
+            {
+                return new Response<bool>(
+                    StatusCodes.Status404NotFound,
+                    "Danh mục thiết bị không tồn tại"
+                );
+            }
+
+            if (category.IsDelete)
+            {
+                return new Response<bool>(
+                    StatusCodes.Status400BadRequest,
+                    "Danh mục thiết bị đã bị xóa"
+                );
+            }
+
+            // Check if category is referenced by Equipment
+            var equipmentCount = await _equipmentRepository.CountAsync(x =>
+                x.CategoryId == id
+            );
+            if (equipmentCount > 0)
+            {
+                return new Response<bool>(
+                    StatusCodes.Status400BadRequest,
+                    "Danh mục đang được sử dụng, không thể xóa"
+                );
+            }
+
+            // Soft delete
+            category.IsDelete = true;
+            category.UpdatedDate = DateTime.Now;
+            await _repository.UpdateAsync(category);
+
+            return new Response<bool>(true);
+        }
+        catch (Exception ex)
+        {
+            return new Response<bool>(
+                StatusCodes.Status500InternalServerError,
+                $"Lỗi khi xóa danh mục: {ex.Message}"
+            );
+        }
+    }
 }

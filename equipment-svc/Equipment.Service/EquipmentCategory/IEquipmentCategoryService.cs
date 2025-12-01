@@ -39,4 +39,11 @@ public interface IEquipmentCategoryService
     /// <ParamPaging name="id"></ParamPaging>
     /// <returns></returns>
     public Task<Response<bool>> UpdateStatusCategory(int id);
+    
+    /// <summary>
+    /// Xóa danh mục thiết bị (soft delete)
+    /// </summary>
+    /// <ParamPaging name="id"></ParamPaging>
+    /// <returns></returns>
+    public Task<Response<bool>> DeleteCategory(int id);
 }

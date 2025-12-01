@@ -20,6 +20,7 @@ public class EquipmentService : IEquipmentService
     private readonly IUserRepository _userRepository;
     private readonly IBorrowEquipmentRepository _borrowEquipmentRepository;
     private readonly IEquipmentHistoryService _equipmentHistoryService;
+    private readonly IEquipmentHistoryRepository _equipmentHistoryRepository;
 
     public EquipmentService(
         IEquipmentRepository equipmentRepository,
@@ -27,7 +28,8 @@ public class EquipmentService : IEquipmentService
         IDepartmentRepository departmentRepository,
         IUserRepository userRepository,
         IBorrowEquipmentRepository borrowEquipmentRepository,
-        IEquipmentHistoryService equipmentHistoryService
+        IEquipmentHistoryService equipmentHistoryService,
+        IEquipmentHistoryRepository equipmentHistoryRepository
     )
     {
         _equipmentRepository = equipmentRepository;
@@ -36,6 +38,7 @@ public class EquipmentService : IEquipmentService
         _userRepository = userRepository;
         _borrowEquipmentRepository = borrowEquipmentRepository;
         _equipmentHistoryService = equipmentHistoryService;
+        _equipmentHistoryRepository = equipmentHistoryRepository;
     }
 
     public async Task<Response<Domain.Entities.Equipment>> GetById(int id)
@@ -476,5 +479,54 @@ public class EquipmentService : IEquipmentService
         }
 
         return $"{user.UserName} - {user.FullName}";
+    }
+
+    public async Task<Response<bool>> DeleteEquipment(int id)
+    {
+        try
+        {
+            var equipment = await _equipmentRepository.GetByIdAsync(id);
+            if (equipment == null)
+            {
+                return new Response<bool>(
+                    StatusCodes.Status404NotFound,
+                    "Thiết bị không tồn tại"
+                );
+            }
+
+            if (equipment.IsDelete)
+            {
+                return new Response<bool>(
+                    StatusCodes.Status400BadRequest,
+                    "Thiết bị đã bị xóa"
+                );
+            }
+
+            // Check if equipment is referenced by BorrowEquipment
+            var borrowEquipmentCount = await _borrowEquipmentRepository.CountAsync(x =>
+                x.EquipmentId == id
+            );
+            if (borrowEquipmentCount > 0)
+            {
+                return new Response<bool>(
+                    StatusCodes.Status400BadRequest,
+                    "Thiết bị đang được sử dụng trong yêu cầu mượn, không thể xóa"
+                );
+            }
+
+            // Soft delete
+            equipment.IsDelete = true;
+            equipment.UpdatedDate = DateTime.Now;
+            await _equipmentRepository.UpdateAsync(equipment);
+
+            return new Response<bool>(true);
+        }
+        catch (Exception ex)
+        {
+            return new Response<bool>(
+                StatusCodes.Status500InternalServerError,
+                $"Lỗi khi xóa thiết bị: {ex.Message}"
+            );
+        }
     }
 }

@@ -7,7 +7,8 @@ import {
   SearchIcon,
   EyeIcon,
   EllipsisVerticalIcon,
-  Pencil
+  Pencil,
+  Trash2
 } from "lucide-react";
 import Button from "../../components/ui/button/Button";
 import {
@@ -30,8 +31,9 @@ import BorrowEquipmentModal from "../BorrowReturn/BorrowEquipmentModal";
 import ReturnEquipmentModal from "../BorrowReturn/ReturnEquipmentModal";
 import EquipmentHistoryModal from "./EquipmentHistoryModal";
 import EquipmentBorrowReturnHistoryModal from "./EquipmentBorrowReturnHistoryModal";
+import ConfirmModal from "../../components/common/ConfirmModal";
 import { useGetListBorrowEquipmentPagingMutation } from "../../api/useBorrowEquipmentApi";
-import { useExportEquipmentMutation } from "../../api/useEquipmentApi";
+import { useExportEquipmentMutation, useDeleteEquipmentMutation } from "../../api/useEquipmentApi";
 import { BorrowEquipmentEntity, BorrowEquipmentPaging } from "../../types/BorrowEquipment";
 import { EquipmentPagingResponse } from "../../types/Equipment";
 
@@ -59,6 +61,7 @@ export default function EquipmentList() {
 
   const [getBorrowEquipmentPaging] = useGetListBorrowEquipmentPagingMutation();
   const [exportEquipment] = useExportEquipmentMutation();
+  const [deleteEquipment] = useDeleteEquipmentMutation();
   const [borrowRecords, setBorrowRecords] = useState<BorrowEquipmentPaging[]>([]);
 
   const arrColumns = [
@@ -81,6 +84,9 @@ export default function EquipmentList() {
   const [isBorrowReturnHistoryOpen, setIsBorrowReturnHistoryOpen] = useState(false);
   const [borrowReturnEquipmentId, setBorrowReturnEquipmentId] = useState<number | null>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [equipmentToDelete, setEquipmentToDelete] = useState<{ id: number; name: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Fetch borrow records for current user to get borrow record IDs
   useEffect(() => {
@@ -251,6 +257,40 @@ export default function EquipmentList() {
     return false;
   };
 
+  const handleOpenDeleteModal = (item: EquipmentPagingResponse) => {
+    setEquipmentToDelete({ id: item.id, name: item.name });
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleCloseDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    setEquipmentToDelete(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!equipmentToDelete) return;
+
+    try {
+      setIsDeleting(true);
+      const response = await deleteEquipment({ id: equipmentToDelete.id }).unwrap();
+      if (response.statusCode === 200) {
+        toast.success("Xóa thiết bị thành công");
+        handleRefresh();
+      } else {
+        toast.error(response.message || "Có lỗi xảy ra khi xóa thiết bị");
+      }
+    } catch (error: unknown) {
+      const message =
+        typeof error === "object" && error !== null && "data" in error
+          ? String((error as { data?: string }).data || "Có lỗi xảy ra khi xóa thiết bị")
+          : undefined;
+      toast.error(message);
+    } finally {
+      setIsDeleting(false);
+      handleCloseDeleteModal();
+    }
+  };
+
   return (
     <div>
       <PageMeta
@@ -380,6 +420,14 @@ export default function EquipmentList() {
                             />
                           </span>
                         )}
+                        {isAdmin() && (
+                          <span title="Xóa">
+                            <Trash2
+                              className="w-4 h-4 cursor-pointer hover:text-red-600 transition-colors"
+                              onClick={() => handleOpenDeleteModal(item)}
+                            />
+                          </span>
+                        )}
                         <TableDropdown
                           className="h-4 w-4"
                           dropdownButton={
@@ -477,6 +525,17 @@ export default function EquipmentList() {
         isOpen={isBorrowReturnHistoryOpen}
         onClose={handleCloseBorrowReturnHistoryModal}
         equipmentId={borrowReturnEquipmentId}
+      />
+
+      <ConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={handleCloseDeleteModal}
+        onConfirm={handleConfirmDelete}
+        title="Xóa thiết bị"
+        message={`Bạn có chắc chắn muốn xóa thiết bị "${equipmentToDelete?.name}" không?`}
+        confirmText="Xóa"
+        cancelText="Hủy"
+        isLoading={isDeleting}
       />
     </div>
   );

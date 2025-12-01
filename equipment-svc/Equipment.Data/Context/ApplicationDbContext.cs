@@ -30,6 +30,9 @@ public class ApplicationDbContext : DbContext
             builder
                 .HasIndex(x => x.Name)
                 .HasDatabaseName("IX_EquipmentCategory_EquipmentCategoryName");
+
+            builder.Property(x => x.IsDelete)
+                .HasDefaultValue(false);
         });
 
         // Configuration for User entity
@@ -38,6 +41,9 @@ public class ApplicationDbContext : DbContext
             builder.ToTable("Users");
 
             builder.HasKey(x => x.Id);
+
+            builder.Property(x => x.IsDelete)
+                .HasDefaultValue(false);
         });
 
         // Configuration for Department entity
@@ -49,6 +55,9 @@ public class ApplicationDbContext : DbContext
 
             // Create unique index on Code
             builder.HasIndex(x => x.Code).IsUnique().HasDatabaseName("IX_Department_Code");
+
+            builder.Property(x => x.IsDelete)
+                .HasDefaultValue(false);
         });
 
         // Configuration for Equipment entity
@@ -63,6 +72,9 @@ public class ApplicationDbContext : DbContext
             // Configure decimal precision for Price
             builder.Property(x => x.Price)
                 .HasPrecision(18, 2);
+
+            builder.Property(x => x.IsDelete)
+                .HasDefaultValue(false);
         });
 
         // Configuration for RefreshToken entity

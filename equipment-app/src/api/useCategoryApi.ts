@@ -27,7 +27,7 @@ export const useCategoryApi = createApi({
             }),
             providesTags: ['Category'],
         }),
-        getCategoryList: builder.query<BaseResponse<CategoryModel[]>, {}>({
+        getCategoryList: builder.query<BaseResponse<CategoryModel[]>, void>({
             query: () => ({
                 method: 'GET',
                 url: '/category/active',
@@ -49,6 +49,13 @@ export const useCategoryApi = createApi({
             }),
             invalidatesTags: ['Category'],
         }),
+        deleteCategory: builder.mutation<BaseResponse<boolean>, { id: number }>({
+            query: ({ id }) => ({
+                method: 'DELETE',
+                url: `/category/${id}`,
+            }),
+            invalidatesTags: ['Category'],
+        }),
     }),
 });
 
@@ -58,4 +65,5 @@ export const {
     useGetCategoryListQuery,
     useCreateOrUpdateCategoryMutation,
     useUpdateCategoryStatusMutation,
+    useDeleteCategoryMutation,
 } = useCategoryApi;

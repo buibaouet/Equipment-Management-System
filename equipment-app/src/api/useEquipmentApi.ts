@@ -74,6 +74,13 @@ export const useEquipmentApi = createApi({
             }),
             providesTags: ['Equipment'],
         }),
+        deleteEquipment: builder.mutation<BaseResponse<boolean>, { id: number }>({
+            query: ({ id }) => ({
+                method: 'DELETE',
+                url: `/equipment/${id}`,
+            }),
+            invalidatesTags: ['Equipment'],
+        }),
     }),
 });
 
@@ -85,5 +92,6 @@ export const {
     useCreateOrUpdateEquipmentMutation,
     useUpdateEquipmentStatusMutation,
     useGetListMyEquipmentPagingMutation,
-    useGetEquipmentHistoryByIdQuery
+    useGetEquipmentHistoryByIdQuery,
+    useDeleteEquipmentMutation
 } = useEquipmentApi;

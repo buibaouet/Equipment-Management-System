@@ -11,7 +11,8 @@ import {
   PlusCircle,
   PauseCircleIcon,
   PlayCircleIcon,
-  Eye
+  Eye,
+  Trash2
 } from "lucide-react";
 import Badge from "../../components/ui/badge/Badge";
 import useCategoryList from "./useCategoryList";
@@ -22,6 +23,9 @@ import { CategoryEntity } from "../../types/Category";
 import TableBodyContent from "../../components/ui/table/TableBodyContent";
 import { useAuth } from "../../hooks/useAuth";
 import { RoleEnum } from "../../utils/enumerations";
+import { useDeleteCategoryMutation } from "../../api/useCategoryApi";
+import ConfirmModal from "../../components/common/ConfirmModal";
+import { toast } from "sonner";
 
 export default function CategoryList() {
   const {
@@ -35,8 +39,9 @@ export default function CategoryList() {
     handleActiveCategory,
     isLoading
   } = useCategoryList();
-  const { currentUser } = useAuth();
+  const { currentUser, isAdmin } = useAuth();
   const isSupervisor = currentUser?.role === RoleEnum.Supervisor;
+  const [deleteCategory] = useDeleteCategoryMutation();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<CategoryEntity | null>(null);
@@ -47,6 +52,9 @@ export default function CategoryList() {
   };
 
   const [isViewMode, setIsViewMode] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<{ id: number; name: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleEditCategory = (category: CategoryEntity) => {
     setSelectedCategory(category);
@@ -64,6 +72,40 @@ export default function CategoryList() {
     setIsModalOpen(false);
     setSelectedCategory(null);
     setIsViewMode(false);
+  };
+
+  const handleOpenDeleteModal = (category: CategoryEntity) => {
+    setCategoryToDelete({ id: category.id, name: category.name });
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleCloseDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    setCategoryToDelete(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!categoryToDelete) return;
+
+    try {
+      setIsDeleting(true);
+      const response = await deleteCategory({ id: categoryToDelete.id }).unwrap();
+      if (response.statusCode === 200) {
+        toast.success("Xóa danh mục thành công");
+        refreshCategories();
+      } else {
+        toast.error(response.message || "Có lỗi xảy ra khi xóa danh mục");
+      }
+    } catch (error: unknown) {
+      const message =
+        typeof error === "object" && error !== null && "data" in error
+        ? String((error as { data?: string }).data || "Có lỗi xảy ra khi xóa danh mục")
+          : undefined;
+      toast.error(message);
+    } finally {
+      setIsDeleting(false);
+      handleCloseDeleteModal();
+    }
   };
 
   const arrColumns = [
@@ -156,6 +198,14 @@ export default function CategoryList() {
                                 />
                               </span>
                             }
+                            {isAdmin() && (
+                              <span title="Xóa">
+                                <Trash2
+                                  className="w-4 h-4 cursor-pointer hover:text-red-600 transition-colors"
+                                  onClick={() => handleOpenDeleteModal(item)}
+                                />
+                              </span>
+                            )}
                           </>
                         )}
                       </div>
@@ -181,6 +231,17 @@ export default function CategoryList() {
         initialData={selectedCategory}
         callbackAction={refreshCategories}
         readOnly={isViewMode}
+      />
+
+      <ConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={handleCloseDeleteModal}
+        onConfirm={handleConfirmDelete}
+        title="Xóa danh mục"
+        message={`Bạn có chắc chắn muốn xóa danh mục "${categoryToDelete?.name}" không?`}
+        confirmText="Xóa"
+        cancelText="Hủy"
+        isLoading={isDeleting}
       />
     </div>
   );

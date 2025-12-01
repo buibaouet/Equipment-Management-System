@@ -14,4 +14,5 @@ public interface IUserService
     Task<Response<UserResponseModel>> GetUserByIdAsync(int id);
     Task<Response<List<UserNameModel>>> GetListManager();
     Task<Response<List<UserNameModel>>> GetListUserActive();
+    Task<Response<bool>> DeleteUser(int id);
 }

@@ -10,18 +10,22 @@ import {
   PauseCircleIcon,
   PlayCircleIcon,
   PlusCircle,
-  Eye
+  Eye,
+  Trash2
 } from "lucide-react";
 import Badge from "../../components/ui/badge/Badge";
 import useDepartmentList from "./useDepartmentList";
 import PageMeta from "../../components/common/PageMeta";
 import DepartmentModal from "./DepartmentModal";
 import { useState } from "react";
-import { DepartmentEntity } from "../../types/Department";
+import { DepartmentEntity, DepartmentPaging } from "../../types/Department";
 import HeaderTable from "../../components/ui/table/HeaderTable";
 import TableBodyContent from "../../components/ui/table/TableBodyContent";
 import { useAuth } from "../../hooks/useAuth";
 import { RoleEnum } from "../../utils/enumerations";
+import { useDeleteDepartmentMutation } from "../../api/useDepartmentApi";
+import ConfirmModal from "../../components/common/ConfirmModal";
+import { toast } from "sonner";
 
 export default function DepartmentList() {
   const {
@@ -35,12 +39,16 @@ export default function DepartmentList() {
     handleActiveDepartment,
     isLoading
   } = useDepartmentList();
-  const { currentUser } = useAuth();
+  const { currentUser, isAdmin } = useAuth();
   const isSupervisor = currentUser?.role === RoleEnum.Supervisor;
+  const [deleteDepartment] = useDeleteDepartmentMutation();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState<DepartmentEntity | null>(null);
   const [isViewMode, setIsViewMode] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [departmentToDelete, setDepartmentToDelete] = useState<{ id: number; name: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleOpenModal = () => {
     setSelectedDepartment(null); // Clear selected department for "Add new"
@@ -48,14 +56,34 @@ export default function DepartmentList() {
     setIsModalOpen(true);
   };
 
-  const handleEditDepartment = (department: DepartmentEntity) => {
-    setSelectedDepartment(department);
+  const handleEditDepartment = (department: DepartmentPaging) => {
+    // Create a minimal DepartmentEntity from DepartmentPaging
+    // The modal will fetch the full entity using the id
+    setSelectedDepartment({
+      id: department.id,
+      code: department.code,
+      name: department.name,
+      description: department.description,
+      managerId: department.managerId,
+      managerName: department.managerName,
+      isActive: department.isActive,
+    });
     setIsViewMode(false);
     setIsModalOpen(true);
   };
 
-  const handleViewDepartment = (department: DepartmentEntity) => {
-    setSelectedDepartment(department);
+  const handleViewDepartment = (department: DepartmentPaging) => {
+    // Create a minimal DepartmentEntity from DepartmentPaging
+    // The modal will fetch the full entity using the id
+    setSelectedDepartment({
+      id: department.id,
+      code: department.code,
+      name: department.name,
+      description: department.description,
+      managerId: department.managerId,
+      managerName: department.managerName,
+      isActive: department.isActive,
+    });
     setIsViewMode(true);
     setIsModalOpen(true);
   };
@@ -64,6 +92,40 @@ export default function DepartmentList() {
     setIsModalOpen(false);
     setSelectedDepartment(null);
     setIsViewMode(false);
+  };
+
+  const handleOpenDeleteModal = (department: DepartmentPaging) => {
+    setDepartmentToDelete({ id: department.id, name: department.name });
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleCloseDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    setDepartmentToDelete(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!departmentToDelete) return;
+
+    try {
+      setIsDeleting(true);
+      const response = await deleteDepartment({ id: departmentToDelete.id }).unwrap();
+      if (response.statusCode === 200) {
+        toast.success("Xóa phòng ban thành công");
+        refreshDepartments();
+      } else {
+        toast.error(response.message || "Có lỗi xảy ra khi xóa phòng ban");
+      }
+    } catch (error: unknown) {
+      const message =
+        typeof error === "object" && error !== null && "data" in error
+          ? String((error as { data?: string }).data || "Có lỗi xảy ra khi xóa phòng ban")
+          : undefined;
+      toast.error(message);
+    } finally {
+      setIsDeleting(false);
+      handleCloseDeleteModal();
+    }
   };
 
   const arrColumns = [
@@ -106,7 +168,7 @@ export default function DepartmentList() {
                 isLoading={isLoading}
                 data={departments}
                 columns={arrColumns}
-                renderRow={(item: any, index: number) => (
+                renderRow={(item: DepartmentPaging, index: number) => (
                   <TableRow key={index + 1}>
                     <TableCell className="px-4 py-4 font-medium text-gray-800 border border-gray-100 dark:border-white/[0.05] dark:text-white text-theme-sm whitespace-nowrap ">
                       {item.code}
@@ -164,6 +226,14 @@ export default function DepartmentList() {
                                 />
                               </span>
                             }
+                            {isAdmin() && (
+                              <span title="Xóa">
+                                <Trash2
+                                  className="w-4 h-4 cursor-pointer hover:text-red-600 transition-colors"
+                                  onClick={() => handleOpenDeleteModal(item)}
+                                />
+                              </span>
+                            )}
                           </>
                         )}
                       </div>
@@ -189,6 +259,17 @@ export default function DepartmentList() {
         initialData={selectedDepartment}
         callbackAction={refreshDepartments}
         readOnly={isViewMode}
+      />
+
+      <ConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={handleCloseDeleteModal}
+        onConfirm={handleConfirmDelete}
+        title="Xóa phòng ban"
+        message={`Bạn có chắc chắn muốn xóa phòng ban "${departmentToDelete?.name}" không?`}
+        confirmText="Xóa"
+        cancelText="Hủy"
+        isLoading={isDeleting}
       />
     </div>
   );

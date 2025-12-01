@@ -9,6 +9,7 @@ import {
   SearchIcon,
   Eye,
   PlusCircle,
+  Trash2,
 } from "lucide-react";
 import Badge from "../../components/ui/badge/Badge";
 import useUserManagement from "./useUserManagement";
@@ -23,6 +24,9 @@ import HeaderTable from "../../components/ui/table/HeaderTable";
 import TableBodyContent from "../../components/ui/table/TableBodyContent";
 import { useAuth } from "../../hooks/useAuth";
 import Button from "../../components/ui/button/Button";
+import { useDeleteUserMutation } from "../../api/useUserApi";
+import ConfirmModal from "../../components/common/ConfirmModal";
+import { toast } from "sonner";
 
 export default function UserManagement() {
   const {
@@ -43,6 +47,10 @@ export default function UserManagement() {
   const { isOpen: isCreateModalOpen, openModal: openCreateModal, closeModal: closeCreateModal } = useModal();
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [isViewMode, setIsViewMode] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<{ id: number; name: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteUser] = useDeleteUserMutation();
 
   const handleEditUser = (user: UserEntity) => {
     setSelectedUserId(user.id);
@@ -60,6 +68,40 @@ export default function UserManagement() {
     closeModal();
     setSelectedUserId(null);
     setIsViewMode(false);
+  };
+
+  const handleOpenDeleteModal = (user: UserEntity) => {
+    setUserToDelete({ id: user.id, name: `${user.firstName} ${user.lastName}` });
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleCloseDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    setUserToDelete(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!userToDelete) return;
+
+    try {
+      setIsDeleting(true);
+      const response = await deleteUser({ id: userToDelete.id }).unwrap();
+      if (response.statusCode === 200) {
+        toast.success("Xóa người dùng thành công");
+        refreshUsers();
+      } else {
+        toast.error(response.message || "Có lỗi xảy ra khi xóa người dùng");
+      }
+    } catch (error: unknown) {
+      const message =
+        typeof error === "object" && error !== null && "data" in error
+          ? String((error as { data?: string }).data || "Có lỗi xảy ra khi xóa người dùng")
+          : undefined;
+          toast.error(message);
+        } finally {
+          setIsDeleting(false);
+      handleCloseDeleteModal();
+    }
   };
 
   const arrColumns = [
@@ -157,14 +199,24 @@ export default function UserManagement() {
                             />
                           </span>
                         ) : (
-                          item.role != RoleEnum.Admin && (
-                            <span title="Sửa">
-                              <Pencil
-                                className="w-4 h-4 cursor-pointer hover:text-brand-600 transition-colors"
-                                onClick={() => handleEditUser(item)}
-                              />
-                            </span>
-                          )
+                          <>
+                            {item.role != RoleEnum.Admin && (
+                              <span title="Sửa">
+                                <Pencil
+                                  className="w-4 h-4 cursor-pointer hover:text-brand-600 transition-colors"
+                                  onClick={() => handleEditUser(item)}
+                                />
+                              </span>
+                            )}
+                            {isAdmin() && item.role != RoleEnum.Admin && (
+                              <span title="Xóa">
+                                <Trash2
+                                  className="w-4 h-4 cursor-pointer hover:text-red-600 transition-colors"
+                                  onClick={() => handleOpenDeleteModal(item)}
+                                />
+                              </span>
+                            )}
+                          </>
                         )}
                       </div>
                     </TableCell>
@@ -197,6 +249,18 @@ export default function UserManagement() {
         isOpen={isCreateModalOpen}
         onClose={closeCreateModal}
         callbackAction={refreshUsers}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={handleCloseDeleteModal}
+        onConfirm={handleConfirmDelete}
+        title="Xóa người dùng"
+        message={`Bạn có chắc chắn muốn xóa người dùng "${userToDelete?.name}" không?`}
+        confirmText="Xóa"
+        cancelText="Hủy"
+        isLoading={isDeleting}
       />
     </div>
   );

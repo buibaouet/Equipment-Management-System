@@ -152,4 +152,30 @@ public class EquipmentCategoryController : ControllerBase
             );
         }
     }
+
+    /// <summary>
+    /// Xóa danh mục thiết bị (soft delete)
+    /// </summary>
+    /// <ParamPaging name="id"></ParamPaging>
+    /// <returns></returns>
+    [HttpDelete("{id}")]
+    public async Task<ActionResult> DeleteCategory(int id)
+    {
+        try
+        {
+            var res = await _service.DeleteCategory(id);
+            if (res.StatusCode != StatusCodes.Status200OK)
+            {
+                return StatusCode(res.StatusCode, res.Message);
+            }
+            return Ok(res);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                "Xảy ra lỗi trong quá trình xử lý: \n" + ex.Message + ex.StackTrace
+            );
+        }
+    }
 }

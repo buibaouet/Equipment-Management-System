@@ -225,6 +225,32 @@ public class EquipmentController : ControllerBase
         );
     }
 
+    /// <summary>
+    /// Xóa thiết bị (soft delete)
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    [HttpDelete("{id}")]
+    public async Task<ActionResult> DeleteEquipment(int id)
+    {
+        try
+        {
+            var res = await _equipmentService.DeleteEquipment(id);
+            if (res.StatusCode != StatusCodes.Status200OK)
+            {
+                return StatusCode(res.StatusCode, res.Message);
+            }
+            return Ok(res);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                "Xảy ra lỗi trong quá trình xử lý: \n" + ex.Message + ex.StackTrace
+            );
+        }
+    }
+
     private int? GetCurrentUserId()
     {
         // JWT token stores user ID in "sub" claim (JwtRegisteredClaimNames.Sub)

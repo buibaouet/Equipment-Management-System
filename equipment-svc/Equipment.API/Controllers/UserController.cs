@@ -207,6 +207,32 @@ public class UserController : ControllerBase
             );
         }
     }
+
+    /// <summary>
+    /// Xóa người dùng (soft delete)
+    /// </summary>
+    /// <ParamPaging name="id"></ParamPaging>
+    /// <returns></returns>
+    [HttpDelete("{id}")]
+    public async Task<ActionResult> DeleteUser(int id)
+    {
+        try
+        {
+            var res = await _userService.DeleteUser(id);
+            if (res.StatusCode != StatusCodes.Status200OK)
+            {
+                return StatusCode(res.StatusCode, res.Message);
+            }
+            return Ok(res);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                "Xảy ra lỗi trong quá trình xử lý: \n" + ex.Message + ex.StackTrace
+            );
+        }
+    }
     
     private int? GetCurrentUserId()
     {

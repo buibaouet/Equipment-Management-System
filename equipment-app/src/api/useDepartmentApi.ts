@@ -52,6 +52,13 @@ export const useDepartmentApi = createApi({
             }),
             invalidatesTags: ['Department'],
         }),
+        deleteDepartment: builder.mutation<BaseResponse<boolean>, { id: number }>({
+            query: ({ id }) => ({
+                method: 'DELETE',
+                url: `/department/${id}`,
+            }),
+            invalidatesTags: ['Department'],
+        }),
     }),
 });
 
@@ -60,5 +67,6 @@ export const {
     useGetDepartmentListQuery,
     useGetDepartmentByIdQuery,
     useCreateOrUpdateDepartmentMutation,
-    useUpdateDepartmentStatusMutation
+    useUpdateDepartmentStatusMutation,
+    useDeleteDepartmentMutation
 } = useDepartmentApi;

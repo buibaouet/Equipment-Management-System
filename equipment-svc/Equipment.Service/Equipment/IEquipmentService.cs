@@ -16,4 +16,5 @@ public interface IEquipmentService
     );
     Task<Response<List<EquipmentModel>>> GetListEquipmentAvaiable(int userId);
     Task<Response<List<EquipmentHistoryModel>>> GetHistory(int equipmentId);
+    Task<Response<bool>> DeleteEquipment(int id);
 }

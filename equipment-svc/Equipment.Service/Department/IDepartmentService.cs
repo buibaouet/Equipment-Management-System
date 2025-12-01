@@ -29,4 +29,11 @@ public interface IDepartmentService
     /// <ParamPaging name="id"></ParamPaging>
     /// <returns></returns>
     public Task<Response<bool>> UpdateStatusDepartment(int id);
+    
+    /// <summary>
+    /// Xóa phòng ban (soft delete)
+    /// </summary>
+    /// <ParamPaging name="id"></ParamPaging>
+    /// <returns></returns>
+    public Task<Response<bool>> DeleteDepartment(int id);
 }
