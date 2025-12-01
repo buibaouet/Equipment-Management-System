@@ -1,4 +1,5 @@
 using Equipment.Domain.Constant;
+using Equipment.Domain.Extensions;
 using Equipment.Domain.IRepositories;
 using Equipment.Domain.Models;
 using Equipment.Domain.Models.ReponseModel;
@@ -84,6 +85,71 @@ public class UserService : IUserService
 
         return new Response<UpdateUserResponseModel>(
             new UpdateUserResponseModel() { IsSuccess = true }
+        );
+    }
+
+    public async Task<Response<CreateUserResponseModel>> AddNewUserByAdmin(int userId, CreateUserByAdminInput model)
+    {
+        var user =
+            await _userRepository.GetByIdAsync(userId) ?? throw new ArgumentException("User not found");
+        
+        if(user.Role != Enumerations.Role.Admin)
+        {
+            return new Response<CreateUserResponseModel>(
+                StatusCodes.Status403Forbidden,
+                "Chỉ có Admin mới có quyền thêm người dùng"
+            );
+        }
+        
+        var existsUsername = await _userRepository.ExistAsync(u =>
+            u.UserName == model.UserName
+        );
+        
+        if (existsUsername)
+        {
+            return new Response<CreateUserResponseModel>(
+                new CreateUserResponseModel()
+                {
+                    IsSuccess = false,
+                    UsernameError = "Tên đăng nhập đã tồn tại",
+                }
+            );
+        }
+        
+        var existsEmail = await _userRepository.ExistAsync(u =>
+            u.Email == model.Email
+        );
+        
+        if (existsEmail)
+        {
+            return new Response<CreateUserResponseModel>(
+                new CreateUserResponseModel()
+                {
+                    IsSuccess = false,
+                    EmailError = "Địa chỉ email đã tồn tại",
+                }
+            );
+        }
+        
+        var newUser = new Domain.Entities.User
+        {
+            UserName = model.UserName,
+            FirstName = model.FirstName,
+            LastName = model.LastName,
+            Email = model.Email,
+            Role = model.Role,
+            DepartmentId = model.DepartmentId,
+            PhoneNumber = model.PhoneNumber,
+            Address = model.Address,
+            BirthDate = model.BirthDate,
+            Bio = model.Bio,
+            // Default password
+            Password = BcryptHasher.HashPassword("Default@123"),
+        };
+        await _userRepository.CreateAsync(newUser);
+        
+        return new Response<CreateUserResponseModel>(
+            new CreateUserResponseModel() { IsSuccess = true }
         );
     }
 

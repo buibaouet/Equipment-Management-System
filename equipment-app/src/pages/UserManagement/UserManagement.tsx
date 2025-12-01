@@ -8,6 +8,7 @@ import {
   Pencil,
   SearchIcon,
   Eye,
+  PlusCircle,
 } from "lucide-react";
 import Badge from "../../components/ui/badge/Badge";
 import useUserManagement from "./useUserManagement";
@@ -15,11 +16,13 @@ import PageMeta from "../../components/common/PageMeta";
 import { RoleEnum } from "../../utils/enumerations";
 import { useModal } from "../../hooks/useModal";
 import UserInfoModal from "./UserInfoModal";
+import CreateUserModal from "./CreateUserModal";
 import { useState } from "react";
 import { UserEntity } from "../../types/User";
 import HeaderTable from "../../components/ui/table/HeaderTable";
 import TableBodyContent from "../../components/ui/table/TableBodyContent";
 import { useAuth } from "../../hooks/useAuth";
+import Button from "../../components/ui/button/Button";
 
 export default function UserManagement() {
   const {
@@ -33,10 +36,11 @@ export default function UserManagement() {
     refreshUsers,
     isLoading
   } = useUserManagement();
-  const { currentUser } = useAuth();
+  const { currentUser, isAdmin } = useAuth();
   const isSupervisor = currentUser?.role === RoleEnum.Supervisor;
 
   const { isOpen, openModal, closeModal } = useModal();
+  const { isOpen: isCreateModalOpen, openModal: openCreateModal, closeModal: closeCreateModal } = useModal();
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [isViewMode, setIsViewMode] = useState(false);
 
@@ -91,6 +95,12 @@ export default function UserManagement() {
                 onChange={(e) => handleSearch(e.target.value)}
               />
             </div>
+            {isAdmin() && (
+              <Button variant="primary" onClick={openCreateModal}>
+                <PlusCircle className="w-5 h-5" />
+                Thêm người dùng
+              </Button>
+            )}
           </div>
         </div>
         <div className="max-w-full overflow-x-auto custom-scrollbar">
@@ -101,13 +111,13 @@ export default function UserManagement() {
                 isLoading={isLoading}
                 data={users}
                 columns={arrColumns}
-                renderRow={(item: any, index: number) => (
+                renderRow={(item: UserEntity, index: number) => (
                   <TableRow key={index + 1}>
                     <TableCell className="px-4 py-4 font-medium text-gray-800 border border-gray-100 dark:border-white/[0.05] dark:text-white text-theme-sm whitespace-nowrap ">
                       {item.userName}
                     </TableCell>
                     <TableCell className="px-4 py-4 font-medium text-gray-800 border border-gray-100 dark:border-white/[0.05] dark:text-white text-theme-sm whitespace-nowrap ">
-                      {item.fullName}
+                      {`${item.firstName} ${item.lastName}`}
                     </TableCell>
                     <TableCell className="px-4 py-4 font-normal text-gray-800 border border-gray-100 dark:border-white/[0.05] text-theme-sm dark:text-gray-400 whitespace-nowrap ">
                       {item.email}
@@ -180,6 +190,13 @@ export default function UserManagement() {
         userId={selectedUserId}
         callbackAction={refreshUsers}
         readOnly={isViewMode}
+      />
+
+      {/* Create User Modal */}
+      <CreateUserModal
+        isOpen={isCreateModalOpen}
+        onClose={closeCreateModal}
+        callbackAction={refreshUsers}
       />
     </div>
   );

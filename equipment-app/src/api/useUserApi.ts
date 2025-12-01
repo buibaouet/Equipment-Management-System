@@ -2,7 +2,7 @@ import { createApi } from '@reduxjs/toolkit/query/react';
 import { baseQueryWithReauth } from '../utils/baseQuery';
 import { PaginationParam } from '../types/PagingParam';
 import { BaseResponse, PagingDataModel } from '../types/Response';
-import { UpdateUserInfo, UserModel, UserEntity, UpdateUserResponseModel, UpdateUserRoleDepartment } from '../types/User';
+import { UpdateUserInfo, UserModel, UserEntity, UpdateUserResponseModel, UpdateUserRoleDepartment, CreateUserByAdminInput, CreateUserResponseModel } from '../types/User';
 
 export const useUserApi = createApi({
     reducerPath: 'useUserApi',
@@ -63,6 +63,17 @@ export const useUserApi = createApi({
             }),
             providesTags: ['User'],
         }),
+        createUser: builder.mutation<
+            BaseResponse<CreateUserResponseModel>,
+            { data: CreateUserByAdminInput }
+        >({
+            query: ({ data }) => ({
+                url: '/user',
+                method: 'POST',
+                body: data,
+            }),
+            invalidatesTags: ['User', 'Manager'],
+        }),
     }),
 });
 
@@ -72,5 +83,6 @@ export const {
     useUpdateRoleDepartmentUserMutation,
     useGetManagerListQuery,
     useGetUserListQuery,
-    useGetUserByIdQuery
+    useGetUserByIdQuery,
+    useCreateUserMutation
 } = useUserApi;

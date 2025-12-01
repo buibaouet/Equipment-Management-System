@@ -9,6 +9,7 @@ public interface IUserService
 {
     Task<Response<PagingDataModel<ManaUserResponseModel>>> GetPaging(PaginationParam param);
     Task<Response<UpdateUserResponseModel>> UpdateUserAsync(int id, UpdateUserModel model);
+    Task<Response<CreateUserResponseModel>> AddNewUserByAdmin(int userId, CreateUserByAdminInput model);
     Task<Response<bool>> UpdateUserRoleDepartmentAsync(int id, UpdateRoleDepartmentUserModel param);
     Task<Response<UserResponseModel>> GetUserByIdAsync(int id);
     Task<Response<List<UserNameModel>>> GetListManager();

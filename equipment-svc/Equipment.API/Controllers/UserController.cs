@@ -42,6 +42,41 @@ public class UserController : ControllerBase
             );
         }
     }
+    
+    /// <summary>
+    /// Thêm mới người dùng bởi Admin
+    /// </summary>
+    /// <ParamPaging name="param"></ParamPaging>
+    /// <returns></returns>
+    [HttpPost]
+    public async Task<ActionResult> AddNewUserByAdmin([FromBody] CreateUserByAdminInput param)
+    {
+        try
+        {
+            var currentUserId = GetCurrentUserId();
+            if (currentUserId == null)
+            {
+                return StatusCode(
+                    StatusCodes.Status401Unauthorized,
+                    "Không thể xác định người dùng"
+                );
+            }
+            
+            var res = await _userService.AddNewUserByAdmin((int)currentUserId, param);
+            if (res.StatusCode != StatusCodes.Status200OK)
+            {
+                return StatusCode(res.StatusCode, res.Message);
+            }
+            return Ok(res);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                "Xảy ra lỗi trong quá trình xử lý: \n" + ex.Message + ex.StackTrace
+            );
+        }
+    }
 
     /// <summary>
     /// Lấy thông tin người dùng theo Id
@@ -171,5 +206,18 @@ public class UserController : ControllerBase
                 "Xảy ra lỗi trong quá trình xử lý: \n" + ex.Message + ex.StackTrace
             );
         }
+    }
+    
+    private int? GetCurrentUserId()
+    {
+        // JWT token stores user ID in "sub" claim (JwtRegisteredClaimNames.Sub)
+        var userIdClaim =
+            User.FindFirst("sub")
+            ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+        if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
+        {
+            return userId;
+        }
+        return null;
     }
 }

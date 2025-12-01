@@ -14,6 +14,25 @@ export interface CreateUserInput {
     password: string;
 }
 
+export interface CreateUserByAdminInput {
+    userName: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    role: RoleEnum;
+    departmentId: number;
+    phoneNumber?: string;
+    address?: string;
+    birthDate?: Date;
+    bio?: string;
+}
+
+export interface CreateUserResponseModel {
+    isSuccess: boolean;
+    emailError?: string;
+    usernameError?: string;
+}
+
 export interface UpdateUserInfo {
     firstName: string;
     lastName: string;
