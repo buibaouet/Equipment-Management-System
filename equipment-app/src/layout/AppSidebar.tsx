@@ -13,12 +13,14 @@ import {
 import { useSidebar } from "../context/SidebarContext";
 import { useAuth } from "../hooks/useAuth";
 import { RoleEnum } from "../utils/enumerations";
+import { useGetTotalRequestBorrowEquipmentQuery, useGetTotalOverdueBorrowEquipmentsQuery } from "../api/useBorrowEquipmentApi";
 
 type MenuItem = {
   name: string;
   icon: React.ReactNode;
   path?: string;
   activePath?: string[];
+  badgeCount?: number;
 };
 
 const commonItems: MenuItem[] = [
@@ -43,6 +45,13 @@ const AppSidebar: React.FC = () => {
   let menuItems: MenuItem[];
 
   const { currentUser } = useAuth();
+  const { data: overdueData } = useGetTotalOverdueBorrowEquipmentsQuery(undefined, {
+    skip: currentUser?.role !== RoleEnum.Admin,
+  });
+  const overdueCount = overdueData?.data ?? 0;
+
+  const { data: requestData } = useGetTotalRequestBorrowEquipmentQuery();
+  const requestCount = requestData?.data ?? 0;
 
   if (!currentUser) menuItems = [];
 
@@ -53,6 +62,13 @@ const AppSidebar: React.FC = () => {
         icon: <ListChecksIcon />,
         name: "Duyệt yêu cầu mượn",
         path: "/borrow-request",
+        badgeCount: requestCount,
+      },
+      {
+        icon: <RotateCwSquareIcon />,
+        name: "Thiết bị quá hạn trả",
+        path: "/overdue-equipment",
+        badgeCount: overdueCount,
       },
       {
         icon: <BookMarked />,
@@ -161,7 +177,14 @@ const AppSidebar: React.FC = () => {
                   {nav.icon}
                 </span>
                 {(isExpanded || isHovered || isMobileOpen) && (
-                  <span className="menu-item-text">{nav.name}</span>
+                  <span className="menu-item-text flex items-center justify-between gap-2 w-full">
+                    <span>{nav.name}</span>
+                    {typeof nav.badgeCount === "number" && nav.badgeCount > 0 && (
+                      <span className="ml-2 inline-flex min-w-[20px] items-center justify-center rounded-full bg-red-500 px-2 py-0.5 text-xs font-semibold text-white">
+                        {nav.badgeCount > 99 ? "99+" : nav.badgeCount}
+                      </span>
+                    )}
+                  </span>
                 )}
               </Link>
             )

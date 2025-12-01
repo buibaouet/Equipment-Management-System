@@ -7,6 +7,7 @@ using Equipment.Domain.Models.EquipmentHistoryModel;
 using Equipment.Domain.Models.ReponseModel;
 using Equipment.Service.EquipmentHistory;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 
 namespace Equipment.Service.BorrowEquipment;
 
@@ -82,7 +83,7 @@ public class BorrowEquipmentService : IBorrowEquipmentService
     public async Task<Response<BorrowEquipmentDataModel>> GetById(int id, int currentUserId)
     {
         var borrowRequest = await _borrowEquipmentRepository.GetByIdAsync(id);
-        if (borrowRequest == null || borrowRequest.RequestedByUserId != currentUserId)
+        if (borrowRequest == null)
         {
             return new Response<BorrowEquipmentDataModel>(
                 StatusCodes.Status404NotFound,
@@ -651,6 +652,97 @@ public class BorrowEquipmentService : IBorrowEquipmentService
                 $"Error rejecting borrow request: {ex.Message}"
             );
         }
+    }
+
+    public async Task<Response<int>> GetTotalRequestBorrowEquipment(int currentUserId)
+    {
+        var user = await _userRepository.GetByIdAsync(currentUserId);
+        if (user == null)
+        {
+            return new Response<int>(0);
+        }
+        
+        var equipmentList = _equipmentRepository.GetListAsync(x =>
+            (
+                user.Role == Enumerations.Role.Admin ? x.Id > 0
+                    : user.Role == Enumerations.Role.Manager
+                        ? (x.DepartmentId == user.DepartmentId || x.OwnerId == currentUserId)
+                        : x.OwnerId == currentUserId
+            )
+        );
+
+        var totalRequest = await _borrowEquipmentRepository.CountAsync(e =>
+            e.Status == Enumerations.BorrowEquipmentStatus.Pendding
+            && equipmentList.Select(eq => eq.Id).Contains(e.EquipmentId));
+
+        return new  Response<int>(totalRequest);
+    }
+    
+    public async Task<Response<int>> GetOverdueBorrowEquipmentsTotal()
+    {
+        var overdueBorrowRequests = await _borrowEquipmentRepository
+            .GetListAsync(x =>
+                x.Status == Enumerations.BorrowEquipmentStatus.Borrowed
+                && x.ReturnedDate == null
+                && x.ToDate < DateTime.Now
+            )
+            .ToListAsync();
+
+        return new  Response<int>(overdueBorrowRequests.Count);
+    }
+
+    public async Task<Response<List<BorrowEquipmentDataModel>>> GetOverdueBorrowEquipments()
+    {
+        var overdueBorrowRequests = await _borrowEquipmentRepository
+            .GetListAsync(x =>
+                x.Status == Enumerations.BorrowEquipmentStatus.Borrowed
+                && x.ReturnedDate == null
+                && x.ToDate < DateTime.Now
+            )
+            .OrderBy(x => x.ToDate)
+            .ToListAsync();
+
+        var result = new List<BorrowEquipmentDataModel>();
+
+        foreach (var item in overdueBorrowRequests)
+        {
+            var equipment = await _equipmentRepository.GetByIdAsync(item.EquipmentId);
+            var category = await _equipmentCategoryRepository.GetByIdAsync(
+                equipment?.CategoryId ?? 0
+            );
+            var department = await _departmentRepository.GetByIdAsync(equipment?.DepartmentId ?? 0);
+            var borrower = await _userRepository.GetByIdAsync(item.RequestedByUserId);
+            var approver = item.ApprovedByUserId.HasValue
+                ? await _userRepository.GetByIdAsync(item.ApprovedByUserId.Value)
+                : null;
+
+            result.Add(
+                new BorrowEquipmentDataModel
+                {
+                    Id = item.Id,
+                    EquipmentId = item.EquipmentId,
+                    EquipmentCode = equipment?.Code ?? "-",
+                    EquipmentName = equipment?.Name ?? "-",
+                    CategoryName = category?.Name ?? "-",
+                    DepartmentName = department?.Name ?? "-",
+                    FromDate = item.FromDate,
+                    ToDate = item.ToDate,
+                    Status = item.Status,
+                    BorrowerId = item.RequestedByUserId,
+                    BorrowerName = borrower?.UserName + " - " + borrower?.FullName,
+                    ApprovedByUserId = item.ApprovedByUserId,
+                    ApprovedByName =
+                        approver != null ? approver.UserName + " - " + approver.FullName : null,
+                    ApprovedDate = item.ApprovedDate,
+                    ReturnedDate = item.ReturnedDate,
+                    StatusAfterReturn = item.StatusAfterReturn,
+                    ProcessingForm = item.ProcessingForm,
+                    ProcessingNote = item.ProcessingNote,
+                }
+            );
+        }
+
+        return new Response<List<BorrowEquipmentDataModel>>(result);
     }
 
     private static List<EquipmentHistoryChangeModel> BuildBorrowRequestChanges(

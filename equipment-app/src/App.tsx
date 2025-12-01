@@ -9,6 +9,7 @@ import Register from "./pages/AuthPages/Register";
 import ChangePassword from "./pages/AuthPages/ChangePassword";
 import Logout from "./pages/AuthPages/Logout";
 import BorrowReturnList from "./pages/BorrowReturn/BorrowReturnList";
+import OverdueEquipment from "./pages/BorrowReturn/OverdueEquipment";
 import MyEquipment from "./pages/MyEquipment/MyEquipment";
 import ApprovedRequest from "./pages/ApprovedRequest/ApprovedRequest";
 import DepartmentList from "./pages/Department/DepartmentList";
@@ -81,6 +82,10 @@ export default function App() {
             <Route path="/category" element={<CategoryList />} />
             <Route path="/department" element={<DepartmentList />} />
             <Route path="/user" element={<UserManagement />} />
+          </Route>
+
+          <Route element={<PrivateRoute allowedRoles={[RoleEnum.Admin]}> <AppLayout /> </PrivateRoute>}>
+            <Route path="/overdue-equipment" element={<OverdueEquipment />} />
           </Route>
 
           {/* Catch all - show 404 page for unknown routes */}

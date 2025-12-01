@@ -26,4 +26,7 @@ public interface IBorrowEquipmentService
     Task<Response<bool>> ReturnEquipment(ReturnEquipmentModel param, int currentUserId);
     Task<Response<bool>> ApproveBorrowRequest(int id, int currentUserId);
     Task<Response<bool>> RejectBorrowRequest(int id, int currentUserId);
+    Task<Response<List<BorrowEquipmentDataModel>>> GetOverdueBorrowEquipments();
+    Task<Response<int>> GetOverdueBorrowEquipmentsTotal();
+    Task<Response<int>> GetTotalRequestBorrowEquipment(int currentUserId);
 }

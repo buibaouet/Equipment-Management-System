@@ -275,6 +275,108 @@ public class BorrowEquipmentController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Lấy danh sách thiết bị mượn quá hạn chưa trả
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet("overdue")]
+    public async Task<ActionResult> GetOverdueBorrowEquipments()
+    {
+        try
+        {
+            var currentUserId = GetCurrentUserId();
+            if (currentUserId == null)
+            {
+                return StatusCode(
+                    StatusCodes.Status401Unauthorized,
+                    "Không thể xác định người dùng"
+                );
+            }
+
+            var res = await _borrowEquipmentService.GetOverdueBorrowEquipments();
+            if (res.StatusCode != StatusCodes.Status200OK)
+            {
+                return StatusCode(res.StatusCode, res.Message);
+            }
+            return Ok(res);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                "Xảy ra lỗi trong quá trình xử lý: \n" + ex.Message + ex.StackTrace
+            );
+        }
+    }
+    
+    /// <summary>
+    /// Lấy số lượng thiết bị mượn quá hạn chưa trả
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet("overdue/total")]
+    public async Task<ActionResult> GetOverdueBorrowEquipmentsTotal()
+    {
+        try
+        {
+            var currentUserId = GetCurrentUserId();
+            if (currentUserId == null)
+            {
+                return StatusCode(
+                    StatusCodes.Status401Unauthorized,
+                    "Không thể xác định người dùng"
+                );
+            }
+
+            var res = await _borrowEquipmentService.GetOverdueBorrowEquipmentsTotal();
+            if (res.StatusCode != StatusCodes.Status200OK)
+            {
+                return StatusCode(res.StatusCode, res.Message);
+            }
+            return Ok(res);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                "Xảy ra lỗi trong quá trình xử lý: \n" + ex.Message + ex.StackTrace
+            );
+        }
+    }
+    
+    /// <summary>
+    /// Lấy tổng số yêu cầu mượn thiết bị đang chờ duyệt
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet("request/total")]
+    public async Task<ActionResult> GetTotalRequestBorrowEquipment()
+    {
+        try
+        {
+            var currentUserId = GetCurrentUserId();
+            if (currentUserId == null)
+            {
+                return StatusCode(
+                    StatusCodes.Status401Unauthorized,
+                    "Không thể xác định người dùng"
+                );
+            }
+
+            var res = await _borrowEquipmentService.GetTotalRequestBorrowEquipment(currentUserId ?? 0);
+            if (res.StatusCode != StatusCodes.Status200OK)
+            {
+                return StatusCode(res.StatusCode, res.Message);
+            }
+            return Ok(res);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                "Xảy ra lỗi trong quá trình xử lý: \n" + ex.Message + ex.StackTrace
+            );
+        }
+    }
+
     private int? GetCurrentUserId()
     {
         // JWT token stores user ID in "sub" claim (JwtRegisteredClaimNames.Sub)

@@ -7,7 +7,7 @@ import { BorrowEquipmentDataModel, BorrowEquipmentEntity, BorrowEquipmentPaging,
 export const useBorrowEquipmentApi = createApi({
     reducerPath: 'borrowEquipmentApi',
     baseQuery: baseQueryWithReauth,
-    tagTypes: ['BorrowEquipment'],
+    tagTypes: ['BorrowEquipment', 'OverdueBorrow'],
     endpoints: (builder) => ({
         getListBorrowEquipmentPaging: builder.mutation<
             BaseResponse<PagingDataModel<BorrowEquipmentPaging>>,
@@ -67,6 +67,27 @@ export const useBorrowEquipmentApi = createApi({
             }),
             invalidatesTags: ['BorrowEquipment'],
         }),
+        getTotalRequestBorrowEquipment: builder.query<BaseResponse<number>, void>({
+            query: () => ({
+                url: `/borrow-equipment/request/total`,
+                method: 'GET',
+            }),
+            providesTags: ['BorrowEquipment'],
+        }),
+        getTotalOverdueBorrowEquipments: builder.query<BaseResponse<number>, void>({
+            query: () => ({
+                url: `/borrow-equipment/overdue/total`,
+                method: 'GET',
+            }),
+            providesTags: ['OverdueBorrow'],
+        }),
+        getOverdueBorrowEquipments: builder.query<BaseResponse<BorrowEquipmentDataModel[]>, void>({
+            query: () => ({
+                url: `/borrow-equipment/overdue`,
+                method: 'GET',
+            }),
+            providesTags: ['OverdueBorrow'],
+        }),
     }),
 });
 
@@ -78,4 +99,7 @@ export const {
     useGetRequestBorrowEquipmentPagingMutation,
     useApproveRequestBorrowEquipmentMutation,
     useRejectRequestBorrowEquipmentMutation,
+    useGetTotalRequestBorrowEquipmentQuery,
+    useGetTotalOverdueBorrowEquipmentsQuery,
+    useGetOverdueBorrowEquipmentsQuery,
 } = useBorrowEquipmentApi;
