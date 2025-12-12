@@ -52,6 +52,7 @@ public class UserService : IUserService
                 Role = item.Role,
                 DepartmentId = item.DepartmentId,
                 DepartmentName = department?.Name ?? "-",
+                IsBlock = item.IsBlock,
             };
             resultData.Data.Add(userModel);
         }
@@ -261,6 +262,7 @@ public class UserService : IUserService
             Bio = user.Bio,
             PhoneNumber = user.PhoneNumber,
             Address = user.Address,
+            IsBlock = user.IsBlock,
         };
     }
 
@@ -333,6 +335,43 @@ public class UserService : IUserService
             return new Response<bool>(
                 StatusCodes.Status500InternalServerError,
                 $"Lỗi khi xóa người dùng: {ex.Message}"
+            );
+        }
+    }
+
+    public async Task<Response<bool>> BlockUserAsync(int id, int currentUserId)
+    {
+        try
+        {
+            var currentUser = await _userRepository.GetByIdAsync(currentUserId);
+            if(currentUser == null || currentUser.Role != Enumerations.Role.Admin)
+            {
+                return new Response<bool>(
+                    StatusCodes.Status403Forbidden,
+                    "Chỉ có Admin mới có quyền khóa/mở khóa tài khoản người dùng"
+                );
+            }
+            
+            var user = await _userRepository.GetByIdAsync(id);
+            if (user == null)
+            {
+                return new Response<bool>(
+                    StatusCodes.Status404NotFound,
+                    "Người dùng không tồn tại"
+                );
+            }
+
+            user.IsBlock = !user.IsBlock;
+            user.FailedLoginAttempts = 0;
+            await _userRepository.UpdateAsync(user);
+
+            return new Response<bool>(true);
+        }
+        catch (Exception ex)
+        {
+            return new Response<bool>(
+                StatusCodes.Status500InternalServerError,
+                $"Lỗi khi khóa/mở khóa tài khoản: {ex.Message}"
             );
         }
     }

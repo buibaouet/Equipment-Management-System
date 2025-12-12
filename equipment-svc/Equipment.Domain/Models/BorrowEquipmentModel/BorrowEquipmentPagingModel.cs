@@ -24,6 +24,8 @@ public class BorrowEquipmentRequestPagingModel : BaseEntity
     public string DepartmentName { get; set; } = string.Empty;
     public DateTime FromDate { get; set; }
     public DateTime ToDate { get; set; }
+    public int OwerId { get; set; }
+    public string OwerName { get; set; } = string.Empty;
     public int BorrowerId { get; set; }
     public string BorrowerName { get; set; } = string.Empty;
 }

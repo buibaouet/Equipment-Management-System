@@ -136,14 +136,7 @@ public class BorrowEquipmentService : IBorrowEquipmentService
             return new Response<PagingDataModel<BorrowEquipmentRequestPagingModel>>(resultData);
         }
 
-        var equipmentList = _equipmentRepository.GetListAsync(x =>
-            (
-                user.Role == Enumerations.Role.Admin ? x.Id > 0
-                : user.Role == Enumerations.Role.Manager
-                    ? (x.DepartmentId == user.DepartmentId || x.OwnerId == currentUserId)
-                : x.OwnerId == currentUserId
-            )
-        );
+        var equipmentList = await GetEquipmentListByUserRole(user, currentUserId);
 
         Expression<Func<Domain.Entities.BorrowEquipment, bool>> expression = e =>
             e.Id > 0
@@ -160,6 +153,9 @@ public class BorrowEquipmentService : IBorrowEquipmentService
             );
             var department = await _departmentRepository.GetByIdAsync(equipment?.DepartmentId ?? 0);
             var userRequest = await _userRepository.GetByIdAsync(item.RequestedByUserId);
+            var ownerUser = equipment?.OwnerId.HasValue == true
+                ? await _userRepository.GetByIdAsync(equipment.OwnerId.Value)
+                : null;
 
             var borrowModel = new BorrowEquipmentRequestPagingModel
             {
@@ -171,6 +167,10 @@ public class BorrowEquipmentService : IBorrowEquipmentService
                 DepartmentName = department?.Name ?? "-",
                 FromDate = item.FromDate,
                 ToDate = item.ToDate,
+                OwerId = equipment?.OwnerId ?? 0,
+                OwerName = ownerUser != null
+                    ? ownerUser.UserName + " - " + ownerUser.FullName
+                    : "-",
                 BorrowerId = item.RequestedByUserId,
                 BorrowerName = userRequest?.UserName + " - " + userRequest?.FullName,
                 CreatedDate = item.CreatedDate,
@@ -662,14 +662,7 @@ public class BorrowEquipmentService : IBorrowEquipmentService
             return new Response<int>(0);
         }
         
-        var equipmentList = _equipmentRepository.GetListAsync(x =>
-            (
-                user.Role == Enumerations.Role.Admin ? x.Id > 0
-                    : user.Role == Enumerations.Role.Manager
-                        ? (x.DepartmentId == user.DepartmentId || x.OwnerId == currentUserId)
-                        : x.OwnerId == currentUserId
-            )
-        );
+        var equipmentList = await GetEquipmentListByUserRole(user, currentUserId);
 
         var totalRequest = await _borrowEquipmentRepository.CountAsync(e =>
             e.Status == Enumerations.BorrowEquipmentStatus.Pendding
@@ -678,11 +671,20 @@ public class BorrowEquipmentService : IBorrowEquipmentService
         return new  Response<int>(totalRequest);
     }
     
-    public async Task<Response<int>> GetOverdueBorrowEquipmentsTotal()
+    public async Task<Response<int>> GetOverdueBorrowEquipmentsTotal(int currentUserId)
     {
+        var user = await _userRepository.GetByIdAsync(currentUserId);
+        if (user == null)
+        {
+            return new Response<int>(0);
+        }
+        
+        var equipmentList = await GetEquipmentListByUserRole(user, currentUserId);
+        
         var overdueBorrowRequests = await _borrowEquipmentRepository
             .GetListAsync(x =>
-                x.Status == Enumerations.BorrowEquipmentStatus.Borrowed
+                (equipmentList.Select(eq => eq.Id).Contains(x.EquipmentId) || x.RequestedByUserId == currentUserId)
+                && x.Status == Enumerations.BorrowEquipmentStatus.Borrowed
                 && x.ReturnedDate == null
                 && x.ToDate < DateTime.Now
             )
@@ -691,11 +693,20 @@ public class BorrowEquipmentService : IBorrowEquipmentService
         return new  Response<int>(overdueBorrowRequests.Count);
     }
 
-    public async Task<Response<List<BorrowEquipmentDataModel>>> GetOverdueBorrowEquipments()
+    public async Task<Response<List<BorrowEquipmentDataModel>>> GetOverdueBorrowEquipments(int currentUserId)
     {
+        var user = await _userRepository.GetByIdAsync(currentUserId);
+        if (user == null)
+        {
+            return new Response<List<BorrowEquipmentDataModel>>(0);
+        }
+        
+        var equipmentList = await GetEquipmentListByUserRole(user, currentUserId);
+
         var overdueBorrowRequests = await _borrowEquipmentRepository
             .GetListAsync(x =>
-                x.Status == Enumerations.BorrowEquipmentStatus.Borrowed
+                (equipmentList.Select(eq => eq.Id).Contains(x.EquipmentId) || x.RequestedByUserId == currentUserId)
+                && x.Status == Enumerations.BorrowEquipmentStatus.Borrowed
                 && x.ReturnedDate == null
                 && x.ToDate < DateTime.Now
             )
@@ -715,6 +726,9 @@ public class BorrowEquipmentService : IBorrowEquipmentService
             var approver = item.ApprovedByUserId.HasValue
                 ? await _userRepository.GetByIdAsync(item.ApprovedByUserId.Value)
                 : null;
+            var ownerUser = equipment?.OwnerId.HasValue == true
+                ? await _userRepository.GetByIdAsync(equipment.OwnerId.Value)
+                : null;
 
             result.Add(
                 new BorrowEquipmentDataModel
@@ -728,6 +742,10 @@ public class BorrowEquipmentService : IBorrowEquipmentService
                     FromDate = item.FromDate,
                     ToDate = item.ToDate,
                     Status = item.Status,
+                    OwerId = equipment?.OwnerId ?? 0,
+                    OwerName = ownerUser != null
+                        ? ownerUser.UserName + " - " + ownerUser.FullName
+                        : "-",
                     BorrowerId = item.RequestedByUserId,
                     BorrowerName = borrower?.UserName + " - " + borrower?.FullName,
                     ApprovedByUserId = item.ApprovedByUserId,
@@ -745,7 +763,7 @@ public class BorrowEquipmentService : IBorrowEquipmentService
         return new Response<List<BorrowEquipmentDataModel>>(result);
     }
 
-    private static List<EquipmentHistoryChangeModel> BuildBorrowRequestChanges(
+    private List<EquipmentHistoryChangeModel> BuildBorrowRequestChanges(
         Domain.Entities.BorrowEquipment borrowEquipment,
         string? borrowerDisplayName
     )
@@ -758,6 +776,33 @@ public class BorrowEquipmentService : IBorrowEquipmentService
             new() { Field = "Từ ngày", NewValue = borrowEquipment.FromDate.ToString("dd/MM/yyyy") },
             new() { Field = "Đến ngày", NewValue = borrowEquipment.ToDate.ToString("dd/MM/yyyy") },
         };
+    }
+
+    private async Task<IEnumerable<Domain.Entities.Equipment>> GetEquipmentListByUserRole(
+        Domain.Entities.User user,
+        int currentUserId
+    )
+    {
+        if (user.Role == Enumerations.Role.Admin || user.Role == Enumerations.Role.Supervisor)
+        {
+            // Admin/Supervisor: lấy tất cả thiết bị
+            return _equipmentRepository.GetListAsync(x => x.Id > 0);
+        }
+        else if (user.Role == Enumerations.Role.Manager)
+        {
+            // Manager: lấy thiết bị của phòng ban + thiết bị do user của phòng ban sở hữu
+            var usersInDepartment = _userRepository.GetListAsync(u => u.DepartmentId == user.DepartmentId);
+            var userIdsInDepartment = usersInDepartment.Select(u => u.Id).ToList();
+            
+            return _equipmentRepository.GetListAsync(x =>
+                x.DepartmentId == user.DepartmentId || userIdsInDepartment.Contains(x.OwnerId ?? 0)
+            );
+        }
+        else
+        {
+            // User thường: lấy chỉ thiết bị do user sở hữu
+            return _equipmentRepository.GetListAsync(x => x.OwnerId == currentUserId);
+        }
     }
 
     private static List<EquipmentHistoryChangeModel> BuildReturnChanges(

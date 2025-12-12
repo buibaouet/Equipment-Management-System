@@ -81,6 +81,13 @@ export const useUserApi = createApi({
             }),
             invalidatesTags: ['User', 'Manager'],
         }),
+        blockUser: builder.mutation<BaseResponse<boolean>, { id: number }>({
+            query: ({ id }) => ({
+                method: 'PUT',
+                url: `/user/block/${id}`,
+            }),
+            invalidatesTags: ['User', 'Manager', 'Auth'],
+        }),
     }),
 });
 
@@ -92,5 +99,6 @@ export const {
     useGetUserListQuery,
     useGetUserByIdQuery,
     useCreateUserMutation,
-    useDeleteUserMutation
+    useDeleteUserMutation,
+    useBlockUserMutation
 } = useUserApi;

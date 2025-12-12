@@ -293,7 +293,7 @@ public class BorrowEquipmentController : ControllerBase
                 );
             }
 
-            var res = await _borrowEquipmentService.GetOverdueBorrowEquipments();
+            var res = await _borrowEquipmentService.GetOverdueBorrowEquipments(currentUserId ?? 0);
             if (res.StatusCode != StatusCodes.Status200OK)
             {
                 return StatusCode(res.StatusCode, res.Message);
@@ -327,7 +327,7 @@ public class BorrowEquipmentController : ControllerBase
                 );
             }
 
-            var res = await _borrowEquipmentService.GetOverdueBorrowEquipmentsTotal();
+            var res = await _borrowEquipmentService.GetOverdueBorrowEquipmentsTotal(currentUserId ?? 0);
             if (res.StatusCode != StatusCodes.Status200OK)
             {
                 return StatusCode(res.StatusCode, res.Message);

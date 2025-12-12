@@ -10,6 +10,8 @@ import {
   Eye,
   PlusCircle,
   Trash2,
+  Lock,
+  Unlock,
 } from "lucide-react";
 import Badge from "../../components/ui/badge/Badge";
 import useUserManagement from "./useUserManagement";
@@ -24,7 +26,7 @@ import HeaderTable from "../../components/ui/table/HeaderTable";
 import TableBodyContent from "../../components/ui/table/TableBodyContent";
 import { useAuth } from "../../hooks/useAuth";
 import Button from "../../components/ui/button/Button";
-import { useDeleteUserMutation } from "../../api/useUserApi";
+import { useDeleteUserMutation, useBlockUserMutation } from "../../api/useUserApi";
 import ConfirmModal from "../../components/common/ConfirmModal";
 import { toast } from "sonner";
 
@@ -51,6 +53,10 @@ export default function UserManagement() {
   const [userToDelete, setUserToDelete] = useState<{ id: number; name: string } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteUser] = useDeleteUserMutation();
+  const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
+  const [blockTarget, setBlockTarget] = useState<{ id: number; name: string; isBlocked: boolean } | null>(null);
+  const [isBlocking, setIsBlocking] = useState(false);
+  const [blockUser] = useBlockUserMutation();
 
   const handleEditUser = (user: UserEntity) => {
     setSelectedUserId(user.id);
@@ -78,6 +84,45 @@ export default function UserManagement() {
   const handleCloseDeleteModal = () => {
     setIsDeleteModalOpen(false);
     setUserToDelete(null);
+  };
+
+  const handleOpenBlockModal = (user: UserEntity) => {
+    setBlockTarget({ id: user.id, name: `${user.firstName} ${user.lastName}`, isBlocked: false });
+    setIsBlockModalOpen(true);
+  };
+
+  const handleOpenUnblockModal = (user: UserEntity) => {
+    setBlockTarget({ id: user.id, name: `${user.firstName} ${user.lastName}`, isBlocked: true });
+    setIsBlockModalOpen(true);
+  };
+
+  const handleCloseBlockModal = () => {
+    setIsBlockModalOpen(false);
+    setBlockTarget(null);
+  };
+
+  const handleConfirmBlock = async () => {
+    if (!blockTarget) return;
+
+    try {
+      setIsBlocking(true);
+      const response = await blockUser({ id: blockTarget.id }).unwrap();
+      if (response.statusCode === 200) {
+        toast.success(blockTarget.isBlocked ? "Mở khóa người dùng thành công" : "Khóa người dùng thành công");
+        refreshUsers();
+        handleCloseBlockModal();
+      } else {
+        toast.error(response.message || "Có lỗi xảy ra khi cập nhật trạng thái khóa");
+      }
+    } catch (error: unknown) {
+      const message =
+        typeof error === "object" && error !== null && "data" in error
+          ? String((error as { data?: string }).data || "Có lỗi xảy ra khi cập nhật trạng thái khóa")
+          : undefined;
+      toast.error(message);
+    } finally {
+      setIsBlocking(false);
+    }
   };
 
   const handleConfirmDelete = async () => {
@@ -110,6 +155,7 @@ export default function UserManagement() {
     { key: "email", label: "Email", sortable: false },
     { key: "departmentName", label: "Phòng ban", sortable: false },
     { key: "role", label: "Vai trò", sortable: false },
+    { key: "isBlock", label: "Trạng thái", sortable: false },
   ];
 
   return (
@@ -190,6 +236,16 @@ export default function UserManagement() {
                       </Badge>
                     </TableCell>
                     <TableCell className="px-4 py-4 font-normal text-gray-800 border border-gray-100 dark:border-white/[0.05] text-theme-sm dark:text-white/90 whitespace-nowrap ">
+                    <Badge
+                        size="sm"
+                        color={
+                          item.isBlock ? "error" : "success"
+                        }
+                      >
+                        {item.isBlock ? "Đã khóa" : "Đang hoạt động"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="px-4 py-4 font-normal text-gray-800 border border-gray-100 dark:border-white/[0.05] text-theme-sm dark:text-white/90 whitespace-nowrap ">
                       <div className="flex items-center justify-center w-full gap-2">
                         {isSupervisor ? (
                           <span title="Xem">
@@ -209,12 +265,30 @@ export default function UserManagement() {
                               </span>
                             )}
                             {isAdmin() && item.role != RoleEnum.Admin && (
+                              <>
+                              {!item.isBlock ? (
+                                <span title="Khóa">
+                                  <Lock
+                                    className="w-4 h-4 cursor-pointer hover:text-red-600 transition-colors"
+                                    onClick={() => handleOpenBlockModal(item)}
+                                  />
+                                  
+                                </span>
+                              ) : (
+                                <span title="Mở khóa">
+                                  <Unlock
+                                    className="w-4 h-4 cursor-pointer hover:text-green-600 transition-colors"
+                                    onClick={() => handleOpenUnblockModal(item)}
+                                  />
+                                </span>
+                              )}
                               <span title="Xóa">
                                 <Trash2
                                   className="w-4 h-4 cursor-pointer hover:text-red-600 transition-colors"
                                   onClick={() => handleOpenDeleteModal(item)}
                                 />
                               </span>
+                              </>
                             )}
                           </>
                         )}
@@ -261,6 +335,22 @@ export default function UserManagement() {
         confirmText="Xóa"
         cancelText="Hủy"
         isLoading={isDeleting}
+      />
+
+      {/* Block/Unblock Confirmation Modal */}
+      <ConfirmModal
+        isOpen={isBlockModalOpen}
+        onClose={handleCloseBlockModal}
+        onConfirm={handleConfirmBlock}
+        title={blockTarget?.isBlocked ? "Mở khóa người dùng" : "Khóa người dùng"}
+        message={
+          blockTarget?.isBlocked
+            ? `Bạn có chắc chắn muốn mở khóa người dùng "${blockTarget?.name}" không?`
+            : `Bạn có chắc chắn muốn khóa người dùng "${blockTarget?.name}" không?`
+        }
+        confirmText={blockTarget?.isBlocked ? "Mở khóa" : "Khóa"}
+        cancelText="Hủy"
+        isLoading={isBlocking}
       />
     </div>
   );

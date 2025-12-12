@@ -84,7 +84,7 @@ export default function App() {
             <Route path="/user" element={<UserManagement />} />
           </Route>
 
-          <Route element={<PrivateRoute allowedRoles={[RoleEnum.Admin]}> <AppLayout /> </PrivateRoute>}>
+          <Route element={<PrivateRoute> <AppLayout /> </PrivateRoute>}>
             <Route path="/overdue-equipment" element={<OverdueEquipment />} />
           </Route>
 

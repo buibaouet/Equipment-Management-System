@@ -234,6 +234,42 @@ public class UserController : ControllerBase
         }
     }
     
+    /// <summary>
+    /// Cập nhật khóa/mở khóa tài khoản người dùng
+    /// </summary>
+    /// <ParamPaging name="id"></ParamPaging>
+    /// <ParamPaging name="param"></ParamPaging>
+    /// <returns></returns>
+    [HttpPut("block/{id}")]
+    public async Task<ActionResult> UpdateRole(int id)
+    {
+        try
+        {
+            var currentUserId = GetCurrentUserId();
+            if (currentUserId == null)
+            {
+                return StatusCode(
+                    StatusCodes.Status401Unauthorized,
+                    "Không thể xác định người dùng"
+                );
+            }
+            
+            var res = await _userService.BlockUserAsync(id, currentUserId ?? 0);
+            if (res.StatusCode != StatusCodes.Status200OK)
+            {
+                return StatusCode(res.StatusCode, res.Message);
+            }
+            return Ok(res);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                "Xảy ra lỗi trong quá trình xử lý: \n" + ex.Message + ex.StackTrace
+            );
+        }
+    }
+    
     private int? GetCurrentUserId()
     {
         // JWT token stores user ID in "sub" claim (JwtRegisteredClaimNames.Sub)

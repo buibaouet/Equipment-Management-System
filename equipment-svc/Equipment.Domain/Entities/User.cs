@@ -30,4 +30,7 @@ public class User : BaseEntity
     public string? Bio { get; set; } = string.Empty;
     public string? PhoneNumber { get; set; } = string.Empty;
     public string? Address { get; set; } = string.Empty;
+    
+    public bool IsBlock { get; set; } = false;
+    public int FailedLoginAttempts { get; set; } = 0;
 }

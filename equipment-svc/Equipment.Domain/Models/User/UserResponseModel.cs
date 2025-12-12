@@ -16,6 +16,7 @@ public class UserResponseModel
     public string? Bio { get; set; } = string.Empty;
     public string? PhoneNumber { get; set; } = string.Empty;
     public string? Address { get; set; } = string.Empty;
+    public bool IsBlock { get; set; }
 }
 
 public class ManaUserResponseModel
@@ -37,6 +38,7 @@ public class ManaUserResponseModel
     public Enumerations.Role Role { get; set; }
     public int? DepartmentId { get; set; }
     public string? DepartmentName { get; set; } = string.Empty;
+    public bool IsBlock { get; set; }
 }
 
 public class UserNameModel

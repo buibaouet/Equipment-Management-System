@@ -15,4 +15,5 @@ public interface IUserService
     Task<Response<List<UserNameModel>>> GetListManager();
     Task<Response<List<UserNameModel>>> GetListUserActive();
     Task<Response<bool>> DeleteUser(int id);
+    Task<Response<bool>> BlockUserAsync(int id, int currentUserId);
 }

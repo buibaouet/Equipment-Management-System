@@ -45,9 +45,7 @@ const AppSidebar: React.FC = () => {
   let menuItems: MenuItem[];
 
   const { currentUser } = useAuth();
-  const { data: overdueData } = useGetTotalOverdueBorrowEquipmentsQuery(undefined, {
-    skip: currentUser?.role !== RoleEnum.Admin,
-  });
+  const { data: overdueData } = useGetTotalOverdueBorrowEquipmentsQuery();
   const overdueCount = overdueData?.data ?? 0;
 
   const { data: requestData } = useGetTotalRequestBorrowEquipmentQuery();
@@ -91,6 +89,18 @@ const AppSidebar: React.FC = () => {
     menuItems = [
       ...commonItems,
       {
+        icon: <ListChecksIcon />,
+        name: "Duyệt yêu cầu mượn",
+        path: "/borrow-request",
+        badgeCount: requestCount,
+      },
+      {
+        icon: <RotateCwSquareIcon />,
+        name: "Thiết bị quá hạn trả",
+        path: "/overdue-equipment",
+        badgeCount: overdueCount,
+      },
+      {
         icon: <BookMarked />,
         name: "Danh mục thiết bị",
         path: "/category",
@@ -125,6 +135,13 @@ const AppSidebar: React.FC = () => {
           icon: <ListChecksIcon />,
           name: "Duyệt yêu cầu mượn",
           path: "/borrow-request",
+          badgeCount: requestCount,
+        },
+        {
+          icon: <RotateCwSquareIcon />,
+          name: "Thiết bị quá hạn trả",
+          path: "/overdue-equipment",
+          badgeCount: overdueCount,
         },
       ];
     }
@@ -145,6 +162,13 @@ const AppSidebar: React.FC = () => {
           icon: <ListChecksIcon />,
           name: "Duyệt yêu cầu mượn",
           path: "/borrow-request",
+          badgeCount: requestCount,
+        },
+        {
+          icon: <RotateCwSquareIcon />,
+          name: "Thiết bị quá hạn trả",
+          path: "/overdue-equipment",
+          badgeCount: overdueCount,
         },
       ];
     }

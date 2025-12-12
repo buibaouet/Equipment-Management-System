@@ -48,10 +48,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         try {
             const result = await loginMutation(credentials);
 
-            if (!result.data || !result.data.data || !result.data.data?.success || !result.data.data.data) {
+            if (!result.data || !result.data?.data || !result.data?.data?.success || !result.data?.data?.data) {
                 return {
                     success: false,
-                    message: 'Tài khoản hoặc mật khẩu không chính xác.'
+                    message: result?.data?.data?.message || 'Tài khoản hoặc mật khẩu không chính xác.'
                 };
             }
 

@@ -56,6 +56,7 @@ export interface UserEntity {
     address: string;
     departmentId: number;
     departmentName: string;
+    isBlock: boolean;
 }
 
 export interface UpdateUserResponseModel {

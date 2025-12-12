@@ -41,7 +41,7 @@ public class AuthService : IAuthService
 
         var user = await _userRepository.GetAsync(x => x.UserName == model.UserName);
 
-        if (user == null || !BcryptHasher.ValidatePassword(model.Password, user.Password))
+        if (user == null || user.IsDelete)
         {
             return new Response<LoginResponseModel>(
                 new LoginResponseModel()
@@ -51,6 +51,52 @@ public class AuthService : IAuthService
                 }
             );
         }
+
+        // Kiểm tra tài khoản có bị khóa không
+        if (user.IsBlock)
+        {
+            return new Response<LoginResponseModel>(
+                new LoginResponseModel()
+                {
+                    Message = "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.",
+                    Success = false,
+                }
+            );
+        }
+
+        // Kiểm tra mật khẩu
+        if (!BcryptHasher.ValidatePassword(model.Password, user.Password))
+        {
+            // Tăng số lần đăng nhập thất bại
+            user.FailedLoginAttempts++;
+
+            // Nếu đăng nhập thất bại 3 lần liên tiếp, khóa tài khoản
+            if (user.FailedLoginAttempts >= 3)
+            {
+                user.IsBlock = true;
+                await _userRepository.UpdateAsync(user);
+                return new Response<LoginResponseModel>(
+                    new LoginResponseModel()
+                    {
+                        Message = "Bạn đã nhập sai mật khẩu 3 lần. Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.",
+                        Success = false,
+                    }
+                );
+            }
+
+            await _userRepository.UpdateAsync(user);
+            return new Response<LoginResponseModel>(
+                new LoginResponseModel()
+                {
+                    Message = "Tên đăng nhập hoặc mật khẩu không đúng.",
+                    Success = false,
+                }
+            );
+        }
+
+        // Đăng nhập thành công - reset failed login attempts
+        user.FailedLoginAttempts = 0;
+        await _userRepository.UpdateAsync(user);
 
         // Generate JWT token
         var accessToken = _jwtService.GenerateToken(user);

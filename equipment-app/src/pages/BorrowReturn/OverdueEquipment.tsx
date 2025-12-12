@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { Table, TableCell, TableRow } from "../../components/ui/table";
-import { Info } from "lucide-react";
+import { Info, RotateCcwIcon } from "lucide-react";
 import Badge from "../../components/ui/badge/Badge";
 import PageMeta from "../../components/common/PageMeta";
 import HeaderTable from "../../components/ui/table/HeaderTable";
@@ -8,13 +8,20 @@ import TableBodyContent from "../../components/ui/table/TableBodyContent";
 import { useGetOverdueBorrowEquipmentsQuery } from "../../api/useBorrowEquipmentApi";
 import { BorrowEquipmentDataModel } from "../../types/BorrowEquipment";
 import BorrowReturnInfoModal from "./BorrowReturnInfoModal";
+import ReturnEquipmentModal from "./ReturnEquipmentModal";
+import { useAuth } from "../../hooks/useAuth";
+import { BorrowEquipmentStatusEnum } from "../../utils/enumerations";
 
 export default function OverdueEquipment() {
-  const { data, isLoading } = useGetOverdueBorrowEquipmentsQuery();
+  const { data, isLoading, refetch } = useGetOverdueBorrowEquipmentsQuery();
   const overdueRecords = (data?.data || []) as BorrowEquipmentDataModel[];
 
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [selectedInfoId, setSelectedInfoId] = useState<number | null>(null);
+  const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
+  const [selectedReturnItem, setSelectedReturnItem] = useState<BorrowEquipmentDataModel | null>(null);
+
+  const { currentUser } = useAuth();
 
   const openInfoModal = useCallback((id: number) => {
     setSelectedInfoId(id);
@@ -24,6 +31,16 @@ export default function OverdueEquipment() {
   const closeInfoModal = useCallback(() => {
     setIsInfoModalOpen(false);
     setSelectedInfoId(null);
+  }, []);
+
+  const openReturnModal = useCallback((item: BorrowEquipmentDataModel) => {
+    setSelectedReturnItem(item);
+    setIsReturnModalOpen(true);
+  }, []);
+
+  const closeReturnModal = useCallback(() => {
+    setSelectedReturnItem(null);
+    setIsReturnModalOpen(false);
   }, []);
 
   const overdueInfo = (item: BorrowEquipmentDataModel) => {
@@ -44,6 +61,7 @@ export default function OverdueEquipment() {
     { key: "name", label: "Tên thiết bị", sortable: true },
     { key: "categoryName", label: "Loại thiết bị", sortable: false },
     { key: "departmentName", label: "Phòng ban", sortable: false },
+    { key: "owerName", label: "Chủ thiết bị", sortable: false },
     { key: "borrowerName", label: "Người mượn", sortable: false },
     { key: "fromDate", label: "Ngày mượn", sortable: true },
     { key: "toDate", label: "Ngày trả dự kiến", sortable: true },
@@ -91,6 +109,9 @@ export default function OverdueEquipment() {
                       {item.departmentName}
                     </TableCell>
                     <TableCell className="px-4 py-3.5 font-normal text-gray-800 border border-gray-100  dark:border-white/[0.05] text-theme-sm dark:text-gray-400 whitespace-nowrap ">
+                      {item.owerName}
+                    </TableCell>
+                    <TableCell className="px-4 py-3.5 font-normal text-gray-800 border border-gray-100  dark:border-white/[0.05] text-theme-sm dark:text-gray-400 whitespace-nowrap ">
                       {item.borrowerName}
                     </TableCell>
                     <TableCell className="px-4 py-3.5 font-normal text-gray-800 border border-gray-100  dark:border-white/[0.05] text-theme-sm dark:text-gray-400 whitespace-nowrap ">
@@ -112,9 +133,19 @@ export default function OverdueEquipment() {
                           onClick={() => openInfoModal(item.id)}
                           aria-label="Xem chi tiết"
                           title="Xem chi tiết"
-                        >
+                          >
                           <Info className="w-4 h-4" />
                         </button>
+                        {currentUser?.id === item.borrowerId && item.status === BorrowEquipmentStatusEnum.Borrowed && (
+                          <span
+                            className="flex items-center gap-2 cursor-pointer"
+                            onClick={() => openReturnModal(item)}
+                            title="Trả thiết bị"
+                          >
+                            <RotateCcwIcon className="w-4 h-4 cursor-pointer hover:text-gray" />
+                            <span className="text-sm">Trả</span>
+                          </span>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -129,6 +160,13 @@ export default function OverdueEquipment() {
         isOpen={isInfoModalOpen}
         onClose={closeInfoModal}
         recordId={selectedInfoId ?? undefined}
+      />
+
+      <ReturnEquipmentModal
+        isOpen={isReturnModalOpen}
+        onClose={closeReturnModal}
+        equipment={selectedReturnItem ?? undefined}
+        actionCallback={refetch}
       />
     </div>
   );

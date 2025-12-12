@@ -16,6 +16,8 @@ import TableBodyContent from "../../components/ui/table/TableBodyContent";
 import HeaderTable from "../../components/ui/table/HeaderTable";
 import { RequestBorrowEquipmentPaging } from "../../types/BorrowEquipment";
 import EquipmentModal from "../Equipment/EquipmentModal";
+import { RoleEnum } from "../../utils/enumerations";
+import { useAuth } from "../../hooks/useAuth";
 
 export default function ApprovedRequest() {
   const {
@@ -47,6 +49,7 @@ export default function ApprovedRequest() {
     { key: "equipmentName", label: "Tên thiết bị", sortable: true },
     { key: "categoryName", label: "Loại thiết bị", sortable: false },
     { key: "departmentName", label: "Phòng ban", sortable: false },
+    { key: "owerName", label: "Chủ thiết bị", sortable: false },
     { key: "borrowerName", label: "Người mượn", sortable: true },
     { key: "fromDate", label: "Thời gian mượn", sortable: false },
   ];
@@ -63,6 +66,9 @@ export default function ApprovedRequest() {
   const formatDateRange = (fromDate: Date | string, toDate: Date | string) => {
     return `${formatDate(fromDate)} - ${formatDate(toDate)}`;
   };
+
+  const { currentUser } = useAuth();
+  const isSupervisor = currentUser?.role === RoleEnum.Supervisor;
 
   return (
     <div>
@@ -101,6 +107,9 @@ export default function ApprovedRequest() {
                       {item.departmentName}
                     </TableCell>
                     <TableCell className="px-4 py-4 font-normal text-gray-800 border border-gray-100 dark:border-white/[0.05] text-theme-sm dark:text-gray-400 whitespace-nowrap ">
+                      {item.owerName}
+                    </TableCell>
+                    <TableCell className="px-4 py-4 font-normal text-gray-800 border border-gray-100 dark:border-white/[0.05] text-theme-sm dark:text-gray-400 whitespace-nowrap ">
                       {item.borrowerName}
                     </TableCell>
                     <TableCell className="px-4 py-4 font-normal text-gray-800 border border-gray-100 dark:border-white/[0.05] text-theme-sm dark:text-gray-400 whitespace-nowrap ">
@@ -108,18 +117,22 @@ export default function ApprovedRequest() {
                     </TableCell>
                     <TableCell className="px-4 py-4 font-normal text-gray-800 border border-gray-100 dark:border-white/[0.05] text-theme-sm dark:text-white/90 whitespace-nowrap ">
                       <div className="flex items-center justify-center w-full gap-2">
-                        <span title="Duyệt">
-                          <CheckIcon 
-                            className="w-4 h-4 cursor-pointer hover:text-success-500 text-success-600 dark:text-success-400" 
-                            onClick={() => handleApprove(item.id)}
-                          />
-                        </span>
-                        <span title="Từ chối">
-                          <XIcon 
-                            className="w-4 h-4 cursor-pointer hover:text-error-500 text-error-600 dark:text-error-400" 
-                            onClick={() => handleReject(item.id)}
-                          />
-                        </span>
+                      {!isSupervisor && (
+                        <>
+                          <span title="Duyệt">
+                            <CheckIcon 
+                              className="w-4 h-4 cursor-pointer hover:text-success-500 text-success-600 dark:text-success-400" 
+                              onClick={() => handleApprove(item.id)}
+                            />
+                          </span>
+                          <span title="Từ chối">
+                            <XIcon 
+                              className="w-4 h-4 cursor-pointer hover:text-error-500 text-error-600 dark:text-error-400" 
+                              onClick={() => handleReject(item.id)}
+                            />
+                          </span>
+                        </>
+                        )}
                         <span title="Xem chi tiết">
                           <EyeIcon 
                             className="w-4 h-4 cursor-pointer hover:text-gray" 

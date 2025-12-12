@@ -28,6 +28,8 @@ export interface RequestBorrowEquipmentPaging {
     departmentName: string;
     fromDate: Date;
     toDate: Date;
+    owerId: number;
+    owerName: string;
     borrowerId: number;
     borrowerName: string;
 }
@@ -55,6 +57,8 @@ export interface BorrowEquipmentDataModel {
     departmentName: string;
     fromDate: Date;
     toDate: Date;
+    owerId: number;
+    owerName: string;
     borrowerId: number;
     borrowerName: string;
     approvedByUserId: number;
