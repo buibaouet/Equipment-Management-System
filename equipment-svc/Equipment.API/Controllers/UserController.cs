@@ -27,7 +27,16 @@ public class UserController : ControllerBase
     {
         try
         {
-            var res = await _userService.GetPaging(param);
+            var currentUserId = GetCurrentUserId();
+            if (currentUserId == null)
+            {
+                return StatusCode(
+                    StatusCodes.Status401Unauthorized,
+                    "Không thể xác định người dùng"
+                );
+            }
+
+            var res = await _userService.GetPaging(param, currentUserId.Value);
             if (res.StatusCode != StatusCodes.Status200OK)
             {
                 return StatusCode(res.StatusCode, res.Message);

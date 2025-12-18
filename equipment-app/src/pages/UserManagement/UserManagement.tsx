@@ -44,6 +44,7 @@ export default function UserManagement() {
   } = useUserManagement();
   const { currentUser, isAdmin } = useAuth();
   const isSupervisor = currentUser?.role === RoleEnum.Supervisor;
+  const isManager = currentUser?.role === RoleEnum.Manager;
 
   const { isOpen, openModal, closeModal } = useModal();
   const { isOpen: isCreateModalOpen, openModal: openCreateModal, closeModal: closeCreateModal } = useModal();
@@ -247,7 +248,7 @@ export default function UserManagement() {
                     </TableCell>
                     <TableCell className="px-4 py-4 font-normal text-gray-800 border border-gray-100 dark:border-white/[0.05] text-theme-sm dark:text-white/90 whitespace-nowrap ">
                       <div className="flex items-center justify-center w-full gap-2">
-                        {isSupervisor ? (
+                        {isSupervisor || isManager ? (
                           <span title="Xem">
                             <Eye
                               className="w-4 h-4 cursor-pointer hover:text-brand-600 transition-colors"

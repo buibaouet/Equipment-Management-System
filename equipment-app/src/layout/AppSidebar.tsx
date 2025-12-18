@@ -143,6 +143,11 @@ const AppSidebar: React.FC = () => {
           path: "/overdue-equipment",
           badgeCount: overdueCount,
         },
+        {
+          icon: <User2 />,
+          name: "Danh sách người dùng",
+          path: "/user",
+        },
       ];
     }
     else {

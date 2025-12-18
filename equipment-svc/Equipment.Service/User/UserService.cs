@@ -32,12 +32,38 @@ public class UserService : IUserService
     }
 
     public async Task<Response<PagingDataModel<ManaUserResponseModel>>> GetPaging(
-        PaginationParam param
+        PaginationParam param,
+        int currentUserId
     )
     {
         var resultData = new PagingDataModel<ManaUserResponseModel>();
+        
+        // Mặc định không filter
+        System.Linq.Expressions.Expression<Func<Domain.Entities.User, bool>>? filter = null;
 
-        var pagingData = await _userRepository.GetPagingAsync<Domain.Entities.User>(param);
+        // Nếu là Manager, chỉ xem được user trong phòng ban mình quản lý hoặc cùng phòng ban với mình
+        var currentUser = await _userRepository.GetByIdAsync(currentUserId);
+        if (currentUser != null && currentUser.Role == Enumerations.Role.Manager)
+        {
+            var departments = _departmentRepository.GetListAsync(d =>
+                d.ManagerId == currentUserId
+            );
+            var departmentIds = departments.Select(d => d.Id).ToList();
+
+            if (departmentIds.Any())
+            {
+                filter = u =>
+                    u.DepartmentId.HasValue && (departmentIds.Contains(u.DepartmentId.Value) || u.DepartmentId == currentUser.DepartmentId);
+            }
+            else
+            {
+                // Manager không quản lý phòng ban nào -> trả về rỗng
+                return new Response<PagingDataModel<ManaUserResponseModel>>(resultData);
+            }
+        }
+
+        var pagingData =
+            await _userRepository.GetPagingAsync<Domain.Entities.User>(param, filter);
 
         foreach (var item in pagingData.Data)
         {
