@@ -15,6 +15,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<RefreshToken> RefreshTokens { get; set; }
     public DbSet<BorrowEquipment> BorrowEquipments { get; set; }
     public DbSet<EquipmentHistory> EquipmentHistories { get; set; }
+    public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -87,6 +88,22 @@ public class ApplicationDbContext : DbContext
             builder.Property(x => x.Token)
                 .IsRequired()
                 .HasMaxLength(100);
+        });
+
+        // Configuration for PasswordResetToken entity
+        modelBuilder.Entity<PasswordResetToken>(builder =>
+        {
+            builder.ToTable("PasswordResetTokens");
+
+            builder.HasKey(x => x.Id);
+
+            builder.Property(x => x.OtpCode)
+                .IsRequired()
+                .HasMaxLength(10);
+
+            builder.Property(x => x.Email)
+                .IsRequired()
+                .HasMaxLength(256);
         });
 
         // Configuration for BorrowEquipment entity

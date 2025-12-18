@@ -24,6 +24,7 @@ export default function Login() {
   });
   const [errors, setErrors] = useState<Partial<LoginCredentials>>({});
   const [loginError, setLoginError] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validateForm = (): boolean => {
     const newErrors: Partial<LoginCredentials> = {};
@@ -71,7 +72,7 @@ export default function Login() {
     }
 
     setLoginError('');
-
+    setIsSubmitting(true);
     try {
       const response = await login(formData);
 
@@ -84,6 +85,8 @@ export default function Login() {
     } catch (error) {
       console.error('Login failed:', error);
       setLoginError('Login failed. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -162,14 +165,26 @@ export default function Login() {
                         </span>
                       </div>
                     </div>
+                    <div className="flex justify-end text-sm">
+                      <Link
+                        to="/forgot-password"
+                        className="text-brand-500 hover:text-brand-600 dark:text-brand-400"
+                      >
+                        Quên mật khẩu?
+                      </Link>
+                    </div>
                     <div>
                       <button
                         type="submit"
                         className={`w-full inline-flex items-center justify-center gap-2 rounded-lg transition bg-brand-500 text-white shadow-theme-xs hover:bg-brand-600 disabled:bg-brand-300 px-4 py-3 text-sm`}
-                        disabled={authLoading}
+                        disabled={authLoading || isSubmitting}
                       >
-                        {authLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-                        {authLoading ? "Đang đăng nhập..." : "Đăng nhập"}
+                        {(authLoading || isSubmitting) && (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        )}
+                        {(authLoading || isSubmitting)
+                          ? "Đang đăng nhập..."
+                          : "Đăng nhập"}
                       </button>
                     </div>
                   </div>

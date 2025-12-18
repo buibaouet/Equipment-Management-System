@@ -6,6 +6,9 @@ using Equipment.Domain.Models.Auth;
 using Equipment.Domain.Models.ReponseModel;
 using Equipment.Domain.Models.User;
 using Microsoft.AspNetCore.Http;
+using Equipment.Domain.Entities;
+using Equipment.Domain.IRepositories;
+using Equipment.Service.Email;
 
 namespace Equipment.Service.Auth;
 
@@ -14,16 +17,22 @@ public class AuthService : IAuthService
     private readonly IUserRepository _userRepository;
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly IJwtService _jwtService;
+    private readonly IPasswordResetTokenRepository _passwordResetTokenRepository;
+    private readonly IEmailSender _emailSender;
 
     public AuthService(
         IUserRepository userRepository,
         IRefreshTokenRepository refreshTokenRepository,
-        IJwtService jwtService
+        IJwtService jwtService,
+        IPasswordResetTokenRepository passwordResetTokenRepository,
+        IEmailSender emailSender
     )
     {
         _userRepository = userRepository;
         _refreshTokenRepository = refreshTokenRepository;
         _jwtService = jwtService;
+        _passwordResetTokenRepository = passwordResetTokenRepository;
+        _emailSender = emailSender;
     }
 
     public async Task<Response<LoginResponseModel>> HandleLogin(LoginModel model)
@@ -305,6 +314,114 @@ public class AuthService : IAuthService
         return new Response<ChangePasswordResponseModel>(
             new ChangePasswordResponseModel() { IsSuccess = true }
         );
+    }
+
+    public async Task<Response<string>> ForgotPasswordAsync(ForgotPasswordRequestModel model)
+    {
+        if (!ValidateEmail(model.Email))
+        {
+            return new Response<string>(
+                StatusCodes.Status400BadRequest,
+                "Địa chỉ email không hợp lệ."
+            );
+        }
+
+        var user = await _userRepository.GetAsync(u =>
+            u.Email == model.Email && !u.IsDelete
+        );
+
+        if (user == null)
+        {
+            return new Response<string>(
+                StatusCodes.Status404NotFound,
+                "Email không tồn tại trong hệ thống."
+            );
+        }
+        // FailedLoginAttempts < 3 là do admin chủ động khóa không phải do đăng nhập sai nhiều lần
+        if (user.IsBlock && user.FailedLoginAttempts < 3)
+        {
+            return new Response<string>(
+                StatusCodes.Status404NotFound,
+                "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên ."
+            );
+        }
+
+        // Invalidate old tokens
+        await _passwordResetTokenRepository.InvalidateUserTokensAsync(user.Id);
+
+        // Generate new OTP (6 digits)
+        var random = new Random();
+        var otp = random.Next(100000, 999999).ToString();
+
+        var resetToken = new PasswordResetToken
+        {
+            UserId = user.Id,
+            Email = user.Email,
+            OtpCode = otp,
+            ExpiryDate = DateTime.UtcNow.AddMinutes(10),
+            IsUsed = false,
+        };
+
+        await _passwordResetTokenRepository.CreateAsync(resetToken);
+
+        await _emailSender.SendAsync(user.Email, otp);
+
+        return new Response<string>("Đã gửi mã OTP đến email của bạn.");
+    }
+
+    public async Task<Response<ResetPasswordResponseModel>> ResetPasswordWithOtpAsync(
+        ResetPasswordWithOtpModel model
+    )
+    {
+        var response = new ResetPasswordResponseModel();
+
+        if (string.IsNullOrWhiteSpace(model.Email) || string.IsNullOrWhiteSpace(model.OtpCode))
+        {
+            response.OtpCodeError = "Thông tin không hợp lệ.";
+            response.IsSuccess = false;
+            return new Response<ResetPasswordResponseModel>(response);
+        }
+
+        if (!ValidatePassword(model.NewPassword))
+        {
+            response.NewPasswordError =
+                "Mật khẩu tối thiểu 8 ký tự bao gồm chữ, số và ký tự đặc biệt";
+            response.IsSuccess = false;
+            return new Response<ResetPasswordResponseModel>(response);
+        }
+
+        var user = await _userRepository.GetAsync(u =>
+            u.Email == model.Email && !u.IsDelete && !u.IsBlock
+        );
+
+        if (user == null)
+        {
+            response.OtpCodeError = "Email không tồn tại trong hệ thống.";
+            response.IsSuccess = false;
+            return new Response<ResetPasswordResponseModel>(response);
+        }
+
+        var token = await _passwordResetTokenRepository.GetAsync(t =>
+            t.UserId == user.Id && t.Email == model.Email && !t.IsUsed
+        );
+
+        if (token == null || token.ExpiryDate < DateTime.UtcNow || token.OtpCode != model.OtpCode)
+        {
+            response.OtpCodeError = "Mã OTP không hợp lệ hoặc đã hết hạn.";
+            response.IsSuccess = false;
+            return new Response<ResetPasswordResponseModel>(response);
+        }
+
+        // Mark token as used
+        token.IsUsed = true;
+        await _passwordResetTokenRepository.UpdateAsync(token);
+
+        // Update password
+        user.Password = BcryptHasher.HashPassword(model.NewPassword);
+        await _userRepository.UpdateAsync(user);
+
+        response.IsSuccess = true;
+        return new Response<ResetPasswordResponseModel>(response);
     }
 
     /// <summary>

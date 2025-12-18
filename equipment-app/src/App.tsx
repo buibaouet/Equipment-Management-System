@@ -8,6 +8,7 @@ import Login from "./pages/AuthPages/Login";
 import Register from "./pages/AuthPages/Register";
 import ChangePassword from "./pages/AuthPages/ChangePassword";
 import Logout from "./pages/AuthPages/Logout";
+import ForgotPassword from "./pages/AuthPages/ForgotPassword";
 import BorrowReturnList from "./pages/BorrowReturn/BorrowReturnList";
 import OverdueEquipment from "./pages/BorrowReturn/OverdueEquipment";
 import MyEquipment from "./pages/MyEquipment/MyEquipment";
@@ -39,6 +40,17 @@ export default function App() {
                 <Navigate to="/" replace />
               ) : (
                 <Login />
+              )
+            }
+          />
+
+          <Route
+            path="/forgot-password"
+            element={
+              isAuthenticated ? (
+                <Navigate to="/" replace />
+              ) : (
+                <ForgotPassword />
               )
             }
           />

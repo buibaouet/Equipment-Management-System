@@ -1,5 +1,5 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
-import type { ChangePasswordResponseModel, LoginCredentials, LoginResponse, RegisterResponseModel } from '../types/Auth';
+import type { ChangePasswordResponseModel, ForgotPasswordRequest, LoginCredentials, LoginResponse, RegisterResponseModel, ResetPasswordResponseModel, ResetPasswordWithOtpRequest } from '../types/Auth';
 import type { CreateUserInput, UserEntity } from '../types/User';
 import { BaseResponse } from '../types/Response';
 import { baseQueryWithReauth } from '../utils/baseQuery';
@@ -49,6 +49,26 @@ export const useAuthApi = createApi({
                 },
             }),
         }),
+        forgotPassword: builder.mutation<
+            BaseResponse<string>,
+            ForgotPasswordRequest
+        >({
+            query: (data) => ({
+                url: '/auth/forgot-password',
+                method: 'POST',
+                body: data,
+            }),
+        }),
+        resetPasswordWithOtp: builder.mutation<
+            BaseResponse<ResetPasswordResponseModel>,
+            ResetPasswordWithOtpRequest
+        >({
+            query: (data) => ({
+                url: '/auth/reset-password',
+                method: 'POST',
+                body: data,
+            }),
+        }),
         getUserInfo: builder.query<BaseResponse<UserEntity>, { userId: number }>({
             query: ({ userId }) => ({
                 url: `/auth/${userId}`,
@@ -65,4 +85,6 @@ export const {
     useRegisterMutation,
     useChangePasswordMutation,
     useGetUserInfoQuery,
+    useForgotPasswordMutation,
+    useResetPasswordWithOtpMutation,
 } = useAuthApi;

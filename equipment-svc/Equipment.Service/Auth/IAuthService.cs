@@ -10,4 +10,6 @@ public interface IAuthService
     Task<Response<string>> RefreshToken(RefreshTokenModel model);
     Task<Response<RegisterResponseModel>> CreateUserAsync(CreateUserModel model);
     Task<Response<ChangePasswordResponseModel>> ChangePasswordAsync(ChangePasswordInputModel model);
+    Task<Response<string>> ForgotPasswordAsync(ForgotPasswordRequestModel model);
+    Task<Response<ResetPasswordResponseModel>> ResetPasswordWithOtpAsync(ResetPasswordWithOtpModel model);
 }

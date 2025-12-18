@@ -127,6 +127,60 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
+    /// Gửi mã OTP quên mật khẩu tới email
+    /// </summary>
+    /// <ParamPaging name="model"></ParamPaging>
+    /// <returns></returns>
+    [HttpPost("forgot-password")]
+    [AllowAnonymous]
+    public async Task<ActionResult> ForgotPassword([FromBody] ForgotPasswordRequestModel model)
+    {
+        try
+        {
+            var res = await _authService.ForgotPasswordAsync(model);
+            if (res.StatusCode != StatusCodes.Status200OK)
+            {
+                return StatusCode(res.StatusCode, res.Message);
+            }
+            return Ok(res);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                "Xảy ra lỗi trong quá trình xử lý: \n" + ex.Message + ex.StackTrace
+            );
+        }
+    }
+
+    /// <summary>
+    /// Đặt lại mật khẩu bằng OTP
+    /// </summary>
+    /// <ParamPaging name="model"></ParamPaging>
+    /// <returns></returns>
+    [HttpPost("reset-password")]
+    [AllowAnonymous]
+    public async Task<ActionResult> ResetPassword([FromBody] ResetPasswordWithOtpModel model)
+    {
+        try
+        {
+            var res = await _authService.ResetPasswordWithOtpAsync(model);
+            if (res.StatusCode != StatusCodes.Status200OK)
+            {
+                return StatusCode(res.StatusCode, res.Message);
+            }
+            return Ok(res);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                "Xảy ra lỗi trong quá trình xử lý: \n" + ex.Message + ex.StackTrace
+            );
+        }
+    }
+
+    /// <summary>
     /// Lấy thông tin người dùng theo Id
     /// </summary>
     /// <ParamPaging name="userId"></ParamPaging>

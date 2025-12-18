@@ -8,6 +8,7 @@ using Equipment.Service.Equipment;
 using Equipment.Service.EquipmentCategory;
 using Equipment.Service.EquipmentHistory;
 using Equipment.Service.User;
+using Equipment.Service.Email;
 
 namespace Equipment.API.Extensions;
 
@@ -35,5 +36,7 @@ public static class DependencyInjectionExtension
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         services.AddScoped<IBorrowEquipmentRepository, BorrowEquipmentRepository>();
         services.AddScoped<IEquipmentHistoryRepository, EquipmentHistoryRepository>();
+        services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
+        services.AddScoped<IEmailSender, EmailSender>();
     }
 }

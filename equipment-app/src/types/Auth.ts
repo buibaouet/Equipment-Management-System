@@ -34,9 +34,25 @@ export interface ChangePasswordResponseModel {
     newPasswordError: string;
 }
 
+export interface ResetPasswordResponseModel {
+    isSuccess: boolean;
+    otpCodeError: string;
+    newPasswordError: string;
+}
+
 export interface RegisterResponseModel {
     isSuccess: boolean;
     passwordError: string;
     emailError: string;
     usernameError: string;
+}
+
+export interface ForgotPasswordRequest {
+    email: string;
+}
+
+export interface ResetPasswordWithOtpRequest {
+    email: string;
+    otpCode: string;
+    newPassword: string;
 }
