@@ -342,7 +342,7 @@ public class AuthService : IAuthService
         {
             return new Response<string>(
                 StatusCodes.Status404NotFound,
-                "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên ."
+                "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên."
             );
         }
 
@@ -391,12 +391,21 @@ public class AuthService : IAuthService
         }
 
         var user = await _userRepository.GetAsync(u =>
-            u.Email == model.Email && !u.IsDelete && !u.IsBlock
+            u.Email == model.Email && !u.IsDelete
         );
 
         if (user == null)
         {
             response.OtpCodeError = "Email không tồn tại trong hệ thống.";
+            response.IsSuccess = false;
+            return new Response<ResetPasswordResponseModel>(response);
+        }
+        
+        
+        // FailedLoginAttempts < 3 là do admin chủ động khóa không phải do đăng nhập sai nhiều lần
+        if (user.IsBlock && user.FailedLoginAttempts < 3)
+        {
+            response.OtpCodeError = "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.";
             response.IsSuccess = false;
             return new Response<ResetPasswordResponseModel>(response);
         }

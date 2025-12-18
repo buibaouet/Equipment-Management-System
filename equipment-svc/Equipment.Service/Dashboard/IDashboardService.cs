@@ -10,5 +10,9 @@ public interface IDashboardService
     Task<Response<DashboardModel>> GetDashboardDataAsync();
     Task<Response<List<BorrowReturnChartModel>>> GetDashboardBorrowAsync(Enumerations.ChartPeriodType periodType);
     Task<Response<PagingDataModel<UserRankingTopModel>>> GetTableRankingTop(PaginationParam param);
+    Task<Response<PagingDataModel<LoanRequestReportModel>>> GetLoanRequestReportAsync(
+        PaginationParam param,
+        Enumerations.ChartPeriodType periodType
+    );
 }
 

@@ -1,7 +1,7 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { baseQueryWithReauth } from '../utils/baseQuery';
 import { BaseResponse, PagingDataModel } from '../types/Response';
-import { BorrowReturnChartModel, DashboardModel, UserRankingTopModel } from '../types/Dashboard';
+import { BorrowReturnChartModel, DashboardModel, LoanRequestReportModel, UserRankingTopModel } from '../types/Dashboard';
 import { ChartPeriodType } from '../utils/enumerations';
 import { PaginationParam } from '../types/PagingParam';
 
@@ -32,6 +32,17 @@ export const useDashboardApi = createApi({
             }),
             invalidatesTags: ['Dashboard'],
         }),
+        getLoanRequestReport: builder.mutation<
+            BaseResponse<PagingDataModel<LoanRequestReportModel>>,
+            { periodType: ChartPeriodType; param: PaginationParam }
+        >({
+            query: ({ periodType, param }) => ({
+                url: `/dashboard/loan-report?periodType=${periodType}`,
+                method: 'POST',
+                body: param,
+            }),
+            invalidatesTags: ['Dashboard'],
+        }),
     }),
 });
 
@@ -39,4 +50,5 @@ export const {
     useGetDashboardDataQuery,
     useGetDashboardBorrowQuery,
     useGetTableRankingTopMutation,
+    useGetLoanRequestReportMutation,
 } = useDashboardApi;

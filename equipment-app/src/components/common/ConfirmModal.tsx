@@ -64,7 +64,7 @@ export default function ConfirmModal({
             disabled={isLoading}
             className="bg-red-600 hover:bg-red-700 text-white"
           >
-            {isLoading ? "Đang xóa..." : confirmText}
+            {isLoading ? `Đang ${confirmText?.toLowerCase()}...` : confirmText}
           </Button>
         </div>
       </div>

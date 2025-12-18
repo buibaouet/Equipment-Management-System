@@ -3,6 +3,7 @@ import BorrowStatisticsChart from "./BorrowStatisticsChart";
 import EquipmentByStatusChart from "./EquipmentByStatusChart";
 import OverviewInfomation from "./OverviewInfomation";
 import EquipmentByCategoryChart from "./EquipmentByCategoryChart";
+import LoanRequestReportTable from "./LoanRequestReportTable";
 
 export default function Dashboard() {
   return (
@@ -25,6 +26,10 @@ export default function Dashboard() {
 
       <div className="col-span-12">
         <UserEquipmentTable />
+      </div>
+
+      <div className="col-span-12">
+        <LoanRequestReportTable />
       </div>
     </div>
   );

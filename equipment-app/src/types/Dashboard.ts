@@ -31,3 +31,18 @@ export interface DashboardModel {
     totalCount: number;
   }
   
+  export interface LoanRequestReportModel {
+    id: number;
+    equipmentCode: string;
+    equipmentName: string;
+    categoryName: string;
+    departmentName: string;
+    ownerName: string;
+    borrowerName: string;
+    approvedDate?: string;
+    fromDate: string;
+    toDate: string;
+    returnedDate?: string;
+    status: number;
+  }
+  

@@ -95,4 +95,34 @@ public class DashboardController : ControllerBase
             );
         }
     }
+
+    /// <summary>
+    /// Báo cáo phiếu mượn theo tuần / tháng / quý
+    /// </summary>
+    /// <param name="periodType">1 = Tuần, 2 = Tháng, 3 = Quý</param>
+    /// <param name="param"></param>
+    /// <returns></returns>
+    [HttpPost("loan-report")]
+    public async Task<ActionResult> GetLoanRequestReport(
+        [FromQuery] Enumerations.ChartPeriodType periodType,
+        [FromBody] PaginationParam param
+    )
+    {
+        try
+        {
+            var res = await _dashboardService.GetLoanRequestReportAsync(param, periodType);
+            if (res.StatusCode != StatusCodes.Status200OK)
+            {
+                return StatusCode(res.StatusCode, res.Message);
+            }
+            return Ok(res);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                "Xảy ra lỗi trong quá trình xử lý: \n" + ex.Message + ex.StackTrace
+            );
+        }
+    }
 }
